@@ -1,0 +1,77 @@
+export const recommendationCards = [
+  {
+    imageSource: require("@/assets/home/Frame-1193.png"),
+    date: "04-03",
+    sport: "풋살",
+    info: "혜당관\n14:00~15:30\n초보\n#조용히 #아무나",
+    buttonText: "신청",
+  },
+  {
+    imageSource: require("@/assets/home/Frame-1193.png"),
+    date: "04-04",
+    sport: "농구",
+    info: "체육관\n18:00~19:30\n중급\n#활발함 #저녁",
+    buttonText: "신청",
+  },
+  {
+    imageSource: require("@/assets/home/Frame-1193.png"),
+    date: "04-05",
+    sport: "헬스",
+    info: "헬스장\n20:00~21:00\n초보\n#꾸준함 #편하게",
+    buttonText: "신청",
+  },
+  {
+    imageSource: require("@/assets/home/Frame-1193.png"),
+    date: "04-03",
+    sport: "풋살",
+    info: "혜당관\n14:00~15:30\n초보\n#조용히 #아무나",
+    buttonText: "신청",
+  },
+  {
+    imageSource: require("@/assets/home/Frame-1193.png"),
+    date: "04-04",
+    sport: "농구",
+    info: "체육관\n18:00~19:30\n중급\n#활발함 #저녁",
+    buttonText: "신청",
+  },
+  {
+    imageSource: require("@/assets/home/Frame-1193.png"),
+    date: "04-05",
+    sport: "헬스",
+    info: "헬스장\n20:00~21:00\n초보\n#꾸준함 #편하게",
+    buttonText: "신청",
+  },
+];
+
+export const groupCards = [
+  {
+    id: "group-1",
+    imageSource: require("@/assets/home/Frame-1200.png"),
+    remainingText: "3명 남음",
+    sport: "풋살",
+    date: "04-11",
+    location: "대운동장",
+    capacity: "4명",
+    level: "초보",
+  },
+  {
+    id: "group-2",
+    imageSource: require("@/assets/home/Frame-1200.png"),
+    remainingText: "2명 남음",
+    sport: "농구",
+    date: "04-12",
+    location: "체육관",
+    capacity: "6명",
+    level: "중급",
+  },
+  {
+    id: "group-3",
+    imageSource: require("@/assets/home/Frame-1200.png"),
+    remainingText: "1명 남음",
+    sport: "배드민턴",
+    date: "04-13",
+    location: "실내체육관",
+    capacity: "4명",
+    level: "초보",
+  },
+];
