@@ -1,8 +1,9 @@
 import * as React from "react";
 import { StyleSheet, View, type DimensionValue } from "react-native";
 import RecommendationSectionHeader from "./RecommendationSectionHeader";
-import GroupMatchCard, { type GroupMatchCardProps } from "./GroupMatchCard";
+import GroupMatchCard from "./GroupMatchCard";
 import { Gap } from "@/constants/locofyHomeStyles";
+import type { GroupMatchCardProps } from "@/types/ui/homeCards";
 
 export type GroupRecommendationSectionProps = {
   title?: string;
@@ -36,7 +37,7 @@ const styles = StyleSheet.create({
   },
 
   cardList: {
-    gap: Gap.gap_14, // 카드 사이 간격
+    gap: Gap.gap_14,
   },
 });
 

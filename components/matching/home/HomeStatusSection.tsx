@@ -2,11 +2,10 @@ import * as React from "react";
 import { View, StyleSheet } from "react-native";
 import QuickMatchToggle from "./QuickMatchToggle";
 import type { HomeStatusVariant } from "@/types/ui/homeStatus";
-
-import NoScheduleContent from "./NoScheduleContent";
+import DefaultMatchContent from "./DefaultMatchContent";
+import MatchedContent from "./MatchedContent";
 import MatchingContent from "./MatchingContent";
-import DefaultMatch from "./DefaultMatchContent";
-import StateMatched from "./MatchedContent";
+import NoScheduleContent from "./NoScheduleContent";
 
 type Props = {
   state: HomeStatusVariant;
@@ -22,36 +21,27 @@ const STATUS_VARIANTS: HomeStatusVariant[] = [
 
 const FALLBACK_CONTENT_HEIGHT = 520;
 
+const CONTENT_BY_VARIANT: Record<HomeStatusVariant, () => React.JSX.Element> = {
+  Default: () => <DefaultMatchContent />,
+  NoSchedule: () => <NoScheduleContent />,
+  Matching: () => <MatchingContent nearbyCount={7} />,
+  Matched: () => <MatchedContent />,
+};
+
 const HomeStatusSection = ({ state, onToggleQuickMatch }: Props) => {
   const [contentHeight, setContentHeight] = React.useState(
     FALLBACK_CONTENT_HEIGHT,
   );
 
-  const renderContent = (variant: HomeStatusVariant) => {
-    switch (variant) {
-      case "NoSchedule":
-        return <NoScheduleContent />;
-
-      case "Matching":
-        return <MatchingContent nearbyCount={7} />;
-
-      case "Matched":
-        return <StateMatched />;
-
-      case "Default":
-        return <DefaultMatch />;
-
-      default:
-        return null;
-    }
-  };
-
   const handleMeasure = (height: number) => {
     setContentHeight((previous) => Math.max(previous, Math.ceil(height)));
   };
 
+  const renderContent = (variant: HomeStatusVariant) =>
+    CONTENT_BY_VARIANT[variant]();
+
   return (
-    <View style={styles.homestatussection}>
+    <View style={styles.homeStatusSection}>
       <QuickMatchToggle
         state={state}
         onChange={(value) => onToggleQuickMatch?.(value)}
@@ -77,7 +67,7 @@ const HomeStatusSection = ({ state, onToggleQuickMatch }: Props) => {
 };
 
 const styles = StyleSheet.create({
-  homestatussection: {
+  homeStatusSection: {
     width: "100%",
     paddingVertical: 17,
     gap: 16,

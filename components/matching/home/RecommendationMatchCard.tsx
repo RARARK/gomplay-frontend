@@ -1,12 +1,5 @@
 import * as React from "react";
-import {
-  ImageBackground,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-  type ImageSourcePropType,
-} from "react-native";
+import { ImageBackground, Pressable, StyleSheet, Text, View } from "react-native";
 import FootballIcons1 from "@/assets/home/Football-Icons.svg";
 import {
   Border,
@@ -16,27 +9,22 @@ import {
   FontSize,
   Gap,
   Height,
+  HomeLayout,
   LetterSpacing,
   LineHeight,
   Padding,
   Width,
 } from "@/constants/locofyHomeStyles";
+import type { RecommendationMatchCardProps } from "@/types/ui/homeCards";
 
-export type RecommendationMatchCardProps = {
-  imageSource?: ImageSourcePropType;
-  date?: string;
-  sport?: string;
-  info?: string;
-  buttonText?: string;
-  onPress?: () => void;
-};
+export type { RecommendationMatchCardProps } from "@/types/ui/homeCards";
 
 const RecommendationMatchCard = ({
   imageSource,
   date = "04-03",
-  sport = "풋살",
-  info = "혜당관\n14:00~15:30\n초보\n#조용히 #아무나",
-  buttonText = "신청",
+  sport = "Tennis",
+  info = "Jamsil Court\n14:00~15:30\nBeginner\n#Friendly #Weekend",
+  buttonText = "Apply",
   onPress,
 }: RecommendationMatchCardProps) => {
   return (
@@ -83,8 +71,8 @@ const RecommendationMatchCard = ({
 
 const styles = StyleSheet.create({
   card: {
-    width: Width.width_142,
-    height: 280, // 카드 전체 높이 고정
+    width: HomeLayout.recommendationCardWidth,
+    height: HomeLayout.recommendationCardHeight,
     borderRadius: Border.br_8,
     backgroundColor: Color.colorWhite,
     elevation: 4,
@@ -92,7 +80,7 @@ const styles = StyleSheet.create({
   },
 
   cardImage: {
-    height: Height.height_133,
+    height: HomeLayout.recommendationCardImageHeight,
     width: "100%",
   },
 
@@ -132,17 +120,14 @@ const styles = StyleSheet.create({
     alignSelf: "flex-start",
     marginLeft: 8,
     marginBottom: 6,
-
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "flex-start",
     gap: Gap.gap_4,
-
     minWidth: 92,
     height: Height.height_30_7,
     paddingHorizontal: 12,
     paddingVertical: Padding.padding_3,
-
     borderRadius: Border.br_32_7,
     backgroundColor: Color.secondary100,
     overflow: "hidden",
@@ -164,7 +149,7 @@ const styles = StyleSheet.create({
   },
 
   infoWrapper: {
-    height: 88, // 본문 영역 높이 고정
+    height: 88,
     paddingHorizontal: 14,
     paddingVertical: 8,
     justifyContent: "flex-start",
@@ -182,7 +167,7 @@ const styles = StyleSheet.create({
 
   applyButton: {
     width: "100%",
-    height: 44,
+    height: HomeLayout.actionButtonHeight,
     borderRadius: Border.br_4,
     backgroundColor: Color.primary100,
     justifyContent: "center",

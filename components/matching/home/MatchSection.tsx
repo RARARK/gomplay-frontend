@@ -8,14 +8,14 @@ import { recommendationCards, groupCards } from "./homeMockData";
 const MatchSection = () => {
   return (
     <View style={styles.container}>
-      {/* 추천 매칭 */}
       <RecommendationSection
-        title="김단국님 맞춤 추천 매칭"
+        title="Recommended matches"
         cards={recommendationCards}
       />
-
-      {/* 다수 모임 */}
-      <GroupRecommendationSection title="다수 모임" cards={groupCards} />
+      <GroupRecommendationSection
+        title="Group activities"
+        cards={groupCards}
+      />
     </View>
   );
 };

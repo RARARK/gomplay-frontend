@@ -1,23 +1,19 @@
 import * as React from "react";
 import { Image } from "expo-image";
 import { StyleSheet, Text, View } from "react-native";
-import type { HomeStatusVariant } from "@/types/ui/homeStatus";
 import {
   FontFamily,
   FontSize,
   LineHeight,
   Color,
+  HomeLayout,
 } from "@/constants/locofyHomeStyles";
 
 type MatchingContentProps = {
-  state?: HomeStatusVariant;
   nearbyCount?: number;
 };
 
-const MatchingContent = ({
-  state = "Matching",
-  nearbyCount = 7,
-}: MatchingContentProps) => {
+const MatchingContent = ({ nearbyCount = 7 }: MatchingContentProps) => {
   return (
     <>
       <Image
@@ -27,11 +23,10 @@ const MatchingContent = ({
       />
 
       <View style={styles.textBlock}>
-        <Text style={styles.title}>파트너 찾는 중 ...</Text>
-
+        <Text style={styles.title}>Finding your partner...</Text>
         <Text style={styles.description}>
-          근처 공강 <Text style={styles.highlight}>{nearbyCount}명</Text> 탐색
-          중
+          We found <Text style={styles.highlight}>{nearbyCount}</Text> nearby
+          people who match your preferences.
         </Text>
       </View>
     </>
@@ -40,13 +35,13 @@ const MatchingContent = ({
 
 const styles = StyleSheet.create({
   image: {
-    width: 144,
-    height: 144,
+    width: HomeLayout.statusIllustrationSize,
+    height: HomeLayout.statusIllustrationSize,
   },
 
   textBlock: {
     width: "100%",
-    minHeight: 182,
+    minHeight: HomeLayout.statusContentMinHeight,
     paddingHorizontal: 24,
     gap: 8,
     alignItems: "center",

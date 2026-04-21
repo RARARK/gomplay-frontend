@@ -1,7 +1,9 @@
 import * as React from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import PreviousButton from "@/assets/home/PreviousButton.svg";
-import PartnerCard, { type PartnerCardProps } from "./PartnerCard";
+import { HomeLayout } from "@/constants/locofyHomeStyles";
+import type { PartnerCardProps } from "@/types/ui/homeCards";
+import PartnerCard from "./PartnerCard";
 
 export type PartnerCarouselProps = {
   partners?: PartnerCardProps[];
@@ -55,7 +57,10 @@ const PartnerCarousel = ({
         onPress={() => moveTo(currentIndex - 1)}
         style={[styles.navButton, isFirst && styles.navButtonDisabled]}
       >
-        <PreviousButton width={48} height={48} />
+        <PreviousButton
+          width={HomeLayout.navButtonSize}
+          height={HomeLayout.navButtonSize}
+        />
       </Pressable>
 
       <PartnerCard {...currentPartner} />
@@ -67,7 +72,10 @@ const PartnerCarousel = ({
         style={[styles.navButton, isLast && styles.navButtonDisabled]}
       >
         <View style={styles.nextButton}>
-          <PreviousButton width={48} height={48} />
+          <PreviousButton
+            width={HomeLayout.navButtonSize}
+            height={HomeLayout.navButtonSize}
+          />
         </View>
       </Pressable>
     </View>
@@ -84,7 +92,7 @@ const styles = StyleSheet.create({
   },
 
   navButton: {
-    borderRadius: 24,
+    borderRadius: HomeLayout.navButtonSize / 2,
   },
 
   navButtonDisabled: {

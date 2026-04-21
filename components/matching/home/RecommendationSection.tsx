@@ -6,10 +6,9 @@ import {
   ScrollView,
 } from "react-native";
 import RecommendationSectionHeader from "./RecommendationSectionHeader";
-import RecommendationMatchCard, {
-  type RecommendationMatchCardProps,
-} from "./RecommendationMatchCard";
+import RecommendationMatchCard from "./RecommendationMatchCard";
 import { Gap } from "@/constants/locofyHomeStyles";
+import type { RecommendationMatchCardProps } from "@/types/ui/homeCards";
 
 export type RecommendationSectionProps = {
   title?: string;
@@ -50,16 +49,16 @@ const styles = StyleSheet.create({
   container: {
     width: "100%",
     gap: Gap.gap_14,
-    paddingHorizontal: 16, // ✅ 헤더 + 카드 기준선 통일
+    paddingHorizontal: 16,
   },
 
   cardList: {
     flexDirection: "row",
-    paddingRight: 16, // ✅ 마지막 카드 여백
+    paddingRight: 16,
   },
 
   cardItem: {
-    marginRight: Gap.gap_14, // 카드 간 간격
+    marginRight: Gap.gap_14,
   },
 });
 

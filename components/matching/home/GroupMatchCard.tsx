@@ -1,11 +1,5 @@
 import * as React from "react";
-import {
-  ImageBackground,
-  StyleSheet,
-  Text,
-  View,
-  type ImageSourcePropType,
-} from "react-native";
+import { ImageBackground, StyleSheet, Text, View } from "react-native";
 import FootballIcons1 from "@/assets/home/Football-Icons.svg";
 import {
   Padding,
@@ -18,30 +12,23 @@ import {
   LineHeight,
   LetterSpacing,
   FontSize,
+  HomeLayout,
 } from "@/constants/locofyHomeStyles";
+import type { GroupMatchCardProps } from "@/types/ui/homeCards";
 
-export type GroupMatchCardProps = {
-  imageSource?: ImageSourcePropType;
-  remainingText?: string;
-  sport?: string;
-  date?: string;
-  location?: string;
-  capacity?: string;
-  level?: string;
-};
+export type { GroupMatchCardProps } from "@/types/ui/homeCards";
 
 const GroupMatchCard = ({
   imageSource,
-  remainingText = "3명 남음",
-  sport = "풋살",
+  remainingText = "3 spots left",
+  sport = "Tennis",
   date = "04-11",
-  location = "대운동장",
-  capacity = "4명",
-  level = "초보",
+  location = "Jamsil",
+  capacity = "4 people",
+  level = "Beginner",
 }: GroupMatchCardProps) => {
   return (
     <View style={styles.card}>
-      {/* 이미지 */}
       <ImageBackground
         style={styles.cardImage}
         imageStyle={styles.imageBorder}
@@ -49,12 +36,10 @@ const GroupMatchCard = ({
         source={imageSource}
       >
         <View style={styles.overlay}>
-          {/* 남은 인원 */}
           <View style={styles.remainingBadge}>
             <Text style={styles.remainingText}>{remainingText}</Text>
           </View>
 
-          {/* 종목 */}
           <View style={styles.sportBadge}>
             <FootballIcons1
               width={Width.width_24_67}
@@ -65,16 +50,13 @@ const GroupMatchCard = ({
         </View>
       </ImageBackground>
 
-      {/* 🔥 하단 2줄 구조 */}
       <View style={styles.info}>
-        {/* 1줄: 장소 */}
         <Text style={styles.location} numberOfLines={1}>
           {location}
         </Text>
 
-        {/* 2줄: 메타 */}
         <Text style={styles.meta} numberOfLines={1}>
-          {date} · {capacity} · {level}
+          {date} • {capacity} • {level}
         </Text>
       </View>
     </View>
@@ -91,7 +73,7 @@ const styles = StyleSheet.create({
 
   cardImage: {
     width: "100%",
-    height: Height.height_133,
+    height: HomeLayout.groupCardImageHeight,
   },
 
   imageBorder: {
@@ -144,7 +126,6 @@ const styles = StyleSheet.create({
     letterSpacing: LetterSpacing.ls__0_5,
   },
 
-  /* 🔥 핵심: 하단 2줄 */
   info: {
     backgroundColor: Color.nuetral100,
     paddingHorizontal: 14,
@@ -161,7 +142,7 @@ const styles = StyleSheet.create({
 
   meta: {
     fontSize: 12,
-    color: "#666",
+    color: "#666666",
     fontFamily: FontFamily.inter,
   },
 });

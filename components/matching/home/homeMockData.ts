@@ -1,6 +1,10 @@
-import type { PartnerCardProps } from "./PartnerCard";
+import type {
+  GroupMatchCardProps,
+  PartnerCardProps,
+  RecommendationMatchCardProps,
+} from "@/types/ui/homeCards";
 
-export const recommendationCards = [
+export const recommendationCards: RecommendationMatchCardProps[] = [
   {
     imageSource: require("../../../assets/home/Frame-1193.png"),
     date: "04-03",
@@ -45,7 +49,7 @@ export const recommendationCards = [
   },
 ];
 
-export const groupCards = [
+export const groupCards: GroupMatchCardProps[] = [
   {
     id: "group-1",
     imageSource: require("../../../assets/home/Frame-1200.png"),
@@ -96,7 +100,8 @@ export const matchedPartners: PartnerCardProps[] = [
   {
     name: "Jiwon Park",
     age: 23,
-    description: "Prefers active weekend sessions and consistent cardio routines",
+    description:
+      "Prefers active weekend sessions and consistent cardio routines",
     tags: ["Running", "All Levels", "Han River", "Morning"],
     matchScore: 79,
   },

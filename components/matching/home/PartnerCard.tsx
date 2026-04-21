@@ -6,7 +6,6 @@ import {
   StyleSheet,
   Text,
   View,
-  type ImageSourcePropType,
 } from "react-native";
 import Mdifire from "@/assets/home/mdi-fire.svg";
 import {
@@ -16,22 +15,12 @@ import {
   FontFamily,
   FontSize,
   Gap,
+  HomeLayout,
   LineHeight,
 } from "@/constants/locofyHomeStyles";
+import type { PartnerCardProps } from "@/types/ui/homeCards";
 
-export type PartnerCardProps = {
-  imageSource?: ImageSourcePropType;
-  profileImageSource?: ImageSourcePropType;
-  name?: string;
-  age?: number;
-  description?: string;
-  tags?: string[];
-  matchScore?: number;
-  rejectLabel?: string;
-  acceptLabel?: string;
-  onReject?: () => void;
-  onAccept?: () => void;
-};
+export type { PartnerCardProps } from "@/types/ui/homeCards";
 
 const DEFAULT_BACKGROUND_IMAGE = require("../../../assets/home/PartnerCardBackground2.png");
 const DEFAULT_PROFILE_IMAGE = require("../../../assets/home/PartnerProfileImage.png");
@@ -115,8 +104,8 @@ const PartnerCard = ({
 
 const styles = StyleSheet.create({
   card: {
-    width: 303,
-    minHeight: 416,
+    width: HomeLayout.partnerCardWidth,
+    minHeight: HomeLayout.partnerCardMinHeight,
     borderRadius: Border.br_16,
     backgroundColor: Color.colorWhite,
     borderWidth: 1,
@@ -127,7 +116,7 @@ const styles = StyleSheet.create({
   },
 
   visual: {
-    height: 208,
+    height: HomeLayout.partnerCardVisualHeight,
     justifyContent: "flex-end",
     backgroundColor: Color.colorLightsteelblue,
   },
@@ -145,9 +134,9 @@ const styles = StyleSheet.create({
   },
 
   profileImage: {
-    width: 167,
-    height: 167,
-    borderRadius: 83.5,
+    width: HomeLayout.partnerProfileSize,
+    height: HomeLayout.partnerProfileSize,
+    borderRadius: HomeLayout.partnerProfileSize / 2,
   },
 
   content: {
@@ -235,7 +224,7 @@ const styles = StyleSheet.create({
 
   actionButton: {
     flex: 1,
-    height: 44,
+    height: HomeLayout.actionButtonHeight,
     borderRadius: Border.br_32_7,
     alignItems: "center",
     justifyContent: "center",

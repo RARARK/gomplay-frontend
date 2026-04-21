@@ -2,6 +2,7 @@ import * as React from "react";
 import { useRouter } from "expo-router";
 import { View, Image, Text, Pressable, StyleSheet } from "react-native";
 import Materialsymbolscheck from "@/assets/home/material-symbols-check.svg";
+import { HomeLayout } from "@/constants/locofyHomeStyles";
 
 const NoScheduleContent = () => {
   const router = useRouter();
@@ -14,12 +15,9 @@ const NoScheduleContent = () => {
       />
 
       <View style={styles.content}>
-        <Text style={styles.title}>
-          시간표를 등록하고 근처 공강 파트너를 찾아보세요!
-        </Text>
-
+        <Text style={styles.title}>Add your timetable to start matching</Text>
         <Text style={styles.subtitle}>
-          나와 같이 공강인 파트너를 찾아드려요!
+          Set your available hours so quick match can find better partners.
         </Text>
 
         <Pressable
@@ -27,10 +25,12 @@ const NoScheduleContent = () => {
           onPress={() => router.push("/timetable")}
         >
           <Materialsymbolscheck width={24} height={24} />
-          <Text style={styles.buttonText}>시간표 등록하러 가기</Text>
+          <Text style={styles.buttonText}>Go to timetable</Text>
         </Pressable>
 
-        <Text style={styles.caption}>지금 등록하고 바로 매칭 시작하기</Text>
+        <Text style={styles.caption}>
+          Register now and start matching right away.
+        </Text>
       </View>
     </>
   );
@@ -38,13 +38,14 @@ const NoScheduleContent = () => {
 
 const styles = StyleSheet.create({
   image: {
-    width: 144,
-    height: 144,
+    width: HomeLayout.statusIllustrationSize,
+    height: HomeLayout.statusIllustrationSize,
   },
 
   content: {
     width: "100%",
-    paddingHorizontal: 24, // 🔥 중요 (레이아웃 기준)
+    minHeight: HomeLayout.statusContentMinHeight,
+    paddingHorizontal: 24,
     gap: 24,
     alignItems: "center",
   },

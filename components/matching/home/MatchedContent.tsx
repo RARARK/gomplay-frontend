@@ -1,17 +1,18 @@
 import * as React from "react";
 import { StyleSheet, Text, View } from "react-native";
 import SuccessIcon from "@/assets/home/Success-Icon.svg";
-import PartnerCarousel from "./PartnerCarousel";
-import type { PartnerCardProps } from "./PartnerCard";
 import { matchedPartners } from "./homeMockData";
+import PartnerCarousel from "./PartnerCarousel";
+import type { PartnerCardProps } from "@/types/ui/homeCards";
 import {
   Color,
   FontFamily,
   FontSize,
+  HomeLayout,
   LineHeight,
 } from "@/constants/locofyHomeStyles";
 
-export type StateMatchedProps = {
+export type MatchedContentProps = {
   title?: string;
   description?: string;
   partners?: PartnerCardProps[];
@@ -25,7 +26,7 @@ const MatchedContent = ({
   partners = matchedPartners,
   initialIndex = 0,
   onPartnerIndexChange,
-}: StateMatchedProps) => {
+}: MatchedContentProps) => {
   return (
     <View style={styles.container}>
       <View style={styles.banner}>
@@ -50,6 +51,7 @@ const MatchedContent = ({
 const styles = StyleSheet.create({
   container: {
     width: "100%",
+    minHeight: HomeLayout.matchedContentMinHeight,
     alignItems: "center",
     gap: 20,
     paddingVertical: 14,

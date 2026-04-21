@@ -322,3 +322,19 @@ export const LetterSpacing = {
   ls_0_06: letterSpacings.normalSm,
   ls_0_07: letterSpacings.normalMd,
 } as const;
+
+export const HomeLayout = {
+  statusIllustrationSize: sizes[144],
+  statusContentMinHeight: sizes[180],
+  matchedContentMinHeight: sizes[416] + spacing[24] + spacing[80],
+  recommendationCardWidth: sizes[142],
+  recommendationCardHeight: 280,
+  recommendationCardImageHeight: sizes[133],
+  groupCardImageHeight: sizes[133],
+  partnerCardWidth: sizes[303],
+  partnerCardMinHeight: sizes[416],
+  partnerCardVisualHeight: 208,
+  partnerProfileSize: 167,
+  actionButtonHeight: sizes[44],
+  navButtonSize: sizes[48],
+} as const;
