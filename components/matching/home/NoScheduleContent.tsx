@@ -1,8 +1,11 @@
 import * as React from "react";
+import { useRouter } from "expo-router";
 import { View, Image, Text, Pressable, StyleSheet } from "react-native";
 import Materialsymbolscheck from "@/assets/home/material-symbols-check.svg";
 
 const NoScheduleContent = () => {
+  const router = useRouter();
+
   return (
     <>
       <Image
@@ -19,7 +22,10 @@ const NoScheduleContent = () => {
           나와 같이 공강인 파트너를 찾아드려요!
         </Text>
 
-        <Pressable style={styles.button}>
+        <Pressable
+          style={styles.button}
+          onPress={() => router.push("/timetable")}
+        >
           <Materialsymbolscheck width={24} height={24} />
           <Text style={styles.buttonText}>시간표 등록하러 가기</Text>
         </Pressable>
