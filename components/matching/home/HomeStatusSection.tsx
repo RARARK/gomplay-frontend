@@ -6,6 +6,7 @@ import type { HomeStatusVariant } from "@/types/ui/homeStatus";
 import NoScheduleContent from "./NoScheduleContent";
 import MatchingContent from "./MatchingContent";
 import DefaultMatch from "./DefaultMatchContent";
+import StateMatched from "./StateMatched";
 
 type Props = {
   state: HomeStatusVariant;
@@ -16,13 +17,13 @@ const HomeStatusSection = ({ state, onToggleQuickMatch }: Props) => {
   const renderContent = () => {
     switch (state) {
       case "NoSchedule":
-        return <NoScheduleContent />;
+        return <StateMatched />;
 
       case "Matching":
         return <MatchingContent nearbyCount={7} />;
 
       case "Matched":
-        return null;
+        return <StateMatched />;
 
       case "Default":
         return <DefaultMatch />;

@@ -5,19 +5,31 @@ export const FontFamily = {
 };
 /* Font sizes */
 export const FontSize = {
+  fs_10: 10,
   fs_11: 11,
+  fs_13: 13,
   fs_15: 15,
   fs_17: 17,
+  fs_22: 22,
 };
 /* Colors */
 export const Color = {
   accent100: "#e24cb5",
+  colorBlack: "#000",
+  colorGhostwhite: "#f4f3fa",
+  colorGray: "rgba(0, 0, 0, 0.15)",
+  colorKhaki: "#fdd46a",
+  colorLightsteelblue: "#c1cdff",
+  colorRoyalblue: "#5567d3",
   colorOrangered: "#ff6600",
+  colorSilver: "#bbb7c7",
+  colorSlategray: "#706f88",
   colorWhite: "#fff",
   labelsPrimary: "#000",
   nuetral100: "#f2f2f2",
   nuetral300: "#bbb7c7",
   nuetral500: "#5c5a63",
+  nuetral700: "#413f46",
   nuetral900: "#070322",
   primary100: "#4c5be2",
   primary900: "#2a327d",
@@ -25,6 +37,8 @@ export const Color = {
 };
 /* Gaps */
 export const Gap = {
+  gap_11: 11,
+  gap_12: 12,
   gap_14: 14,
   gap_16: 16,
   gap_17: 17,
@@ -76,10 +90,12 @@ export const Border = {
 /* box shadows */
 export const BoxShadow = {
   shadow_drop: "0px 4px 4px rgba(0, 0, 0, 0.25)",
+  shadow_drop1: "0px 0px 20px rgba(255, 255, 255, 0.3)",
 };
 /* width */
 export const Width = {
   width_10: 10,
+  width_131: 131,
   width_121: 121,
   width_142: 142,
   width_144: 144,
@@ -88,7 +104,10 @@ export const Width = {
   width_21: 21,
   width_24: 24,
   width_24_67: 25,
+  width_22: 22,
+  width_303: 303,
   width_31: 31,
+  width_32: 32,
   width_316: 316,
   width_37: 37,
   width_374: 374,
@@ -116,17 +135,23 @@ export const Height = {
   height_24_67: 25,
   height_27: 27,
   height_30_7: 31,
+  height_32: 32,
+  height_38: 38,
+  height_416: 416,
   height_48: 48,
   height_64: 64,
 };
 /* line-height */
 export const LineHeight = {
   lh_13: 13,
+  lh_18: 18,
   lh_20: 20,
   lh_22: 22,
+  lh_28: 28,
 };
 /* letter-spacing */
 export const LetterSpacing = {
+  ls__0_08: 0,
   ls__0_41: 0,
   ls__0_5: 0,
   ls_0_06: 0,
