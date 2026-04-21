@@ -3,7 +3,7 @@ import { StyleSheet, View } from "react-native";
 import RecommendationSection from "./RecommendationSection";
 import GroupRecommendationSection from "./GroupRecommendationSection";
 import { Gap } from "@/constants/locofyHomeStyles";
-import { recommendationCards, groupCards } from "@/constants/mockData";
+import { recommendationCards, groupCards } from "./homeMockData";
 
 const MatchSection = () => {
   return (

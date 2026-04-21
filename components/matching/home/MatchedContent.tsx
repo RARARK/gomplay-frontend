@@ -3,7 +3,13 @@ import { StyleSheet, Text, View } from "react-native";
 import SuccessIcon from "@/assets/home/Success-Icon.svg";
 import PartnerCarousel from "./PartnerCarousel";
 import type { PartnerCardProps } from "./PartnerCard";
-import { Color, FontFamily, FontSize, LineHeight } from "@/constants/locofyHomeStyles";
+import { matchedPartners } from "./homeMockData";
+import {
+  Color,
+  FontFamily,
+  FontSize,
+  LineHeight,
+} from "@/constants/locofyHomeStyles";
 
 export type StateMatchedProps = {
   title?: string;
@@ -13,27 +19,10 @@ export type StateMatchedProps = {
   onPartnerIndexChange?: (index: number) => void;
 };
 
-const DEFAULT_PARTNERS: PartnerCardProps[] = [
-  {
-    name: "Minjun Kim",
-    age: 21,
-    description: "Looking for a light weekend morning workout partner",
-    tags: ["Tennis", "Beginner", "Jamsil", "Fair Play"],
-    matchScore: 87,
-  },
-  {
-    name: "Seoyoon Lee",
-    age: 24,
-    description: "Best matched for weekday evening rallies and steady play",
-    tags: ["Badminton", "Intermediate", "Gangnam", "After Work"],
-    matchScore: 82,
-  },
-];
-
-const StateMatched = ({
+const MatchedContent = ({
   title = "Partner found!",
   description = "Your match is ready. Connect right away.",
-  partners = DEFAULT_PARTNERS,
+  partners = matchedPartners,
   initialIndex = 0,
   onPartnerIndexChange,
 }: StateMatchedProps) => {
@@ -104,4 +93,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default StateMatched;
+export default MatchedContent;
