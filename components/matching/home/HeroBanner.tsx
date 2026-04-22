@@ -15,6 +15,12 @@ type HeroBannerProps = {
   banners?: Banner[];
 };
 
+const FALLBACK_BANNER: Banner = {
+  id: "fallback-banner",
+  image: require("../../../assets/home/icon.png"),
+  text: "Welcome to Gomplay",
+};
+
 // Receive banner data from the parent so this component only handles banner UI.
 const HeroBanner = ({ banners = [] }: HeroBannerProps) => {
   const [index, setIndex] = React.useState(0);
@@ -67,19 +73,15 @@ const HeroBanner = ({ banners = [] }: HeroBannerProps) => {
     [prev, next],
   );
 
-  const currentBanner = banners[index];
-
-  // Render a placeholder to keep the layout stable when no banner is available.
-  if (!currentBanner) {
-    return <View style={[styles.heroBanner, styles.emptyBanner]} />;
-  }
+  const currentBanner = banners[index] ?? FALLBACK_BANNER;
+  const bannerImageSource = currentBanner.image ?? FALLBACK_BANNER.image;
 
   return (
     <View {...panResponder.panHandlers}>
       <ImageBackground
         style={styles.heroBanner}
         imageStyle={styles.heroBannerImage}
-        source={currentBanner.image}
+        source={bannerImageSource}
       >
         <View style={styles.overlay}>
           <Pressable onPress={prev} hitSlop={10} style={styles.arrowButton}>
