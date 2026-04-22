@@ -7,25 +7,30 @@ import {
 
 import HomeHeader from "@/components/matching/home/HomeHeader";
 import HeroBanner from "@/components/matching/home/HeroBanner";
+import { homeBanners } from "@/components/matching/home/homeMockData";
 import HomeStatusSection from "@/components/matching/home/HomeStatusSection";
 import MatchSection from "@/components/matching/home/MatchSection";
 import CreatePostButton from "@/assets/home/CreatePostButton.svg";
 
 import { Color, Width } from "@/constants/locofyHomeStyles";
+import type { Banner } from "@/types/ui/homeBanner";
 import type { HomeStatusVariant } from "@/types/ui/homeStatus";
 
-export default function NewHome() {
+export default function HomePage() {
   const insets = useSafeAreaInsets();
 
   const [isQuickMatchOn, setIsQuickMatchOn] = React.useState(false);
+  const [banners] = React.useState<Banner[]>(homeBanners);
 
   const hasTimetable = false;
   const isMatched = false;
 
+  // Reserve extra scroll space so the last section is not hidden behind the FAB.
   const FAB_SIZE = 56;
   const FAB_OFFSET = 20;
   const FAB_EXTRA_SPACE = 12;
 
+  // Decide which home status content should be shown based on the current state.
   const getHomeStatusVariant = (): HomeStatusVariant => {
     if (isMatched) return "Matched";
     if (isQuickMatchOn) return "Matching";
@@ -36,10 +41,11 @@ export default function NewHome() {
   const currentState = getHomeStatusVariant();
 
   const handleCreatePostPress = () => {
-    console.log("모집글 작성 버튼 클릭");
+    console.log("Create post button clicked");
   };
 
   return (
+    // Keep the home screen content inside the top safe area.
     <SafeAreaView edges={["top"]} style={styles.safeArea}>
       <>
         <ScrollView
@@ -54,14 +60,18 @@ export default function NewHome() {
           showsVerticalScrollIndicator={false}
         >
           <HomeHeader />
-          <HeroBanner />
+          <HeroBanner banners={banners} />
+
+          {/* Render the status-specific content without changing the page layout. */}
           <HomeStatusSection
             state={currentState}
             onToggleQuickMatch={setIsQuickMatchOn}
           />
+
           <MatchSection />
         </ScrollView>
 
+        {/* Floating action button for creating a new recruitment post. */}
         <Pressable
           onPress={handleCreatePostPress}
           style={[

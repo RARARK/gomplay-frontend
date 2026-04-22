@@ -3,6 +3,25 @@ import type {
   PartnerCardProps,
   RecommendationMatchCardProps,
 } from "@/types/ui/homeCards";
+import type { Banner } from "@/types/ui/homeBanner";
+
+export const homeBanners: Banner[] = [
+  {
+    id: "banner-1",
+    image: require("../../../assets/home/HeroBanner.png"),
+    text: "Just do it!",
+  },
+  {
+    id: "banner-2",
+    image: require("../../../assets/home/adaptive-icon.png"),
+    text: "Weekly Fitness Champion",
+  },
+  {
+    id: "banner-3",
+    image: require("../../../assets/home/icon.png"),
+    text: "Sponsored: Protein Supplement",
+  },
+];
 
 export const recommendationCards: RecommendationMatchCardProps[] = [
   {

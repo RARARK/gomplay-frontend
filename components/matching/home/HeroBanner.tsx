@@ -1,5 +1,4 @@
 import * as React from "react";
-import { useMemo, useState } from "react";
 import {
   StyleSheet,
   Text,
@@ -10,42 +9,53 @@ import {
 } from "react-native";
 import BannerImage1 from "@/assets/home/Banner-Image.svg";
 import { Color, FontFamily } from "@/constants/locofyHomeStyles";
+import type { Banner } from "@/types/ui/homeBanner";
 
-const banners = [
-  {
-    image: require("@/assets/home/HeroBanner.png"),
-    text: "just do it!",
-  },
-  {
-    image: require("@/assets/home/adaptive-icon.png"),
-    text: null,
-  },
-  {
-    image: require("@/assets/home/icon.png"),
-    text: null,
-  },
-];
+type HeroBannerProps = {
+  banners?: Banner[];
+};
 
-const HeroBanner = () => {
-  const [index, setIndex] = useState(0);
+// Receive banner data from the parent so this component only handles banner UI.
+const HeroBanner = ({ banners = [] }: HeroBannerProps) => {
+  const [index, setIndex] = React.useState(0);
 
-  const prev = () => {
-    setIndex((prev) => (prev === 0 ? banners.length - 1 : prev - 1));
-  };
+  // Keep the current index in bounds when the banner list changes.
+  React.useEffect(() => {
+    if (banners.length === 0) {
+      if (index !== 0) {
+        setIndex(0);
+      }
+      return;
+    }
 
-  const next = () => {
-    setIndex((prev) => (prev === banners.length - 1 ? 0 : prev + 1));
-  };
+    if (index > banners.length - 1) {
+      setIndex(banners.length - 1);
+    }
+  }, [banners.length, index]);
 
-  const panResponder = useMemo(
+  const prev = React.useCallback(() => {
+    if (banners.length <= 1) {
+      return;
+    }
+
+    setIndex((current) => (current === 0 ? banners.length - 1 : current - 1));
+  }, [banners.length]);
+
+  const next = React.useCallback(() => {
+    if (banners.length <= 1) {
+      return;
+    }
+
+    setIndex((current) => (current === banners.length - 1 ? 0 : current + 1));
+  }, [banners.length]);
+
+  // Handle horizontal swipes without interfering with vertical scrolling.
+  const panResponder = React.useMemo(
     () =>
       PanResponder.create({
-        onMoveShouldSetPanResponder: (_, gestureState) => {
-          return (
-            Math.abs(gestureState.dx) > 15 &&
-            Math.abs(gestureState.dx) > Math.abs(gestureState.dy)
-          );
-        },
+        onMoveShouldSetPanResponder: (_, gestureState) =>
+          Math.abs(gestureState.dx) > 15 &&
+          Math.abs(gestureState.dx) > Math.abs(gestureState.dy),
         onPanResponderRelease: (_, gestureState) => {
           if (gestureState.dx > 50) {
             prev();
@@ -54,10 +64,15 @@ const HeroBanner = () => {
           }
         },
       }),
-    [],
+    [prev, next],
   );
 
   const currentBanner = banners[index];
+
+  // Render a placeholder to keep the layout stable when no banner is available.
+  if (!currentBanner) {
+    return <View style={[styles.heroBanner, styles.emptyBanner]} />;
+  }
 
   return (
     <View {...panResponder.panHandlers}>
@@ -67,17 +82,17 @@ const HeroBanner = () => {
         source={currentBanner.image}
       >
         <View style={styles.overlay}>
-          <Pressable onPress={prev} hitSlop={10}>
+          <Pressable onPress={prev} hitSlop={10} style={styles.arrowButton}>
             <BannerImage1 style={styles.leftArrow} width={48} height={48} />
           </Pressable>
 
-          {currentBanner.text ? (
-            <Text style={styles.justDoIt}>{currentBanner.text}</Text>
-          ) : (
-            <View />
-          )}
+          <View style={styles.textContainer}>
+            {currentBanner.text ? (
+              <Text style={styles.bannerText}>{currentBanner.text}</Text>
+            ) : null}
+          </View>
 
-          <Pressable onPress={next} hitSlop={10}>
+          <Pressable onPress={next} hitSlop={10} style={styles.arrowButton}>
             <BannerImage1 style={styles.rightArrow} width={48} height={48} />
           </Pressable>
         </View>
@@ -92,6 +107,9 @@ const styles = StyleSheet.create({
     aspectRatio: 402 / 209,
     overflow: "hidden",
   },
+  emptyBanner: {
+    backgroundColor: "#e9e9e9",
+  },
   heroBannerImage: {
     resizeMode: "cover",
   },
@@ -99,8 +117,19 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
     paddingHorizontal: 16,
+  },
+  arrowButton: {
+    width: 48,
+    height: 48,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  textContainer: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 12,
   },
   leftArrow: {
     width: 48,
@@ -111,7 +140,7 @@ const styles = StyleSheet.create({
     height: 48,
     transform: [{ scaleX: -1 }],
   },
-  justDoIt: {
+  bannerText: {
     fontSize: 34,
     letterSpacing: 0.37,
     lineHeight: 41,
@@ -119,6 +148,7 @@ const styles = StyleSheet.create({
     fontFamily: FontFamily.inter,
     color: Color.accent100,
     textAlign: "center",
+    maxWidth: "100%",
   },
 });
 

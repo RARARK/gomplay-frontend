@@ -1,4 +1,5 @@
 export const MATCH_STATUS = {
+  // 매칭 진행 상태
   PENDING: "PENDING",
   ACCEPTED: "ACCEPTED",
   IN_PROGRESS: "IN_PROGRESS",

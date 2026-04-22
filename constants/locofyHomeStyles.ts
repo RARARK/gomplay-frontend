@@ -1,4 +1,5 @@
 const fontFamilies = {
+  // locofy 코드에서 쓰는 css속성들
   inter: "Inter",
   sfPro: "SF Pro",
 } as const;

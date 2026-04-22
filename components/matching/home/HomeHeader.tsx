@@ -4,12 +4,18 @@ import { StyleSheet, Pressable, View } from "react-native";
 import Frame91 from "@/assets/home/Frame-91.svg";
 import Frame921 from "@/assets/home/Frame-92.svg";
 import Frame110 from "@/assets/home/Frame-110.svg";
-import { Height, Width, Color } from "@/constants/locofyHomeStyles";
+import { Height, Width } from "@/constants/locofyHomeStyles";
 
 const HomeHeader = () => {
   return (
     <View style={styles.header}>
-      <Pressable style={styles.iconButton} onPress={() => {}}>
+      {/* Toggle the home mode from the leading action button. */}
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="Toggle home mode"
+        style={styles.iconButton}
+        onPress={() => {}}
+      >
         <Image
           style={styles.imageIcon}
           contentFit="cover"
@@ -17,14 +23,27 @@ const HomeHeader = () => {
         />
       </Pressable>
 
+      {/* Keep the secondary actions grouped on the right side of the header. */}
       <View style={styles.rightIcons}>
-        <Frame91
-          style={styles.svgIcon}
-          width={Width.width_48}
-          height={Height.height_48}
-        />
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Open notifications"
+          style={styles.iconButton}
+          onPress={() => {}}
+        >
+          <Frame91
+            style={styles.svgIcon}
+            width={Width.width_48}
+            height={Height.height_48}
+          />
+        </Pressable>
 
-        <Pressable style={styles.iconButton} onPress={() => {}}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Open profile"
+          style={styles.iconButton}
+          onPress={() => {}}
+        >
           <Frame921
             style={styles.svgIcon}
             width={Width.width_48}
@@ -32,11 +51,18 @@ const HomeHeader = () => {
           />
         </Pressable>
 
-        <Frame110
-          style={styles.svgIcon}
-          width={Width.width_48}
-          height={Height.height_48}
-        />
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Open settings"
+          style={styles.iconButton}
+          onPress={() => {}}
+        >
+          <Frame110
+            style={styles.svgIcon}
+            width={Width.width_48}
+            height={Height.height_48}
+          />
+        </Pressable>
       </View>
     </View>
   );
@@ -70,9 +96,6 @@ const styles = StyleSheet.create({
   svgIcon: {
     width: Width.width_48,
     height: Height.height_48,
-  },
-  primarySvgColor: {
-    color: Color.labelsPrimary,
   },
 });
 
