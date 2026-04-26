@@ -1,3 +1,3 @@
-import ChatRoomScreen from "../../components/chat/ChatRoomScreen";
+import ChatListScreen from "../../components/chat/ChatListScreen";
 
-export default ChatRoomScreen;
+export default ChatListScreen;

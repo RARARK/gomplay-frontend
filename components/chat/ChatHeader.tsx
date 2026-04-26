@@ -13,11 +13,13 @@ import {
 type ChatHeaderProps = {
   title?: string;
   onBackPress?: () => void;
+  showBackButton?: boolean;
 };
 
 export default function ChatHeader({
   title = "Chat Room",
   onBackPress,
+  showBackButton = true,
 }: ChatHeaderProps) {
   const handleBackPress = () => {
     if (onBackPress) {
@@ -33,15 +35,23 @@ export default function ChatHeader({
   return (
     <View style={styles.container}>
       <View style={styles.headerRow}>
-        <Pressable
-          accessibilityLabel="Go back"
-          accessibilityRole="button"
-          hitSlop={8}
-          onPress={handleBackPress}
-          style={styles.backButton}
-        >
-          <Ionicons name="chevron-back" size={24} color={Color.labelsPrimary} />
-        </Pressable>
+        {showBackButton ? (
+          <Pressable
+            accessibilityLabel="Go back"
+            accessibilityRole="button"
+            hitSlop={8}
+            onPress={handleBackPress}
+            style={styles.backButton}
+          >
+            <Ionicons
+              name="chevron-back"
+              size={24}
+              color={Color.labelsPrimary}
+            />
+          </Pressable>
+        ) : (
+          <View style={styles.backButtonPlaceholder} />
+        )}
         <Text numberOfLines={1} style={styles.title}>
           {title}
         </Text>
@@ -66,6 +76,10 @@ const styles = StyleSheet.create({
     height: 40,
     alignItems: "center",
     justifyContent: "center",
+  },
+  backButtonPlaceholder: {
+    width: 40,
+    height: 40,
   },
   title: {
     flex: 1,

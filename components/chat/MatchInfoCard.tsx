@@ -1,8 +1,6 @@
-import { StyleSheet, Text, View } from "react-native";
+import { Image, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
-import Vector from "../../assets/home/Vector.svg";
-import Vector1 from "../../assets/home/Vector1.svg";
 import { Border, Color, FontFamily, FontSize } from "../GlobalStyles";
 
 type MatchInfoCardProps = {
@@ -35,10 +33,9 @@ export default function MatchInfoCard({
     <View style={styles.wrapper}>
       <View style={styles.card}>
         <View style={styles.locationRow}>
-          <Vector
-            color={Color.colorSalmon}
-            width={19}
-            height={27}
+          <Image
+            source={require("../../assets/chat/Locationpin.png")}
+            style={styles.locationIcon}
           />
           <Text numberOfLines={1} style={styles.locationText}>
             {locationName}
@@ -47,11 +44,7 @@ export default function MatchInfoCard({
 
         <View style={styles.infoPanel}>
           <View style={styles.timeRow}>
-            <Vector1
-              color={Color.nuetral700}
-              width={16}
-              height={16}
-            />
+            <Ionicons name="time-outline" size={16} color={Color.nuetral700} />
             <Text style={styles.timeText}>{timeLabel}</Text>
           </View>
 
@@ -96,6 +89,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 13,
     paddingHorizontal: 4,
+  },
+  locationIcon: {
+    width: 19,
+    height: 27,
+    resizeMode: "contain",
   },
   locationText: {
     flex: 1,

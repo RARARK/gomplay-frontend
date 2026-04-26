@@ -1,4 +1,5 @@
 import { ScrollView, StyleSheet, View } from "react-native";
+import { router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import ChatHeader from "./ChatHeader";
@@ -9,7 +10,7 @@ export default function ChatRoomScreen() {
   return (
     <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
       <View style={styles.container}>
-        <ChatHeader />
+        <ChatHeader onBackPress={() => router.replace("/(tabs)/chat")} />
         <ScrollView
           contentContainerStyle={styles.content}
           showsVerticalScrollIndicator={false}
