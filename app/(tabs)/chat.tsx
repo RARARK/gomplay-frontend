@@ -1,9 +1,3 @@
-import { View, Text } from "react-native";
+import ChatRoomScreen from "../../components/chat/ChatRoomScreen";
 
-export default function ChatScreen() {
-  return (
-    <View>
-      <Text>채팅</Text>
-    </View>
-  );
-}
+export default ChatRoomScreen;
