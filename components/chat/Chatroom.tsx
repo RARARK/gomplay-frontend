@@ -1,25 +1,30 @@
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { router } from "expo-router";
 
 import { Border, Color, FontFamily, FontSize } from "../GlobalStyles";
+import {
+  getChatRoomParticipantDisplayName,
+  type ChatRoom,
+} from "@/types/domain/chatRoom";
 
 export type ChatroomProps = {
-  id: string;
-  name: string;
-  previewMessage: string;
-  timestamp: string;
-  unreadCount?: number;
-  onPress?: (id: string) => void;
+  chatRoom: ChatRoom;
+  onPress?: (chatRoomId: number) => void;
 };
 
 export default function Chatroom({
-  id,
-  name,
-  previewMessage,
-  timestamp,
-  unreadCount = 2,
+  chatRoom,
   onPress,
 }: ChatroomProps) {
+  const {
+    id,
+    participants,
+    lastMessage,
+    lastMessageAt,
+    unreadMessageCount,
+  } = chatRoom;
+  const partnerDisplayName = getChatRoomParticipantDisplayName(participants);
+
   const handlePress = () => {
     if (onPress) {
       onPress(id);
@@ -28,36 +33,34 @@ export default function Chatroom({
 
     router.push(`/chat/${encodeURIComponent(id)}`);
   };
-
-  const avatarLabel = getAvatarLabel(name);
-
   return (
     <Pressable
-      accessibilityLabel={`Open chat with ${name}`}
+      accessibilityLabel={`Open chat with ${partnerDisplayName}`}
       accessibilityRole="button"
       onPress={handlePress}
       style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
     >
       <View style={styles.content}>
-        <View style={styles.avatar}>
-          <Text style={styles.avatarText}>{avatarLabel}</Text>
-        </View>
+        <Image
+          source={require("../../assets/chat/Profileimage.png")}
+          style={styles.avatar}
+        />
 
         <View style={styles.messageBlock}>
           <Text numberOfLines={1} style={styles.name}>
-            {name}
+            {partnerDisplayName}
           </Text>
           <Text numberOfLines={1} style={styles.previewMessage}>
-            {previewMessage}
+            {lastMessage ?? "No messages yet."}
           </Text>
         </View>
       </View>
 
       <View style={styles.meta}>
-        <Text style={styles.timestamp}>{timestamp}</Text>
-        {unreadCount > 0 ? (
+        <Text style={styles.timestamp}>{formatChatListTime(lastMessageAt)}</Text>
+        {unreadMessageCount > 0 ? (
           <View style={styles.badge}>
-            <Text style={styles.badgeText}>{unreadCount}</Text>
+            <Text style={styles.badgeText}>{unreadMessageCount}</Text>
           </View>
         ) : null}
       </View>
@@ -65,14 +68,29 @@ export default function Chatroom({
   );
 }
 
-function getAvatarLabel(name: string) {
-  const trimmedName = name.trim();
-
-  if (!trimmedName) {
-    return "?";
+function formatChatListTime(timestamp?: string) {
+  if (!timestamp) {
+    return "";
   }
 
-  return trimmedName.charAt(0).toUpperCase();
+  const date = new Date(timestamp);
+  const now = new Date();
+  const isSameDay =
+    date.getFullYear() === now.getFullYear() &&
+    date.getMonth() === now.getMonth() &&
+    date.getDate() === now.getDate();
+
+  if (isSameDay) {
+    return date.toLocaleTimeString([], {
+      hour: "numeric",
+      minute: "2-digit",
+    });
+  }
+
+  return date.toLocaleDateString([], {
+    month: "short",
+    day: "numeric",
+  });
 }
 
 const styles = StyleSheet.create({
@@ -102,16 +120,7 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: Color.primary100,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  avatarText: {
-    fontSize: FontSize.fs_17,
-    lineHeight: 22,
-    fontWeight: "700",
-    fontFamily: FontFamily.inter,
-    color: Color.colorWhite,
+    resizeMode: "cover",
   },
   messageBlock: {
     flex: 1,

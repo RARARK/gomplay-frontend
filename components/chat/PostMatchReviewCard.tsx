@@ -9,6 +9,12 @@ type PostMatchReviewCardProps = {
   buttonLabel?: string;
   inputPlaceholder?: string;
   onPressReview?: () => void;
+  messageValue?: string;
+  onChangeMessage?: (message: string) => void;
+  onPressSend?: () => void;
+  showReviewPrompt?: boolean;
+  inputDisabled?: boolean;
+  sendDisabled?: boolean;
 };
 
 export default function PostMatchReviewCard({
@@ -17,36 +23,60 @@ export default function PostMatchReviewCard({
   buttonLabel = "Leave review",
   inputPlaceholder = "Write a message...",
   onPressReview,
+  messageValue = "",
+  onChangeMessage,
+  onPressSend,
+  showReviewPrompt = true,
+  inputDisabled = false,
+  sendDisabled = false,
 }: PostMatchReviewCardProps) {
   return (
     <View style={styles.wrapper}>
-      <View style={styles.card}>
-        <View style={styles.innerCard}>
-          <View style={styles.headerRow}>
-            <Ionicons
-              name="flag-outline"
-              size={24}
-              color={Color.labelsPrimary}
-            />
-            <Text style={styles.title}>{title}</Text>
+      {showReviewPrompt ? (
+        <View style={styles.card}>
+          <View style={styles.innerCard}>
+            <View style={styles.headerRow}>
+              <Ionicons
+                name="flag-outline"
+                size={24}
+                color={Color.labelsPrimary}
+              />
+              <Text style={styles.title}>{title}</Text>
+            </View>
+
+            <Text style={styles.description}>{description}</Text>
+
+            <Pressable onPress={onPressReview} style={styles.actionButton}>
+              <Text style={styles.actionLabel}>{buttonLabel}</Text>
+              <Ionicons
+                name="arrow-forward"
+                size={18}
+                color={Color.colorWhite}
+              />
+            </Pressable>
           </View>
-
-          <Text style={styles.description}>{description}</Text>
-
-          <Pressable onPress={onPressReview} style={styles.actionButton}>
-            <Text style={styles.actionLabel}>{buttonLabel}</Text>
-            <Ionicons name="arrow-forward" size={18} color={Color.colorWhite} />
-          </Pressable>
         </View>
-      </View>
+      ) : null}
 
       <View style={styles.messageInputContainer}>
         <TextInput
+          editable={!inputDisabled}
           placeholder={inputPlaceholder}
           placeholderTextColor={Color.nuetral700}
+          value={messageValue}
+          onChangeText={onChangeMessage}
           style={styles.messageInput}
         />
-        <Pressable accessibilityLabel="Send message" style={styles.sendButton}>
+        <Pressable
+          accessibilityLabel="Send message"
+          accessibilityRole="button"
+          disabled={sendDisabled}
+          onPress={onPressSend}
+          style={[
+            styles.sendButton,
+            sendDisabled && styles.sendButtonDisabled,
+          ]}
+        >
           <Image
             source={require("../../assets/chat/airplane.png")}
             style={styles.sendIcon}
@@ -139,6 +169,9 @@ const styles = StyleSheet.create({
     height: 32,
     alignItems: "center",
     justifyContent: "center",
+  },
+  sendButtonDisabled: {
+    opacity: 0.45,
   },
   sendIcon: {
     width: 26,

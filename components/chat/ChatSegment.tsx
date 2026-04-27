@@ -2,45 +2,14 @@ import { FlatList, StyleSheet, Text, View } from "react-native";
 
 import Chatroom from "./Chatroom";
 import { Color, FontFamily, FontSize } from "../GlobalStyles";
-
-export type ChatItem = {
-  id: string;
-  name: string;
-  previewMessage: string;
-  timestamp: string;
-  unreadCount: number;
-};
+import type { ChatRoom } from "@/types/domain/chatRoom";
 
 type ChatSegmentProps = {
-  items?: ChatItem[];
+  items?: ChatRoom[];
 };
 
-export const defaultChatItems: ChatItem[] = [
-  {
-    id: "room-1",
-    name: "Daniel Kim",
-    previewMessage: "I am heading out now!",
-    timestamp: "Today 7:01 PM",
-    unreadCount: 2,
-  },
-  {
-    id: "room-2",
-    name: "Minsu Lee",
-    previewMessage: "See you in front of the court.",
-    timestamp: "Today 5:42 PM",
-    unreadCount: 0,
-  },
-  {
-    id: "room-3",
-    name: "Seojun Park",
-    previewMessage: "Thanks for leaving a review.",
-    timestamp: "Yesterday 9:18 PM",
-    unreadCount: 1,
-  },
-];
-
 export default function ChatSegment({
-  items = defaultChatItems,
+  items = [],
 }: ChatSegmentProps) {
   if (items.length === 0) {
     return (
@@ -56,15 +25,9 @@ export default function ChatSegment({
   return (
     <FlatList
       data={items}
-      keyExtractor={(item) => item.id}
+      keyExtractor={(item) => String(item.id)}
       renderItem={({ item }) => (
-        <Chatroom
-          id={item.id}
-          name={item.name}
-          previewMessage={item.previewMessage}
-          timestamp={item.timestamp}
-          unreadCount={item.unreadCount}
-        />
+        <Chatroom chatRoom={item} />
       )}
       contentContainerStyle={styles.container}
       ItemSeparatorComponent={ItemSeparator}
