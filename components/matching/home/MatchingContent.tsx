@@ -42,6 +42,7 @@ const styles = StyleSheet.create({
   textBlock: {
     width: "100%",
     minHeight: HomeLayout.statusContentMinHeight,
+    marginTop: 24,
     paddingHorizontal: 24,
     gap: 8,
     alignItems: "center",
