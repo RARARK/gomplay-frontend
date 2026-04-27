@@ -155,7 +155,10 @@ export default function ChatRoomScreen() {
 
   if (isLoading || !chatRoom) {
     return (
-      <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
+      <SafeAreaView
+        style={styles.safeArea}
+        edges={["top", "left", "right", "bottom"]}
+      >
         <View style={styles.loadingContainer}>
           <ActivityIndicator color={Color.primary100} />
         </View>
@@ -164,7 +167,10 @@ export default function ChatRoomScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
+    <SafeAreaView
+      style={styles.safeArea}
+      edges={["top", "left", "right", "bottom"]}
+    >
       <View style={styles.container}>
         <ChatHeader
           title={partnerDisplayName}
@@ -235,7 +241,6 @@ function MessageRow({ message, partnerName }: MessageRowProps) {
         </View>
         <View style={styles.myBubble}>
           <Text style={styles.myBubbleText}>{message.message}</Text>
-          <View style={styles.myBubbleTail} />
         </View>
       </View>
     );
@@ -309,17 +314,17 @@ const styles = StyleSheet.create({
     color: Color.nuetral700,
   },
   partnerMessageSection: {
-    gap: 10,
+    gap: 8,
   },
   partnerHeaderRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
+    gap: 10,
   },
   partnerAvatar: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     resizeMode: "cover",
   },
   partnerName: {
@@ -332,15 +337,18 @@ const styles = StyleSheet.create({
   partnerBubbleRow: {
     flexDirection: "row",
     alignItems: "flex-end",
-    gap: 12,
-    paddingLeft: 64,
+    gap: 8,
+    paddingLeft: 58,
   },
   partnerBubble: {
     maxWidth: "72%",
-    borderRadius: 24,
-    backgroundColor: "#f2f2f2",
+    borderTopLeftRadius: 8,
+    borderTopRightRadius: 22,
+    borderBottomRightRadius: 22,
+    borderBottomLeftRadius: 22,
+    backgroundColor: "#f3f4f6",
     paddingHorizontal: 18,
-    paddingVertical: 16,
+    paddingVertical: 14,
   },
   partnerBubbleText: {
     fontSize: 18,
@@ -352,29 +360,20 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "flex-end",
     alignItems: "flex-end",
-    gap: 12,
+    gap: 8,
   },
   myMessageMeta: {
-    paddingBottom: 8,
+    paddingBottom: 6,
   },
   myBubble: {
-    position: "relative",
     maxWidth: "76%",
-    borderRadius: 24,
+    borderTopLeftRadius: 22,
+    borderTopRightRadius: 8,
+    borderBottomRightRadius: 22,
+    borderBottomLeftRadius: 22,
     backgroundColor: Color.primary100,
     paddingHorizontal: 18,
-    paddingVertical: 16,
-  },
-  myBubbleTail: {
-    position: "absolute",
-    right: 6,
-    bottom: -12,
-    width: 0,
-    height: 0,
-    borderLeftWidth: 18,
-    borderTopWidth: 18,
-    borderLeftColor: "transparent",
-    borderTopColor: Color.primary100,
+    paddingVertical: 14,
   },
   myBubbleText: {
     fontSize: 18,
