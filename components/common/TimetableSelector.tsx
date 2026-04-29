@@ -27,6 +27,8 @@ type TimetableSelectorProps = {
   title?: string;
   subtitle?: string;
   saveLabel?: string;
+  secondaryActionLabel?: string;
+  onSecondaryAction?: () => void;
 };
 
 type TimetableCell = {
@@ -68,6 +70,8 @@ const TimetableSelector = ({
   title = "Timetable Selection",
   subtitle = "Tap or drag to select your available time blocks.",
   saveLabel = "Save",
+  secondaryActionLabel,
+  onSecondaryAction,
 }: TimetableSelectorProps) => {
   const [gridWidth, setGridWidth] = React.useState(0);
   const [isDragging, setIsDragging] = React.useState(false);
@@ -292,6 +296,16 @@ const TimetableSelector = ({
       >
         <Text style={styles.saveButtonText}>{saveLabel}</Text>
       </Pressable>
+
+      {secondaryActionLabel && onSecondaryAction ? (
+        <Pressable
+          accessibilityRole="button"
+          onPress={onSecondaryAction}
+          style={styles.secondaryAction}
+        >
+          <Text style={styles.secondaryActionText}>{secondaryActionLabel}</Text>
+        </Pressable>
+      ) : null}
     </View>
   );
 };
@@ -390,6 +404,19 @@ const styles = StyleSheet.create({
     fontSize: 18,
     lineHeight: 24,
     fontWeight: "700",
+  },
+  secondaryAction: {
+    marginTop: 14,
+    alignItems: "center",
+    justifyContent: "center",
+    minHeight: 28,
+  },
+  secondaryActionText: {
+    fontSize: 15,
+    lineHeight: 20,
+    fontWeight: "600",
+    color: "#6B7280",
+    textAlign: "center",
   },
 });
 
