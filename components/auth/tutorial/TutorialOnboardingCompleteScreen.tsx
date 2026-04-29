@@ -1,6 +1,21 @@
-import { Image } from "expo-image";
 import React from "react";
-import { Pressable, StyleSheet, Text, View, useWindowDimensions } from "react-native";
+import {
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+  useWindowDimensions,
+  type ImageSourcePropType,
+} from "react-native";
+
+import ChatLocationPin from "@/assets/chat/Locationpin.png";
+import ChatProfileImage from "@/assets/chat/Profileimage.png";
+import HomeMatchingBear from "@/assets/home/MatchingBear.png";
+import HomePartnerCardBackground from "@/assets/home/PartnerCardBackground.png";
+import HomePartnerCardBackground2 from "@/assets/home/PartnerCardBackground2.png";
+import HomePartnerProfileImage from "@/assets/home/PartnerProfileImage.png";
+import HomeScheduleBear from "@/assets/home/ScheduleBear.png";
+import LoginTutorialLogo from "@/assets/login/tutorial_logo.png";
 
 type TutorialOnboardingCompleteScreenProps = {
   onPressCta: () => void;
@@ -13,40 +28,58 @@ type OnboardingSlide = {
   buttonLabel: string;
   heroAccent: string;
   heroAccentSecondary: string;
-  cardAccent: string;
-  cardTone: string;
+  leftImage: ImageSourcePropType;
+  centerImage: ImageSourcePropType;
+  rightImage: ImageSourcePropType;
 };
 
 const SLIDES: OnboardingSlide[] = [
   {
     id: "insight",
-    title: "Daily insights from world-\nclass analysts",
-    description: "Our analysts made their names at the top tier\ninstitutions",
+    title: "Find the perfect workout partner for you!",
+    description: "Stay consistent more easily—and enjoy working out together.",
     buttonLabel: "Next",
     heroAccent: "rgba(255, 211, 116, 0.38)",
     heroAccentSecondary: "rgba(68, 110, 255, 0.88)",
-    cardAccent: "rgba(255, 246, 217, 0.88)",
-    cardTone: "#2944EC",
+    leftImage: HomePartnerProfileImage,
+    centerImage: HomePartnerCardBackground,
+    rightImage: ChatProfileImage,
   },
   {
-    id: "schedule",
-    title: "Stay on top of your\nweekly workout plan",
-    description: "Track sessions, manage shared schedules,\nand keep every routine in sync.",
+    id: "quick match",
+    title: "Get matched instantly",
+    description:
+      "Find a partner and start working out right away.\nNo more waiting, no more hassle.",
     buttonLabel: "Next",
     heroAccent: "rgba(164, 244, 214, 0.42)",
     heroAccentSecondary: "rgba(109, 90, 255, 0.82)",
-    cardAccent: "rgba(232, 255, 244, 0.92)",
-    cardTone: "#16A34A",
+    leftImage: HomePartnerCardBackground2,
+    centerImage: HomeScheduleBear,
+    rightImage: ChatLocationPin,
   },
   {
-    id: "partner",
-    title: "Meet better-matched\npartners, faster",
-    description: "We combine your style, pace, and availability\nto recommend the right people.",
-    buttonLabel: "Get Started",
+    id: "normal match",
+    title: "Match with partners on a set schedule",
+    description:
+      "Work out at a fixed time that fits you.\nConsistency is the key to success.",
+    buttonLabel: "Next",
     heroAccent: "rgba(255, 194, 228, 0.34)",
     heroAccentSecondary: "rgba(65, 114, 255, 0.82)",
-    cardAccent: "rgba(245, 238, 255, 0.92)",
-    cardTone: "#7C3AED",
+    leftImage: HomeMatchingBear,
+    centerImage: LoginTutorialLogo,
+    rightImage: HomeScheduleBear,
+  },
+  {
+    id: "partner match",
+    title: "Find partners who match your style",
+    description:
+      "Get matched with partners who have similar workout styles and preferences.\nEnjoy a more personalized workout experience.",
+    buttonLabel: "Get Started",
+    heroAccent: "rgba(255, 225, 163, 0.36)",
+    heroAccentSecondary: "rgba(44, 111, 255, 0.84)",
+    leftImage: HomePartnerProfileImage,
+    centerImage: HomePartnerCardBackground2,
+    rightImage: ChatProfileImage,
   },
 ];
 
@@ -72,86 +105,7 @@ export default function TutorialOnboardingCompleteScreen({
 
   return (
     <View style={styles.screen}>
-      <View style={[styles.hero, { height: heroHeight }]}>
-        <View
-          style={[
-            styles.phoneMock,
-            {
-              width: phoneWidth,
-              height: phoneHeight,
-            },
-          ]}
-        >
-          <View
-            style={[
-              styles.phoneGlowLarge,
-              { backgroundColor: slide.heroAccent },
-            ]}
-          />
-          <View
-            style={[
-              styles.phoneGlowSmall,
-              { backgroundColor: slide.heroAccentSecondary },
-            ]}
-          />
-          <View style={styles.dynamicIsland} />
-          <View style={styles.imageCluster}>
-            <View style={styles.imageCardLeft} />
-            <View style={styles.imageCardCenter}>
-              <Image
-                source={require("@/assets/login/tutorial_logo.png")}
-                style={styles.centerImage}
-                contentFit="contain"
-              />
-            </View>
-            <View style={styles.imageCardRight} />
-          </View>
-
-          <View
-            style={[
-              styles.notificationCard,
-              styles.notificationFront,
-              { backgroundColor: slide.cardAccent },
-            ]}
-          >
-            <View
-              style={[
-                styles.notificationIcon,
-                { backgroundColor: slide.cardTone },
-              ]}
-            />
-            <View style={styles.notificationBars}>
-              <View style={styles.notificationBarLong} />
-              <View style={styles.notificationBarShort} />
-            </View>
-            <View style={styles.notificationMetaDot} />
-          </View>
-
-          <View
-            style={[
-              styles.notificationCard,
-              styles.notificationBack,
-              activeIndex === 1
-                ? styles.notificationBackRaised
-                : activeIndex === 2
-                  ? styles.notificationBackWide
-                  : null,
-            ]}
-          >
-            <View
-              style={[
-                styles.notificationIcon,
-                { backgroundColor: slide.cardTone },
-              ]}
-            />
-            <View style={styles.notificationBars}>
-              <View style={styles.notificationBarLong} />
-              <View style={styles.notificationBarShort} />
-            </View>
-            <View style={styles.notificationMetaDot} />
-          </View>
-        </View>
-      </View>
+      <View style={[styles.hero, { height: heroHeight }]}></View>
 
       <View style={styles.content}>
         <View style={styles.copyBlock}>
@@ -245,6 +199,7 @@ const styles = StyleSheet.create({
     height: 128,
     borderRadius: 24,
     backgroundColor: "rgba(255,255,255,0.78)",
+    overflow: "hidden",
     transform: [{ rotate: "-16deg" }],
   },
   imageCardCenter: {
@@ -259,8 +214,8 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   centerImage: {
-    width: "82%",
-    height: "82%",
+    width: "100%",
+    height: "100%",
   },
   imageCardRight: {
     position: "absolute",
@@ -270,62 +225,12 @@ const styles = StyleSheet.create({
     height: 122,
     borderRadius: 24,
     backgroundColor: "rgba(255,255,255,0.72)",
+    overflow: "hidden",
     transform: [{ rotate: "14deg" }],
   },
-  notificationCard: {
-    position: "absolute",
-    left: 84,
-    right: 40,
-    borderRadius: 24,
-    flexDirection: "row",
-    alignItems: "center",
-    paddingLeft: 24,
-    paddingRight: 18,
-    paddingVertical: 18,
-  },
-  notificationFront: {
-    bottom: 146,
-    zIndex: 2,
-  },
-  notificationBack: {
-    bottom: 88,
-    backgroundColor: "rgba(235, 240, 255, 0.62)",
-    zIndex: 1,
-  },
-  notificationBackRaised: {
-    bottom: 98,
-  },
-  notificationBackWide: {
-    right: 24,
-  },
-  notificationIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 14,
-    marginRight: 18,
-  },
-  notificationBars: {
-    flex: 1,
-  },
-  notificationBarLong: {
-    width: "76%",
-    height: 14,
-    borderRadius: 999,
-    backgroundColor: "rgba(17,17,17,0.84)",
-  },
-  notificationBarShort: {
-    marginTop: 8,
-    width: "56%",
-    height: 12,
-    borderRadius: 999,
-    backgroundColor: "rgba(17,17,17,0.34)",
-  },
-  notificationMetaDot: {
-    marginLeft: 12,
-    width: 18,
-    height: 18,
-    borderRadius: 999,
-    backgroundColor: "rgba(17,17,17,0.16)",
+  sideImage: {
+    width: "100%",
+    height: "100%",
   },
   content: {
     flex: 1,
