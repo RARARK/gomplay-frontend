@@ -17,8 +17,10 @@ import MatchRunIcon from "@/assets/match/fluent-run-16-filled.svg";
 import MatchDifficultyIcon from "@/assets/match/heroicons-chart-bar-16-solid.svg";
 import CreatePostCalendarModal from "@/components/matching/create-post/CreatePostCalendarModal";
 import CreatePostCapacitySelector from "@/components/matching/create-post/CreatePostCapacitySelector";
+import CreatePostChoiceModal from "@/components/matching/create-post/CreatePostChoiceModal";
 import {
   CREATE_POST_DEFAULT_LOCATION,
+  CREATE_POST_DIFFICULTY_CHOICE_OPTIONS,
   CREATE_POST_DIFFICULTY_LABELS,
   CREATE_POST_EXERCISE_OPTIONS,
   CREATE_POST_MAX_TAG_SELECTION,
@@ -29,6 +31,8 @@ import {
   type CreatePostFormState,
 } from "@/components/matching/create-post/createPostConfig";
 import CreatePostDetailCard from "@/components/matching/create-post/CreatePostDetailCard";
+import CreatePostExerciseGridModal from "@/components/matching/create-post/CreatePostExerciseGridModal";
+import { CREATE_POST_EXERCISE_GRID_OPTIONS } from "@/components/matching/create-post/createPostExerciseOptions";
 import CreatePostLocationCard from "@/components/matching/create-post/CreatePostLocationCard";
 import CreatePostTagSelector from "@/components/matching/create-post/CreatePostTagSelector";
 import CreatePostTimeRangeModal from "@/components/matching/create-post/CreatePostTimeRangeModal";
@@ -66,6 +70,10 @@ export default function CreatePostScreen() {
     React.useState(false);
   const [isDatePickerVisible, setIsDatePickerVisible] = React.useState(false);
   const [isTimePickerVisible, setIsTimePickerVisible] = React.useState(false);
+  const [isDifficultyPickerVisible, setIsDifficultyPickerVisible] =
+    React.useState(false);
+  const [isExercisePickerVisible, setIsExercisePickerVisible] =
+    React.useState(false);
   const [hasSubmitted, setHasSubmitted] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
 
@@ -276,23 +284,13 @@ export default function CreatePostScreen() {
                 icon={<MatchDifficultyIcon width={28} height={28} />}
                 label="난이도"
                 value={CREATE_POST_DIFFICULTY_LABELS[form.difficulty]}
-                onPress={() =>
-                  updateForm(
-                    "difficulty",
-                    getNextValue(DIFFICULTY_OPTIONS, form.difficulty),
-                  )
-                }
+                onPress={() => setIsDifficultyPickerVisible(true)}
               />
               <CreatePostDetailCard
                 icon={<MatchRunIcon width={28} height={28} />}
                 label="운동 종목"
                 value={form.exerciseType}
-                onPress={() =>
-                  updateForm(
-                    "exerciseType",
-                    getNextValue(CREATE_POST_EXERCISE_OPTIONS, form.exerciseType),
-                  )
-                }
+                onPress={() => setIsExercisePickerVisible(true)}
               />
             </View>
 
@@ -389,6 +387,24 @@ export default function CreatePostScreen() {
         endAt={form.scheduledEndAt}
         onClose={() => setIsTimePickerVisible(false)}
         onConfirm={handleConfirmTimeRange}
+      />
+
+      <CreatePostChoiceModal
+        visible={isDifficultyPickerVisible}
+        title="운동 난이도 선택"
+        options={CREATE_POST_DIFFICULTY_CHOICE_OPTIONS}
+        selectedValue={form.difficulty}
+        onClose={() => setIsDifficultyPickerVisible(false)}
+        onSelect={(value) => updateForm("difficulty", value)}
+      />
+
+      <CreatePostExerciseGridModal
+        visible={isExercisePickerVisible}
+        title="운동 종목 선택"
+        options={CREATE_POST_EXERCISE_GRID_OPTIONS}
+        selectedValue={form.exerciseType}
+        onClose={() => setIsExercisePickerVisible(false)}
+        onSelect={(value) => updateForm("exerciseType", value)}
       />
     </>
   );
