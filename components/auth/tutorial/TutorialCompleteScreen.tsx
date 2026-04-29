@@ -1,6 +1,12 @@
 import { Image } from "expo-image";
 import React from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import {
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+  useWindowDimensions,
+} from "react-native";
 
 type TutorialCompleteScreenProps = {
   onPressCta: () => void;
@@ -14,12 +20,16 @@ const CTA_LABEL = "맞춤 파트너 보러가기";
 export default function TutorialCompleteScreen({
   onPressCta,
 }: TutorialCompleteScreenProps) {
+  const { width } = useWindowDimensions();
+  const logoWidth = Math.min(width * 0.48, 184);
+  const logoHeight = logoWidth * (154 / 184);
+
   return (
     <View style={styles.container}>
       <View style={styles.content}>
         <Image
           source={require("@/assets/login/tutorial_logo.png")}
-          style={styles.logo}
+          style={{ width: logoWidth, height: logoHeight }}
           contentFit="contain"
         />
 
@@ -49,10 +59,6 @@ const styles = StyleSheet.create({
     maxWidth: 360,
     alignItems: "center",
     gap: 36,
-  },
-  logo: {
-    width: 184,
-    height: 154,
   },
   copyBlock: {
     width: "100%",

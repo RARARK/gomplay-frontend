@@ -14,15 +14,15 @@ type TutorialScheduleScreenContentProps = {
   onSave: (ranges: UserTimetableRange[]) => void;
   onSkip: () => void;
   onBack: () => void;
+  headerTitle: string;
+  title: string;
+  description: string;
+  saveLabel: string;
+  skipLabel: string;
+  progressRatio: number;
 };
 
-const HEADER_TITLE = "시간표 입력";
 const BACK_LABEL = "튜토리얼 이전 단계";
-const TITLE = "언제 운동할 수 있나요?";
-const DESCRIPTION =
-  "강의가 있는 시간대를 선택해주시면 더 잘 맞는 파트너를\n추천해드려요. 나중에 다시 설정하실 수 있어요.";
-const SAVE_LABEL = "분석 시작하기";
-const SKIP_LABEL = "지금은 건너뛰기";
 
 export default function TutorialScheduleScreenContent({
   value,
@@ -30,6 +30,12 @@ export default function TutorialScheduleScreenContent({
   onSave,
   onSkip,
   onBack,
+  headerTitle,
+  title,
+  description,
+  saveLabel,
+  skipLabel,
+  progressRatio,
 }: TutorialScheduleScreenContentProps) {
   return (
     <View style={styles.container}>
@@ -42,22 +48,27 @@ export default function TutorialScheduleScreenContent({
         >
           <Ionicons name="chevron-back" size={32} color="#111111" />
         </Pressable>
-        <Text style={styles.headerTitle}>{HEADER_TITLE}</Text>
+        <Text style={styles.headerTitle}>{headerTitle}</Text>
       </View>
 
       <View style={styles.progressWrapper}>
         <View style={styles.progressTrack} />
-        <View style={styles.progressActive} />
+        <View
+          style={[
+            styles.progressActive,
+            { width: `${Math.min(Math.max(progressRatio, 0), 1) * 100}%` },
+          ]}
+        />
       </View>
 
       <TimetableSelector
         value={value}
         onChange={onChange}
         onSave={onSave}
-        title={TITLE}
-        subtitle={DESCRIPTION}
-        saveLabel={SAVE_LABEL}
-        secondaryActionLabel={SKIP_LABEL}
+        title={title}
+        subtitle={description}
+        saveLabel={saveLabel}
+        secondaryActionLabel={skipLabel}
         onSecondaryAction={onSkip}
       />
     </View>
@@ -111,7 +122,6 @@ const styles = StyleSheet.create({
     position: "absolute",
     left: 0,
     top: 4,
-    width: "100%",
     height: 8,
     borderRadius: 999,
     backgroundColor: "#4C5BE2",

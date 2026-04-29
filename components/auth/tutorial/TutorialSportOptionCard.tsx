@@ -30,8 +30,8 @@ export default function TutorialSportOptionCard({
 
 const styles = StyleSheet.create({
   card: {
-    width: "48%",
-    minHeight: 142,
+    flexBasis: "48%",
+    minHeight: 116,
     borderRadius: 18,
     borderWidth: 1,
     borderColor: "#ECECEC",
@@ -39,7 +39,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     paddingHorizontal: 16,
-    paddingVertical: 20,
+    paddingVertical: 18,
   },
   cardSelected: {
     borderColor: "#4C5BE2",
@@ -58,10 +58,12 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   label: {
+    flexShrink: 1,
     fontSize: 17,
     lineHeight: 24,
     fontWeight: "700",
     color: "#111111",
     fontFamily: "System",
+    textAlign: "center",
   },
 });

@@ -12,6 +12,7 @@ type LoginScreenContentProps = {
   onChangePassword: (value: string) => void;
   onLoginPress: () => void;
   onSignupPress: () => void;
+  onFindAccountPress?: () => void;
 };
 
 export default function LoginScreenContent({
@@ -21,6 +22,7 @@ export default function LoginScreenContent({
   onChangePassword,
   onLoginPress,
   onSignupPress,
+  onFindAccountPress,
 }: LoginScreenContentProps) {
   return (
     <ScrollView
@@ -38,6 +40,7 @@ export default function LoginScreenContent({
           onChangePassword={onChangePassword}
           onLoginPress={onLoginPress}
           onSignupPress={onSignupPress}
+          onFindAccountPress={onFindAccountPress}
         />
       </View>
     </ScrollView>
@@ -52,12 +55,14 @@ const styles = StyleSheet.create({
   },
   content: {
     flexGrow: 1,
-    paddingLeft: 43,
-    paddingRight: 42,
-    paddingTop: 160,
-    paddingBottom: 160,
+    paddingHorizontal: 20,
+    paddingTop: 12,
+    paddingBottom: 64,
   },
   section: {
+    width: "100%",
+    maxWidth: 360,
+    alignSelf: "center",
     gap: 30,
   },
   title: {

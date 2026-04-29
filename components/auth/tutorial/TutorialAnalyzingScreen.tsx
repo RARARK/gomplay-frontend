@@ -1,12 +1,22 @@
 import { Image } from "expo-image";
 import React from "react";
-import { Animated, Easing, StyleSheet, Text, View } from "react-native";
+import {
+  Animated,
+  Easing,
+  StyleSheet,
+  Text,
+  View,
+  useWindowDimensions,
+} from "react-native";
 
 const ANALYZING_TITLE = "사용자의 성향을 분석중입니다...";
 const ANALYZING_SUBTITLE = "잠시만 기다려주세요..";
 
 export default function TutorialAnalyzingScreen() {
   const progress = React.useRef(new Animated.Value(0)).current;
+  const { width } = useWindowDimensions();
+  const logoWidth = Math.min(width * 0.48, 184);
+  const logoHeight = logoWidth * (154 / 184);
 
   React.useEffect(() => {
     Animated.timing(progress, {
@@ -31,7 +41,7 @@ export default function TutorialAnalyzingScreen() {
         <View style={styles.logoWrapper}>
           <Image
             source={require("@/assets/login/tutorial_logo.png")}
-            style={styles.logo}
+            style={{ width: logoWidth, height: logoHeight }}
             contentFit="contain"
           />
         </View>
@@ -74,14 +84,8 @@ const styles = StyleSheet.create({
     letterSpacing: -0.5,
   },
   logoWrapper: {
-    width: 184,
-    height: 154,
     alignItems: "center",
     justifyContent: "center",
-  },
-  logo: {
-    width: 184,
-    height: 154,
   },
   progressSection: {
     width: "100%",

@@ -18,6 +18,7 @@ type LoginFormProps = {
   onChangePassword: (value: string) => void;
   onLoginPress: () => void;
   onSignupPress: () => void;
+  onFindAccountPress?: () => void;
 };
 
 export default function LoginForm({
@@ -27,6 +28,7 @@ export default function LoginForm({
   onChangePassword,
   onLoginPress,
   onSignupPress,
+  onFindAccountPress,
 }: LoginFormProps) {
   return (
     <View style={styles.loginContainer}>
@@ -55,17 +57,22 @@ export default function LoginForm({
           <Text style={styles.login}>Login</Text>
         </Pressable>
 
-        <View style={styles.findAccount}>
+        <Pressable
+          accessibilityRole="button"
+          disabled={!onFindAccountPress}
+          onPress={onFindAccountPress}
+          style={styles.findAccount}
+        >
           <Text style={styles.findAccountText}>{FIND_ACCOUNT_LABEL}</Text>
-        </View>
+        </Pressable>
       </View>
 
       <View style={styles.createAccountArea}>
-        <View style={styles.createAnAccount}>
+        <View style={styles.createAccountRow}>
           <Text style={styles.createAccountPrompt}>{SIGNUP_PROMPT}</Text>
-          <Text onPress={onSignupPress} style={styles.createAccountLink}>
-            {SIGNUP_LABEL}
-          </Text>
+          <Pressable accessibilityRole="button" onPress={onSignupPress}>
+            <Text style={styles.createAccountLink}>{SIGNUP_LABEL}</Text>
+          </Pressable>
         </View>
       </View>
     </View>
@@ -123,7 +130,7 @@ const styles = StyleSheet.create({
   createAccountArea: {
     alignItems: "center",
   },
-  createAnAccount: {
+  createAccountRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: 5,
