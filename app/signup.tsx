@@ -14,7 +14,7 @@ export default function SignupScreen() {
   const handleSubmit = () => {
     router.push({
       pathname: "/signup-verification",
-      params: { email },
+      params: { email, nickname, studentId },
     });
   };
 

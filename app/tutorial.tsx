@@ -1,4 +1,4 @@
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import React from "react";
 import { StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -44,6 +44,11 @@ const isQuestionStep = (step: TutorialStep): step is TutorialQuestionStep =>
   step in TUTORIAL_STEPS;
 
 export default function TutorialScreen() {
+  const params = useLocalSearchParams<{
+    email?: string;
+    nickname?: string;
+    studentId?: string;
+  }>();
   const [currentStep, setCurrentStep] =
     React.useState<TutorialStep>("exerciseStyle");
   const [selectedQuestionOptions, setSelectedQuestionOptions] =
@@ -52,6 +57,12 @@ export default function TutorialScreen() {
   const [timetable, setTimetable] = React.useState<UserTimetableState>(() =>
     createEmptyTimetableState(),
   );
+
+  const signupParams = {
+    email: typeof params.email === "string" ? params.email : "",
+    nickname: typeof params.nickname === "string" ? params.nickname : "",
+    studentId: typeof params.studentId === "string" ? params.studentId : "",
+  };
 
   const handleSelectOption = (optionId: string) => {
     if (!isQuestionStep(currentStep)) {
@@ -84,11 +95,17 @@ export default function TutorialScreen() {
   };
 
   const handleScheduleSave = (_ranges: UserTimetableRange[]) => {
-    router.push("/tutorial-analyzing");
+    router.push({
+      pathname: "/tutorial-analyzing",
+      params: signupParams,
+    });
   };
 
   const handleScheduleSkip = () => {
-    router.push("/tutorial-analyzing");
+    router.push({
+      pathname: "/tutorial-analyzing",
+      params: signupParams,
+    });
   };
 
   const handleBack = () => {

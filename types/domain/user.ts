@@ -11,6 +11,8 @@ export type UserTimetableRange = {
 export type User = {
   id: number;
   nickname: string;
+  email?: string;
+  studentId?: string;
 
   profileImageUrl?: string;
   mannerTemperature?: number;

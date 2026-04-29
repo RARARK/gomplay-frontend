@@ -1,4 +1,5 @@
 import * as React from "react";
+import { router } from "expo-router";
 import { ScrollView, StyleSheet, Pressable } from "react-native";
 import {
   SafeAreaView,
@@ -41,7 +42,7 @@ export default function HomePage() {
   const currentState = getHomeStatusVariant();
 
   const handleCreatePostPress = () => {
-    console.log("Create post button clicked");
+    router.push("/posts/create");
   };
 
   return (

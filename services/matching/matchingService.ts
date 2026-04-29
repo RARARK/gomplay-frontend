@@ -1,4 +1,11 @@
-import type { Match } from "@/types/domain/match";
+import {
+  MATCH_STATUS,
+  type CompleteMatchContext,
+  type CompleteMatchInput,
+  type CompleteMatchResult,
+  type Match,
+} from "@/types/domain/match";
+import { getCompleteMatchErrorMessage } from "@/utils/completeMatchPolicy";
 
 export async function getActiveMatches(): Promise<Match[]> {
   return [
@@ -14,4 +21,37 @@ export async function getActiveMatches(): Promise<Match[]> {
       createdAt: "2026-04-10T17:00:00",
     },
   ];
+}
+
+export async function completeMatch(
+  input: CompleteMatchInput,
+  context: CompleteMatchContext,
+): Promise<CompleteMatchResult> {
+  const errorMessage = getCompleteMatchErrorMessage(input, context);
+
+  if (errorMessage) {
+    throw new Error(errorMessage);
+  }
+
+  if (
+    context.status === MATCH_STATUS.END_PENDING &&
+    context.endRequestedBy !== context.currentUserId
+  ) {
+    return {
+      matchId: input.matchId,
+      status: MATCH_STATUS.COMPLETED,
+    };
+  }
+
+  if (context.status === MATCH_STATUS.END_PENDING) {
+    return {
+      matchId: input.matchId,
+      status: MATCH_STATUS.COMPLETED,
+    };
+  }
+
+  return {
+    matchId: input.matchId,
+    status: MATCH_STATUS.END_PENDING,
+  };
 }

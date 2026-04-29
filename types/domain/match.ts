@@ -9,6 +9,13 @@ export const MATCH_STATUS = {
 
 export type MatchStatus = (typeof MATCH_STATUS)[keyof typeof MATCH_STATUS];
 
+export const MATCH_COMPLETE_ACTION = {
+  COMPLETE: "COMPLETE",
+} as const;
+
+export type MatchCompleteAction =
+  (typeof MATCH_COMPLETE_ACTION)[keyof typeof MATCH_COMPLETE_ACTION];
+
 export const MATCH_SOURCE_TYPE = {
   APPLICATION: "APPLICATION",
   PARTNER_REQUEST: "PARTNER_REQUEST",
@@ -38,3 +45,32 @@ export type Match = {
 
   createdAt: string;
 };
+
+export type CompleteMatchInput = {
+  matchId: number;
+  action: MatchCompleteAction;
+};
+
+export type CompleteMatchContext = {
+  currentUserId?: number | null;
+  hostUserId: number;
+  guestUserId: number;
+  status: MatchStatus;
+  scheduledEndAt?: string;
+  endRequestedBy?: number;
+  isBlocked?: boolean;
+};
+
+export type CompleteMatchPendingResult = {
+  matchId: number;
+  status: typeof MATCH_STATUS.END_PENDING;
+};
+
+export type CompleteMatchDoneResult = {
+  matchId: number;
+  status: typeof MATCH_STATUS.COMPLETED;
+};
+
+export type CompleteMatchResult =
+  | CompleteMatchPendingResult
+  | CompleteMatchDoneResult;
