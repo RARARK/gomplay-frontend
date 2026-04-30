@@ -16,6 +16,8 @@ export default function CreatePostLocationCard({
   onUseCurrentLocation,
   onRecommendNearby,
 }: CreatePostLocationCardProps) {
+  const hasActions = Boolean(onUseCurrentLocation || onRecommendNearby);
+
   return (
     <View style={styles.container}>
       <View style={styles.mapFrame}>
@@ -35,14 +37,20 @@ export default function CreatePostLocationCard({
           <Text style={styles.locationText}>선택된 장소: {location}</Text>
         </View>
 
-        <View style={styles.actions}>
-          <Pressable onPress={onUseCurrentLocation} style={styles.actionButton}>
-            <Text style={styles.actionText}>현재 위치로 지정</Text>
-          </Pressable>
-          <Pressable onPress={onRecommendNearby} style={styles.actionButton}>
-            <Text style={styles.actionText}>주변 스팟 추천</Text>
-          </Pressable>
-        </View>
+        {hasActions ? (
+          <View style={styles.actions}>
+            {onUseCurrentLocation ? (
+              <Pressable onPress={onUseCurrentLocation} style={styles.actionButton}>
+                <Text style={styles.actionText}>현재 위치로 지정</Text>
+              </Pressable>
+            ) : null}
+            {onRecommendNearby ? (
+              <Pressable onPress={onRecommendNearby} style={styles.actionButton}>
+                <Text style={styles.actionText}>주변 스팟 추천</Text>
+              </Pressable>
+            ) : null}
+          </View>
+        ) : null}
       </View>
     </View>
   );

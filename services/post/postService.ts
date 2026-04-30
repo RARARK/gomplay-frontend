@@ -18,6 +18,18 @@ import { getApplyToPostErrorMessage } from "@/utils/canApplyToPost";
 import { getResolveApplicationErrorMessage } from "@/utils/resolveApplicationAction";
 import { validateCreatePostInput } from "@/utils/validateCreatePost";
 
+export type PostHostProfile = {
+  id: number;
+  name: string;
+  department: string;
+};
+
+export type PostParticipant = {
+  id: number;
+  name: string;
+  department?: string;
+};
+
 const now = new Date();
 
 const createDate = (dayOffset: number, hour: number, minute = 0) => {
@@ -25,6 +37,24 @@ const createDate = (dayOffset: number, hour: number, minute = 0) => {
   date.setDate(now.getDate() + dayOffset);
   date.setHours(hour, minute, 0, 0);
   return date.toISOString();
+};
+
+const hostProfiles: Record<number, PostHostProfile> = {
+  1: {
+    id: 1,
+    name: "김단국",
+    department: "소프트웨어학과",
+  },
+  2: {
+    id: 2,
+    name: "이서윤",
+    department: "체육교육과",
+  },
+  3: {
+    id: 3,
+    name: "박지훈",
+    department: "컴퓨터공학과",
+  },
 };
 
 let posts: Post[] = [
@@ -75,12 +105,42 @@ let posts: Post[] = [
   },
 ];
 
+const participantsByPostId: Record<number, PostParticipant[]> = {
+  301: [
+    { id: 1, name: "김단국", department: "소프트웨어학과" },
+    { id: 11, name: "정민수", department: "경영학과" },
+  ],
+  302: [{ id: 2, name: "이서윤", department: "체육교육과" }],
+  303: [
+    { id: 3, name: "박지훈", department: "컴퓨터공학과" },
+    { id: 12, name: "최유나", department: "디자인학과" },
+  ],
+};
+
 export async function getPosts(): Promise<Post[]> {
   return posts;
 }
 
 export async function getPostById(postId: number): Promise<Post | null> {
   return posts.find((post) => post.id === postId) ?? null;
+}
+
+export async function getPostHostProfile(
+  hostUserId: number,
+): Promise<PostHostProfile> {
+  return (
+    hostProfiles[hostUserId] ?? {
+      id: hostUserId,
+      name: "김단국",
+      department: "소프트웨어학과",
+    }
+  );
+}
+
+export async function getPostParticipants(
+  postId: number,
+): Promise<PostParticipant[]> {
+  return participantsByPostId[postId] ?? [];
 }
 
 export async function createPost(
@@ -106,6 +166,10 @@ export async function createPost(
     ...posts,
   ];
 
+  participantsByPostId[nextPostId] = [
+    { id: 1, name: "김단국", department: "소프트웨어학과" },
+  ];
+
   return {
     postId: nextPostId,
     status: POST_STATUS.OPEN,
@@ -116,7 +180,6 @@ export async function applyToPost(
   input: ApplyToPostInput,
   context: ApplyToPostContext,
 ): Promise<ApplyToPostResult> {
-  void input;
   const errorMessage = getApplyToPostErrorMessage(context);
 
   if (errorMessage) {
@@ -124,7 +187,7 @@ export async function applyToPost(
   }
 
   return {
-    applicationId: 101,
+    applicationId: input.postId + 1000,
     status: APPLICATION_STATUS.PENDING,
   };
 }

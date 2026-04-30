@@ -57,7 +57,6 @@ export default function TutorialScreen() {
   const [timetable, setTimetable] = React.useState<UserTimetableState>(() =>
     createEmptyTimetableState(),
   );
-
   const signupParams = {
     email: typeof params.email === "string" ? params.email : "",
     nickname: typeof params.nickname === "string" ? params.nickname : "",

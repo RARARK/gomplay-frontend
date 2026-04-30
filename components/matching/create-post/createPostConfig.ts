@@ -12,9 +12,9 @@ export type CreatePostFormState = {
 };
 
 export const CREATE_POST_TITLE = "매칭 등록";
-export const CREATE_POST_DEFAULT_LOCATION = "한양대학교 대운동장";
-export const CREATE_POST_RECOMMENDED_LOCATION = "한양대학교 풋살장";
-export const CREATE_POST_USE_CURRENT_LOCATION = "한양대학교 본관 앞";
+export const CREATE_POST_DEFAULT_LOCATION = "서양대 체육관 대운동장";
+export const CREATE_POST_RECOMMENDED_LOCATION = "서양대 체육관 실내";
+export const CREATE_POST_USE_CURRENT_LOCATION = "서양대 체육관 본관 앞";
 export const CREATE_POST_MAX_TAG_SELECTION = 3;
 
 export const CREATE_POST_EXERCISE_OPTIONS = [
@@ -33,13 +33,13 @@ export const CREATE_POST_EXERCISE_OPTIONS = [
 ] as const;
 
 export const CREATE_POST_TAG_OPTIONS = [
-  "#조용히",
+  "#조용함",
   "#초보만",
-  "#상관없음",
+  "#경험없음",
   "#말많음",
-  "#저녁운동",
+  "#여유있게",
   "#아침운동",
-  "#빡세게",
+  "#비슷하게",
   "#가볍게",
   "#친목환영",
   "#시간맞춤",
