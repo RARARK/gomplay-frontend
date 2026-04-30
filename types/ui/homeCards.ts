@@ -22,14 +22,3 @@ export type RecommendationMatchCardProps = {
   buttonText?: string;
   onPress?: () => void;
 };
-
-export type GroupMatchCardProps = {
-  id?: string;
-  imageSource?: ImageSourcePropType;
-  remainingText?: string;
-  sport?: string;
-  date?: string;
-  location?: string;
-  capacity?: string;
-  level?: string;
-};

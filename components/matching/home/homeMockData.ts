@@ -1,5 +1,4 @@
 import type {
-  GroupMatchCardProps,
   PartnerCardProps,
   RecommendationMatchCardProps,
 } from "@/types/ui/homeCards";
@@ -65,39 +64,6 @@ export const recommendationCards: RecommendationMatchCardProps[] = [
     sport: "Climbing",
     info: "Climbing Gym\n17:30~19:00\nIntermediate\n#Indoor #Challenge",
     buttonText: "Apply",
-  },
-];
-
-export const groupCards: GroupMatchCardProps[] = [
-  {
-    id: "group-1",
-    imageSource: require("../../../assets/home/Frame-1200.png"),
-    remainingText: "3 spots left",
-    sport: "Tennis",
-    date: "04-11",
-    location: "Jamsil",
-    capacity: "4 people",
-    level: "Beginner",
-  },
-  {
-    id: "group-2",
-    imageSource: require("../../../assets/home/Frame-1200.png"),
-    remainingText: "2 spots left",
-    sport: "Basketball",
-    date: "04-12",
-    location: "Indoor Gym",
-    capacity: "6 people",
-    level: "Intermediate",
-  },
-  {
-    id: "group-3",
-    imageSource: require("../../../assets/home/Frame-1200.png"),
-    remainingText: "1 spot left",
-    sport: "Badminton",
-    date: "04-13",
-    location: "Sports Center",
-    capacity: "4 people",
-    level: "Beginner",
   },
 ];
 

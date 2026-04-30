@@ -1,9 +1,8 @@
 import * as React from "react";
 import { StyleSheet, View } from "react-native";
 import RecommendationSection from "./RecommendationSection";
-import GroupRecommendationSection from "./GroupRecommendationSection";
 import { Gap } from "@/constants/locofyHomeStyles";
-import { recommendationCards, groupCards } from "./homeMockData";
+import { recommendationCards } from "./homeMockData";
 
 const MatchSection = () => {
   return (
@@ -11,10 +10,6 @@ const MatchSection = () => {
       <RecommendationSection
         title="Recommended matches"
         cards={recommendationCards}
-      />
-      <GroupRecommendationSection
-        title="Group activities"
-        cards={groupCards}
       />
     </View>
   );
