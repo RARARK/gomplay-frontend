@@ -27,6 +27,7 @@ import {
   getPostHostProfile,
   getPostParticipants,
   type PostHostProfile,
+  type PostParticipant,
 } from "@/services/post/postService";
 import type { Post } from "@/types/domain/post";
 
@@ -44,7 +45,7 @@ const toDate = (value: string) => {
 export default function PostApplyScreen({ postId }: PostApplyScreenProps) {
   const [post, setPost] = React.useState<Post | null>(null);
   const [host, setHost] = React.useState<PostHostProfile | null>(null);
-  const [participantCount, setParticipantCount] = React.useState(0);
+  const [participants, setParticipants] = React.useState<PostParticipant[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
 
@@ -69,7 +70,7 @@ export default function PostApplyScreen({ postId }: PostApplyScreenProps) {
       if (isMounted) {
         setPost(nextPost);
         setHost(nextHost);
-        setParticipantCount(participants.length);
+        setParticipants(participants);
         setIsLoading(false);
       }
     };
@@ -95,7 +96,7 @@ export default function PostApplyScreen({ postId }: PostApplyScreenProps) {
           currentUserId: CURRENT_USER_ID,
           hostUserId: post.hostUserId,
           postStatus: post.status,
-          currentParticipantCount: participantCount,
+          currentParticipantCount: participants.length,
           capacity: post.capacity,
         },
       );
@@ -161,6 +162,12 @@ export default function PostApplyScreen({ postId }: PostApplyScreenProps) {
           <View style={styles.profileInfo}>
             <Text style={styles.hostName}>{host.name}</Text>
             <Text style={styles.department}>{host.department}</Text>
+          </View>
+          <View style={styles.hostTemperature}>
+            <Ionicons name="thermometer-outline" size={14} color="#4C5BE2" />
+            <Text style={styles.hostTemperatureText}>
+              {host.mannerTemperature.toFixed(1)}°C
+            </Text>
           </View>
         </View>
       ) : null}
@@ -236,6 +243,35 @@ export default function PostApplyScreen({ postId }: PostApplyScreenProps) {
           </View>
         </View>
       </View>
+
+      {participants.length > 0 ? (
+        <View style={styles.section}>
+          <Text style={styles.sectionLabel}>참가 인원</Text>
+          <View style={styles.participantList}>
+            {participants.map((p) => (
+              <View key={p.id} style={styles.participantRow}>
+                <Image
+                  source={require("../../../assets/match/Ellipse-12.png")}
+                  style={styles.participantImage}
+                  contentFit="cover"
+                />
+                <View style={styles.participantInfo}>
+                  <Text style={styles.participantName}>{p.name}</Text>
+                  {p.department ? (
+                    <Text style={styles.participantDepartment}>{p.department}</Text>
+                  ) : null}
+                </View>
+                <View style={styles.participantTemperature}>
+                  <Ionicons name="thermometer-outline" size={14} color="#4C5BE2" />
+                  <Text style={styles.participantTemperatureText}>
+                    {p.mannerTemperature.toFixed(1)}°C
+                  </Text>
+                </View>
+              </View>
+            ))}
+          </View>
+        </View>
+      ) : null}
 
       <View style={styles.section}>
         <Text style={styles.sectionLabel}>추가 설명</Text>
@@ -333,6 +369,17 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
     color: "#6B7280",
+    fontWeight: "700",
+  },
+  hostTemperature: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 2,
+  },
+  hostTemperatureText: {
+    fontSize: 13,
+    lineHeight: 18,
+    color: "#4C5BE2",
     fontWeight: "700",
   },
   section: {
@@ -435,6 +482,53 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     color: "#111827",
     fontWeight: "600",
+  },
+  participantList: {
+    gap: 10,
+  },
+  participantRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#D9D9D9",
+    backgroundColor: "#FFFFFF",
+  },
+  participantImage: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "#EEF2FF",
+  },
+  participantInfo: {
+    flex: 1,
+    gap: 2,
+  },
+  participantName: {
+    fontSize: 15,
+    lineHeight: 20,
+    color: "#111827",
+    fontWeight: "700",
+  },
+  participantDepartment: {
+    fontSize: 12,
+    lineHeight: 16,
+    color: "#6B7280",
+    fontWeight: "600",
+  },
+  participantTemperature: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 2,
+  },
+  participantTemperatureText: {
+    fontSize: 13,
+    lineHeight: 18,
+    color: "#4C5BE2",
+    fontWeight: "700",
   },
   submitButton: {
     minHeight: 60,

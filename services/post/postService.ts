@@ -22,12 +22,14 @@ export type PostHostProfile = {
   id: number;
   name: string;
   department: string;
+  mannerTemperature: number;
 };
 
 export type PostParticipant = {
   id: number;
   name: string;
   department?: string;
+  mannerTemperature: number;
 };
 
 const now = new Date();
@@ -44,16 +46,19 @@ const hostProfiles: Record<number, PostHostProfile> = {
     id: 1,
     name: "김단국",
     department: "소프트웨어학과",
+    mannerTemperature: 38.2,
   },
   2: {
     id: 2,
     name: "이서윤",
     department: "체육교육과",
+    mannerTemperature: 41.0,
   },
   3: {
     id: 3,
     name: "박지훈",
     department: "컴퓨터공학과",
+    mannerTemperature: 36.5,
   },
 };
 
@@ -107,13 +112,13 @@ let posts: Post[] = [
 
 const participantsByPostId: Record<number, PostParticipant[]> = {
   301: [
-    { id: 1, name: "김단국", department: "소프트웨어학과" },
-    { id: 11, name: "정민수", department: "경영학과" },
+    { id: 1, name: "김단국", department: "소프트웨어학과", mannerTemperature: 38.2 },
+    { id: 11, name: "정민수", department: "경영학과", mannerTemperature: 36.5 },
   ],
-  302: [{ id: 2, name: "이서윤", department: "체육교육과" }],
+  302: [{ id: 2, name: "이서윤", department: "체육교육과", mannerTemperature: 41.0 }],
   303: [
-    { id: 3, name: "박지훈", department: "컴퓨터공학과" },
-    { id: 12, name: "최유나", department: "디자인학과" },
+    { id: 3, name: "박지훈", department: "컴퓨터공학과", mannerTemperature: 36.5 },
+    { id: 12, name: "최유나", department: "디자인학과", mannerTemperature: 39.7 },
   ],
 };
 
@@ -133,6 +138,7 @@ export async function getPostHostProfile(
       id: hostUserId,
       name: "김단국",
       department: "소프트웨어학과",
+      mannerTemperature: 36.5,
     }
   );
 }
@@ -167,7 +173,7 @@ export async function createPost(
   ];
 
   participantsByPostId[nextPostId] = [
-    { id: 1, name: "김단국", department: "소프트웨어학과" },
+    { id: 1, name: "김단국", department: "소프트웨어학과", mannerTemperature: 38.2 },
   ];
 
   return {
