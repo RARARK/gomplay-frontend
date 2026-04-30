@@ -18,13 +18,69 @@ import { getApplyToPostErrorMessage } from "@/utils/canApplyToPost";
 import { getResolveApplicationErrorMessage } from "@/utils/resolveApplicationAction";
 import { validateCreatePostInput } from "@/utils/validateCreatePost";
 
+const now = new Date();
+
+const createDate = (dayOffset: number, hour: number, minute = 0) => {
+  const date = new Date(now);
+  date.setDate(now.getDate() + dayOffset);
+  date.setHours(hour, minute, 0, 0);
+  return date.toISOString();
+};
+
+let posts: Post[] = [
+  {
+    id: 301,
+    hostUserId: 1,
+    title: "같이 운동하실 분 구해요",
+    exerciseType: "농구",
+    location: "체육관",
+    scheduledStartAt: createDate(1, 19),
+    scheduledEndAt: createDate(1, 20, 30),
+    capacity: 4,
+    message: "초보도 환영해요. 가볍게 같이 뛰실 분 찾아요.",
+    difficulty: "BEGINNER",
+    tags: ["#초보만", "#조용함"],
+    status: POST_STATUS.OPEN,
+    createdAt: now.toISOString(),
+  },
+  {
+    id: 302,
+    hostUserId: 2,
+    title: "퇴근 후 배드민턴 치실 분",
+    exerciseType: "배드민턴",
+    location: "서양대 체육관",
+    scheduledStartAt: createDate(2, 18, 30),
+    scheduledEndAt: createDate(2, 20),
+    capacity: 2,
+    message: "랠리 위주로 편하게 치려고 해요.",
+    difficulty: "EASY",
+    tags: ["#가볍게", "#시간맞춤"],
+    status: POST_STATUS.OPEN,
+    createdAt: now.toISOString(),
+  },
+  {
+    id: 303,
+    hostUserId: 3,
+    title: "아침 러닝 같이 해요",
+    exerciseType: "러닝",
+    location: "운동장",
+    scheduledStartAt: createDate(3, 7),
+    scheduledEndAt: createDate(3, 8),
+    capacity: 3,
+    message: "페이스는 천천히 맞춰서 뛰어요.",
+    difficulty: "NORMAL",
+    tags: ["#아침운동", "#비슷하게"],
+    status: POST_STATUS.OPEN,
+    createdAt: now.toISOString(),
+  },
+];
+
 export async function getPosts(): Promise<Post[]> {
-  return [];
+  return posts;
 }
 
 export async function getPostById(postId: number): Promise<Post | null> {
-  void postId;
-  return null;
+  return posts.find((post) => post.id === postId) ?? null;
 }
 
 export async function createPost(
@@ -36,8 +92,22 @@ export async function createPost(
     throw new Error(Object.values(errors)[0] ?? "모집글을 생성할 수 없습니다.");
   }
 
+  const nextPostId = Math.max(...posts.map((post) => post.id), 300) + 1;
+  const createdAt = new Date().toISOString();
+
+  posts = [
+    {
+      id: nextPostId,
+      hostUserId: 1,
+      status: POST_STATUS.OPEN,
+      createdAt,
+      ...input,
+    },
+    ...posts,
+  ];
+
   return {
-    postId: 301,
+    postId: nextPostId,
     status: POST_STATUS.OPEN,
   };
 }

@@ -14,16 +14,18 @@ export type RecommendationSectionProps = {
   title?: string;
   textWidth?: DimensionValue;
   cards?: RecommendationMatchCardProps[];
+  onHeaderPress?: () => void;
 };
 
 const RecommendationSection = ({
   title,
   textWidth,
   cards = [],
+  onHeaderPress,
 }: RecommendationSectionProps) => {
   return (
     <View style={styles.container}>
-      <RecommendationSectionHeader title={title} />
+      <RecommendationSectionHeader title={title} onPress={onHeaderPress} />
 
       <ScrollView
         horizontal

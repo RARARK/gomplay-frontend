@@ -198,7 +198,7 @@ export default function CreatePostScreen() {
         [
           {
             text: "확인",
-            onPress: () => router.replace("/(tabs)"),
+            onPress: () => router.replace("/(tabs)/match"),
           },
         ],
       );

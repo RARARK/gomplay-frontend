@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Text, StyleSheet, View } from "react-native";
+import { Pressable, Text, StyleSheet, View } from "react-native";
 import Frame1052 from "@/assets/home/Frame-1052.svg";
 import {
   Width,
@@ -15,21 +15,29 @@ import {
 
 export type RecommendationSectionHeaderProps = {
   title?: string;
+  onPress?: () => void;
 };
 
 const RecommendationSectionHeader = ({
   title,
+  onPress,
 }: RecommendationSectionHeaderProps) => {
+  const TitleContainer = onPress ? Pressable : View;
+
   return (
     <View style={styles.container}>
-      <View style={styles.titleRow}>
+      <TitleContainer
+        accessibilityRole={onPress ? "button" : undefined}
+        onPress={onPress}
+        style={styles.titleRow}
+      >
         <Text style={styles.text}>{title}</Text>
         <Frame1052
           style={styles.icon}
           width={Width.width_24}
           height={Height.height_24}
         />
-      </View>
+      </TitleContainer>
     </View>
   );
 };

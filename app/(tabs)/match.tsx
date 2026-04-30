@@ -1,9 +1,19 @@
-import { View, Text } from "react-native";
+import { StyleSheet } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
-export default function ChatScreen() {
+import PostListScreen from "@/components/matching/posts/PostListScreen";
+
+export default function MatchScreen() {
   return (
-    <View>
-      <Text>매칭현황</Text>
-    </View>
+    <SafeAreaView edges={["top"]} style={styles.safeArea}>
+      <PostListScreen />
+    </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: "#F2F7FF",
+  },
+});

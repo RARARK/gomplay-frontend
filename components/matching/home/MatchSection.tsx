@@ -1,15 +1,21 @@
 import * as React from "react";
+import { router } from "expo-router";
 import { StyleSheet, View } from "react-native";
 import RecommendationSection from "./RecommendationSection";
 import { Gap } from "@/constants/locofyHomeStyles";
 import { recommendationCards } from "./homeMockData";
 
 const MatchSection = () => {
+  const handleRecommendationHeaderPress = () => {
+    router.push("/(tabs)/match");
+  };
+
   return (
     <View style={styles.container}>
       <RecommendationSection
         title="Recommended matches"
         cards={recommendationCards}
+        onHeaderPress={handleRecommendationHeaderPress}
       />
     </View>
   );
