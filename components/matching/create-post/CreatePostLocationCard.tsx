@@ -1,35 +1,52 @@
 import { Image } from "expo-image";
 import React from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Linking, Pressable, StyleSheet, Text, View } from "react-native";
 
 import MatchLocationIcon from "@/assets/match/mdi-location.svg";
 import MatchMapPreview from "@/assets/match/icon.png";
+import type { Coords } from "@/services/location/locationService";
+import { getStaticMapUrl } from "@/services/location/locationService";
 
 type CreatePostLocationCardProps = {
   location: string;
+  locationCoords?: Coords;
+  isLocationLoading?: boolean;
   onUseCurrentLocation?: () => void;
   onRecommendNearby?: () => void;
+  onMapPress?: () => void;
 };
 
 export default function CreatePostLocationCard({
   location,
+  locationCoords,
+  isLocationLoading = false,
   onUseCurrentLocation,
   onRecommendNearby,
+  onMapPress,
 }: CreatePostLocationCardProps) {
   const hasActions = Boolean(onUseCurrentLocation || onRecommendNearby);
+  const mapSource = locationCoords
+    ? { uri: getStaticMapUrl(locationCoords) }
+    : MatchMapPreview;
 
   return (
     <View style={styles.container}>
-      <View style={styles.mapFrame}>
+      <Pressable
+        disabled={!onMapPress}
+        onPress={onMapPress}
+        style={styles.mapFrame}
+      >
         <Image
-          source={MatchMapPreview}
+          source={mapSource}
           style={styles.mapImage}
           contentFit="cover"
         />
-        <View style={styles.mapPin}>
-          <MatchLocationIcon width={22} height={22} />
-        </View>
-      </View>
+        {!locationCoords ? (
+          <View style={styles.mapPin}>
+            <MatchLocationIcon width={22} height={22} />
+          </View>
+        ) : null}
+      </Pressable>
 
       <View style={styles.footer}>
         <View style={styles.locationRow}>
@@ -40,13 +57,25 @@ export default function CreatePostLocationCard({
         {hasActions ? (
           <View style={styles.actions}>
             {onUseCurrentLocation ? (
-              <Pressable onPress={onUseCurrentLocation} style={styles.actionButton}>
-                <Text style={styles.actionText}>현재 위치로 지정</Text>
+              <Pressable
+                disabled={isLocationLoading}
+                onPress={onUseCurrentLocation}
+                style={[styles.actionButton, isLocationLoading && styles.actionButtonDisabled]}
+              >
+                <Text style={styles.actionText}>
+                  {isLocationLoading ? "불러오는 중..." : "현재 위치로 지정"}
+                </Text>
               </Pressable>
             ) : null}
             {onRecommendNearby ? (
-              <Pressable onPress={onRecommendNearby} style={styles.actionButton}>
-                <Text style={styles.actionText}>주변 스팟 추천</Text>
+              <Pressable
+                disabled={isLocationLoading}
+                onPress={onRecommendNearby}
+                style={[styles.actionButton, isLocationLoading && styles.actionButtonDisabled]}
+              >
+                <Text style={styles.actionText}>
+                  {isLocationLoading ? "불러오는 중..." : "주변 스팟 추천"}
+                </Text>
               </Pressable>
             ) : null}
           </View>
@@ -106,6 +135,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: 10,
+  },
+  actionButtonDisabled: {
+    backgroundColor: "#B5BDEB",
   },
   actionText: {
     fontSize: 14,

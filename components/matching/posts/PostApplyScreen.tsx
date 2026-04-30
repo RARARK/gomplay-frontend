@@ -5,6 +5,7 @@ import React from "react";
 import {
   ActivityIndicator,
   Alert,
+  Linking,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -225,7 +226,14 @@ export default function PostApplyScreen({ postId }: PostApplyScreenProps) {
 
       <View style={styles.section}>
         <Text style={styles.sectionLabel}>장소</Text>
-        <CreatePostLocationCard location={post.location} />
+        <CreatePostLocationCard
+          location={post.location}
+          onMapPress={() =>
+            Linking.openURL(
+              `https://maps.google.com/maps?q=${encodeURIComponent(post.location)}`,
+            )
+          }
+        />
         <View style={styles.singleLineInput}>
           <Text style={styles.inputText}>{post.location}</Text>
         </View>

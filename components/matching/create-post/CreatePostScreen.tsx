@@ -22,12 +22,9 @@ import {
   CREATE_POST_DEFAULT_LOCATION,
   CREATE_POST_DIFFICULTY_CHOICE_OPTIONS,
   CREATE_POST_DIFFICULTY_LABELS,
-  CREATE_POST_EXERCISE_OPTIONS,
   CREATE_POST_MAX_TAG_SELECTION,
-  CREATE_POST_RECOMMENDED_LOCATION,
   CREATE_POST_TAG_OPTIONS,
   CREATE_POST_TITLE,
-  CREATE_POST_USE_CURRENT_LOCATION,
   type CreatePostFormState,
 } from "@/components/matching/create-post/createPostConfig";
 import CreatePostDetailCard from "@/components/matching/create-post/CreatePostDetailCard";
@@ -41,18 +38,23 @@ import {
   applyTimePartsToRange,
   formatCreatePostDayLabel,
   formatCreatePostTimeRangeLabel,
-  getNextValue,
   getRoundedFutureDate,
 } from "@/components/matching/create-post/createPostUtils";
+import {
+  getCurrentCoords,
+  getNearbyPlaces,
+  reverseGeocode,
+  type Coords,
+  type NearbyPlace,
+} from "@/services/location/locationService";
+import CreatePostLocationPickerModal from "@/components/matching/create-post/CreatePostLocationPickerModal";
 import { createPost } from "@/services/post/postService";
 import { POST_DIFFICULTY, type CreatePostInput } from "@/types/domain/post";
 import { validateCreatePostInput } from "@/utils/validateCreatePost";
 
-const DIFFICULTY_OPTIONS = Object.values(POST_DIFFICULTY);
-
 const createInitialFormState = (): CreatePostFormState => ({
   title: "",
-  exerciseType: CREATE_POST_EXERCISE_OPTIONS[0],
+  exerciseType: "",
   location: CREATE_POST_DEFAULT_LOCATION,
   scheduledStartAt: getRoundedFutureDate(1),
   scheduledEndAt: getRoundedFutureDate(3),
@@ -76,6 +78,12 @@ export default function CreatePostScreen() {
     React.useState(false);
   const [hasSubmitted, setHasSubmitted] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [isLocationLoading, setIsLocationLoading] = React.useState(false);
+  const [locationCoords, setLocationCoords] = React.useState<Coords | null>(null);
+  const [pickerCoords, setPickerCoords] = React.useState<Coords | null>(null);
+  const [isPickerModalVisible, setIsPickerModalVisible] = React.useState(false);
+  const [nearbyPlaces, setNearbyPlaces] = React.useState<NearbyPlace[]>([]);
+  const [isNearbyModalVisible, setIsNearbyModalVisible] = React.useState(false);
 
   const payload = React.useMemo<CreatePostInput>(
     () => ({
@@ -178,6 +186,85 @@ export default function CreatePostScreen() {
       scheduledStartAt: nextStartAt,
       scheduledEndAt: nextEndAt,
     }));
+  };
+
+  const handleUseCurrentLocation = async () => {
+    setIsLocationLoading(true);
+    try {
+      const coords = await getCurrentCoords();
+      setPickerCoords(coords);
+      setIsPickerModalVisible(true);
+    } catch (error) {
+      Alert.alert(
+        "위치 불러오기 실패",
+        error instanceof Error ? error.message : "다시 시도해주세요.",
+      );
+    } finally {
+      setIsLocationLoading(false);
+    }
+  };
+
+  const handleMapPress = async () => {
+    if (locationCoords) {
+      setPickerCoords(locationCoords);
+      setIsPickerModalVisible(true);
+      return;
+    }
+    setIsLocationLoading(true);
+    try {
+      const coords = await getCurrentCoords();
+      setPickerCoords(coords);
+      setIsPickerModalVisible(true);
+    } catch (error) {
+      Alert.alert(
+        "위치 불러오기 실패",
+        error instanceof Error ? error.message : "다시 시도해주세요.",
+      );
+    } finally {
+      setIsLocationLoading(false);
+    }
+  };
+
+  const handleLocationPickerConfirm = async (coords: Coords) => {
+    setIsPickerModalVisible(false);
+    setIsLocationLoading(true);
+    try {
+      const address = await reverseGeocode(coords);
+      setLocationCoords(coords);
+      updateForm("location", address);
+    } catch (error) {
+      Alert.alert(
+        "주소 변환 실패",
+        error instanceof Error ? error.message : "다시 시도해주세요.",
+      );
+    } finally {
+      setIsLocationLoading(false);
+    }
+  };
+
+  const handleRecommendNearby = async () => {
+    if (!form.exerciseType) {
+      Alert.alert("운동 종목 미선택", "운동 종목을 먼저 선택해주세요.");
+      return;
+    }
+
+    setIsLocationLoading(true);
+    try {
+      const places = await getNearbyPlaces(form.exerciseType);
+      if (places.length === 0) {
+        Alert.alert("주변 스팟 없음", "주변에 등록된 장소가 없어요.");
+        return;
+      }
+      setNearbyPlaces(places);
+      setIsNearbyModalVisible(true);
+    } catch (error) {
+      Alert.alert(
+        "주변 스팟 불러오기 실패",
+        error instanceof Error ? error.message : "다시 시도해주세요.",
+      );
+    } finally {
+      setIsLocationLoading(false);
+    }
   };
 
   const handleSubmit = async () => {
@@ -314,12 +401,11 @@ export default function CreatePostScreen() {
             <Text style={styles.sectionLabel}>장소</Text>
             <CreatePostLocationCard
               location={form.location}
-              onRecommendNearby={() =>
-                updateForm("location", CREATE_POST_RECOMMENDED_LOCATION)
-              }
-              onUseCurrentLocation={() =>
-                updateForm("location", CREATE_POST_USE_CURRENT_LOCATION)
-              }
+              locationCoords={locationCoords ?? undefined}
+              isLocationLoading={isLocationLoading}
+              onMapPress={handleMapPress}
+              onUseCurrentLocation={handleUseCurrentLocation}
+              onRecommendNearby={handleRecommendNearby}
             />
             <TextInput
               onChangeText={(value) => updateForm("location", value)}
@@ -405,6 +491,29 @@ export default function CreatePostScreen() {
         selectedValue={form.exerciseType}
         onClose={() => setIsExercisePickerVisible(false)}
         onSelect={(value) => updateForm("exerciseType", value)}
+      />
+
+      {pickerCoords ? (
+        <CreatePostLocationPickerModal
+          visible={isPickerModalVisible}
+          initialCoords={pickerCoords}
+          onClose={() => setIsPickerModalVisible(false)}
+          onConfirm={handleLocationPickerConfirm}
+        />
+      ) : null}
+
+      <CreatePostChoiceModal
+        visible={isNearbyModalVisible}
+        title="주변 스팟 선택"
+        options={nearbyPlaces.map((p) => ({ label: p.name, value: p.name }))}
+        selectedValue={form.location}
+        onClose={() => setIsNearbyModalVisible(false)}
+        onSelect={(value) => {
+          const place = nearbyPlaces.find((p) => p.name === value);
+          updateForm("location", value);
+          if (place) setLocationCoords(place.coords);
+          setIsNearbyModalVisible(false);
+        }}
       />
     </>
   );
