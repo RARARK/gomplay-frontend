@@ -1,7 +1,11 @@
 {
   "permissions": {
     "allow": [
-      "Bash(npx expo *)"
+      "Bash(npx expo *)",
+      "Bash(Get-ChildItem -Path \"C:\\\\Gomplay\\\\gomplay-frontend\" -Directory)",
+      "Bash(Select-Object -ExpandProperty Name)",
+      "Bash(grep -E \"\\\\.tsx$\")",
+      "Bash(xargs cat *)"
     ]
   }
 }

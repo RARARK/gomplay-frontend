@@ -201,6 +201,7 @@ export default function MyPageScreen() {
           <QuickAction
             icon={<Ionicons name="calendar-outline" size={28} color="#4C5BE2" />}
             label="출석체크"
+            onPress={() => router.push("/attendance" as any)}
           />
           <QuickAction
             icon={<Ionicons name="chatbubble-outline" size={28} color="#4C5BE2" />}
