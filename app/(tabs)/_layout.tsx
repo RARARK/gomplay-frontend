@@ -1,9 +1,13 @@
 import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useChatStore } from "@/stores/chat/chatStore";
 
 export default function TabsLayout() {
   const insets = useSafeAreaInsets();
+  const chatRooms = useChatStore((state) => state.chatRooms);
+  const totalUnread = chatRooms.reduce((sum, room) => sum + room.unreadMessageCount, 0);
+  const chatBadge = totalUnread > 0 ? (totalUnread > 99 ? "99+" : totalUnread) : undefined;
 
   return (
     <Tabs
@@ -41,7 +45,7 @@ export default function TabsLayout() {
     >
       <Tabs.Screen name="index" options={{ title: "홈" }} />
       <Tabs.Screen name="match" options={{ title: "매칭현황" }} />
-      <Tabs.Screen name="chat" options={{ title: "채팅" }} />
+      <Tabs.Screen name="chat" options={{ title: "채팅", tabBarBadge: chatBadge }} />
       <Tabs.Screen name="partner" options={{ title: "파트너찾기" }} />
     </Tabs>
   );

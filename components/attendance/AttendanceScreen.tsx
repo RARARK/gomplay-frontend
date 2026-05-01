@@ -285,7 +285,7 @@ export default function AttendanceScreen() {
 const styles = StyleSheet.create({
   scroll: {
     flex: 1,
-    backgroundColor: "#F2F7FF",
+    backgroundColor: "#FFFFFF",
   },
   content: {
     paddingHorizontal: 16,

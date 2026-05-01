@@ -3,7 +3,12 @@ import { router } from "expo-router";
 import React from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
-import MatchStatusCard, { type MatchItem } from "@/components/matching/status/MatchStatusCard";
+import ApplicantPanel, {
+  type Applicant,
+} from "@/components/matching/status/ApplicantPanel";
+import MatchStatusCard, {
+  type MatchItem,
+} from "@/components/matching/status/MatchStatusCard";
 
 const SOURCE_FILTERS = ["운동 모집", "파트너 모집"] as const;
 const STATUS_FILTERS = ["진행중", "수락 대기"] as const;
@@ -63,13 +68,49 @@ const MOCK_MATCHES: MatchItem[] = [
   },
 ];
 
+const MOCK_APPLICANTS: Record<string, Applicant[]> = {
+  "4": [
+    {
+      id: "a1",
+      name: "이서윤",
+      department: "체육교육과",
+      studentNumber: "20230042",
+      tags: ["아침형", "기초체력"],
+      trustScore: 42.5,
+      status: "pending",
+    },
+    {
+      id: "a2",
+      name: "박지훈",
+      department: "소프트웨어학과",
+      studentNumber: "20220198",
+      tags: ["저녁형", "다이어트"],
+      trustScore: 36.0,
+      status: "pending",
+    },
+    {
+      id: "a3",
+      name: "최민준",
+      department: "스포츠과학과",
+      studentNumber: "20210355",
+      tags: ["주말형", "근력"],
+      trustScore: 58.0,
+      status: "pending",
+    },
+  ],
+};
+
 export default function MatchStatusScreen() {
   const [sourceFilter, setSourceFilter] = React.useState<SourceFilter>(null);
   const [statusFilter, setStatusFilter] = React.useState<StatusFilter>(null);
+  const [panelMatchId, setPanelMatchId] = React.useState<string | null>(null);
+  const [applicantsByMatch, setApplicantsByMatch] =
+    React.useState<Record<string, Applicant[]>>(MOCK_APPLICANTS);
 
   const filtered = MOCK_MATCHES.filter((m) => {
     if (sourceFilter === "운동 모집" && m.sourceType !== "POST") return false;
-    if (sourceFilter === "파트너 모집" && m.sourceType !== "PARTNER") return false;
+    if (sourceFilter === "파트너 모집" && m.sourceType !== "PARTNER")
+      return false;
     if (statusFilter === "진행중" && m.status !== "IN_PROGRESS") return false;
     if (statusFilter === "수락 대기" && m.status !== "PENDING") return false;
     return true;
@@ -77,113 +118,152 @@ export default function MatchStatusScreen() {
 
   const isAllSelected = sourceFilter === null && statusFilter === null;
 
-  return (
-    <ScrollView
-      style={styles.scroll}
-      contentContainerStyle={styles.content}
-      showsVerticalScrollIndicator={false}
-    >
-      {/* 헤더 */}
-      <View style={styles.headerRow}>
-        <Pressable
-          accessibilityRole="button"
-          onPress={() => router.back()}
-          style={styles.backButton}
-        >
-          <Ionicons name="chevron-back" size={28} color="#111111" />
-        </Pressable>
-        <Text style={styles.headerTitle}>매칭 현황</Text>
-        <View style={styles.headerSpacer} />
-      </View>
+  const panelApplicants = panelMatchId
+    ? (applicantsByMatch[panelMatchId] ?? [])
+    : [];
 
-      {/* 필터 */}
+  const handleAccept = (applicantId: string) => {
+    if (!panelMatchId) return;
+    setApplicantsByMatch((prev) => ({
+      ...prev,
+      [panelMatchId]: prev[panelMatchId].filter((a) => a.id !== applicantId),
+    }));
+  };
+
+  const handleReject = (applicantId: string) => {
+    if (!panelMatchId) return;
+    setApplicantsByMatch((prev) => ({
+      ...prev,
+      [panelMatchId]: prev[panelMatchId].filter((a) => a.id !== applicantId),
+    }));
+  };
+
+  return (
+    <>
       <ScrollView
-        horizontal
-        bounces={false}
-        overScrollMode="never"
-        showsHorizontalScrollIndicator={false}
-        style={styles.filterScrollView}
-        contentContainerStyle={styles.filterRow}
+        style={styles.scroll}
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
       >
-        <Pressable
-          accessibilityRole="button"
-          style={[styles.filterChip, isAllSelected && styles.filterChipActive]}
-          onPress={() => { setSourceFilter(null); setStatusFilter(null); }}
+        {/* 헤더 */}
+        <View style={styles.headerRow}>
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => router.back()}
+            style={styles.backButton}
+          >
+            <Ionicons name="chevron-back" size={28} color="#111111" />
+          </Pressable>
+          <Text style={styles.headerTitle}>매칭 현황</Text>
+          <View style={styles.headerSpacer} />
+        </View>
+
+        {/* 필터 */}
+        <ScrollView
+          horizontal
+          bounces={false}
+          overScrollMode="never"
+          showsHorizontalScrollIndicator={false}
+          style={styles.filterScrollView}
+          contentContainerStyle={styles.filterRow}
         >
-          <Text style={[styles.filterChipText, isAllSelected && styles.filterChipTextActive]}>
-            전체
-          </Text>
-        </Pressable>
-        <View style={styles.filterDivider} />
-        {SOURCE_FILTERS.map((f) => {
-          const selected = sourceFilter === f;
-          return (
-            <Pressable
-              key={f}
-              accessibilityRole="button"
-              style={[styles.filterChip, selected && styles.filterChipActive]}
-              onPress={() => setSourceFilter(selected ? null : f)}
+          <Pressable
+            accessibilityRole="button"
+            style={[
+              styles.filterChip,
+              isAllSelected && styles.filterChipActive,
+            ]}
+            onPress={() => {
+              setSourceFilter(null);
+              setStatusFilter(null);
+            }}
+          >
+            <Text
+              style={[
+                styles.filterChipText,
+                isAllSelected && styles.filterChipTextActive,
+              ]}
             >
-              <Text style={[styles.filterChipText, selected && styles.filterChipTextActive]}>
-                {f}
-              </Text>
-              <Ionicons
-                name={selected ? "close" : "chevron-down"}
-                size={14}
-                color={selected ? "#FFFFFF" : "#4C5BE2"}
+              전체
+            </Text>
+          </Pressable>
+          {SOURCE_FILTERS.map((f) => {
+            const selected = sourceFilter === f;
+            return (
+              <Pressable
+                key={f}
+                accessibilityRole="button"
+                style={[styles.filterChip, selected && styles.filterChipActive]}
+                onPress={() => setSourceFilter(selected ? null : f)}
+              >
+                <Text
+                  style={[
+                    styles.filterChipText,
+                    selected && styles.filterChipTextActive,
+                  ]}
+                >
+                  {f}
+                </Text>
+              </Pressable>
+            );
+          })}
+          {STATUS_FILTERS.map((f) => {
+            const selected = statusFilter === f;
+            return (
+              <Pressable
+                key={f}
+                accessibilityRole="button"
+                style={[styles.filterChip, selected && styles.filterChipActive]}
+                onPress={() => setStatusFilter(selected ? null : f)}
+              >
+                <Text
+                  style={[
+                    styles.filterChipText,
+                    selected && styles.filterChipTextActive,
+                  ]}
+                >
+                  {f}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </ScrollView>
+
+        {/* 카드 목록 */}
+        {filtered.length === 0 ? (
+          <View style={styles.empty}>
+            <Text style={styles.emptyText}>해당하는 매칭이 없어요.</Text>
+          </View>
+        ) : (
+          <View style={styles.list}>
+            {filtered.map((item) => (
+              <MatchStatusCard
+                key={item.id}
+                item={item}
+                onComplete={() => {}}
+                onChat={() => {}}
+                onViewApplicants={() => setPanelMatchId(item.id)}
               />
-            </Pressable>
-          );
-        })}
-        <View style={styles.filterDivider} />
-        {STATUS_FILTERS.map((f) => {
-          const selected = statusFilter === f;
-          return (
-            <Pressable
-              key={f}
-              accessibilityRole="button"
-              style={[styles.filterChip, selected && styles.filterChipActive]}
-              onPress={() => setStatusFilter(selected ? null : f)}
-            >
-              <Text style={[styles.filterChipText, selected && styles.filterChipTextActive]}>
-                {f}
-              </Text>
-              <Ionicons
-                name={selected ? "close" : "chevron-down"}
-                size={14}
-                color={selected ? "#FFFFFF" : "#4C5BE2"}
-              />
-            </Pressable>
-          );
-        })}
+            ))}
+          </View>
+        )}
       </ScrollView>
 
-      {/* 카드 목록 */}
-      {filtered.length === 0 ? (
-        <View style={styles.empty}>
-          <Text style={styles.emptyText}>해당하는 매칭이 없어요.</Text>
-        </View>
-      ) : (
-        <View style={styles.list}>
-          {filtered.map((item) => (
-            <MatchStatusCard
-              key={item.id}
-              item={item}
-              onComplete={() => {}}
-              onChat={() => {}}
-              onViewApplicants={() => {}}
-            />
-          ))}
-        </View>
-      )}
-    </ScrollView>
+      <ApplicantPanel
+        visible={panelMatchId !== null}
+        applicants={panelApplicants}
+        onClose={() => setPanelMatchId(null)}
+        onAccept={handleAccept}
+        onReject={handleReject}
+      />
+    </>
   );
 }
 
 const styles = StyleSheet.create({
   scroll: {
     flex: 1,
-    backgroundColor: "#F2F7FF",
+    backgroundColor: "#FFFFFF",
   },
   content: {
     paddingHorizontal: 16,
@@ -226,22 +306,16 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 16,
   },
-  filterDivider: {
-    width: 1,
-    height: 16,
-    backgroundColor: "#D1D5DB",
-  },
   filterChip: {
     minHeight: 30,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: 4,
     borderRadius: 999,
     borderWidth: 1,
     borderColor: "#4C5BE2",
     backgroundColor: "#FFFFFF",
-    paddingHorizontal: 11,
+    paddingHorizontal: 9,
   },
   filterChipActive: {
     backgroundColor: "#4C5BE2",

@@ -27,8 +27,16 @@ import type { Post, PostDifficulty } from "@/types/domain/post";
 const ALL_FILTER_VALUE = "";
 
 type DifficultyFilterValue = PostDifficulty | typeof ALL_FILTER_VALUE;
-type DateFilterValue = "today" | "tomorrow" | "thisWeek" | typeof ALL_FILTER_VALUE;
-type TimeFilterValue = "morning" | "afternoon" | "evening" | typeof ALL_FILTER_VALUE;
+type DateFilterValue =
+  | "today"
+  | "tomorrow"
+  | "thisWeek"
+  | typeof ALL_FILTER_VALUE;
+type TimeFilterValue =
+  | "morning"
+  | "afternoon"
+  | "evening"
+  | typeof ALL_FILTER_VALUE;
 
 const EXERCISE_FILTER_OPTIONS: readonly CreatePostExerciseGridOption[] = [
   {
@@ -47,21 +55,25 @@ const DIFFICULTY_FILTER_OPTIONS: readonly {
   ...CREATE_POST_DIFFICULTY_CHOICE_OPTIONS,
 ];
 
-const DATE_FILTER_OPTIONS: readonly { label: string; value: DateFilterValue }[] =
-  [
-    { label: "전체", value: ALL_FILTER_VALUE },
-    { label: "오늘", value: "today" },
-    { label: "내일", value: "tomorrow" },
-    { label: "이번 주", value: "thisWeek" },
-  ];
+const DATE_FILTER_OPTIONS: readonly {
+  label: string;
+  value: DateFilterValue;
+}[] = [
+  { label: "전체", value: ALL_FILTER_VALUE },
+  { label: "오늘", value: "today" },
+  { label: "내일", value: "tomorrow" },
+  { label: "이번 주", value: "thisWeek" },
+];
 
-const TIME_FILTER_OPTIONS: readonly { label: string; value: TimeFilterValue }[] =
-  [
-    { label: "전체", value: ALL_FILTER_VALUE },
-    { label: "오전", value: "morning" },
-    { label: "오후", value: "afternoon" },
-    { label: "저녁", value: "evening" },
-  ];
+const TIME_FILTER_OPTIONS: readonly {
+  label: string;
+  value: TimeFilterValue;
+}[] = [
+  { label: "전체", value: ALL_FILTER_VALUE },
+  { label: "오전", value: "morning" },
+  { label: "오후", value: "afternoon" },
+  { label: "저녁", value: "evening" },
+];
 
 const TIME_RANGES: Record<Exclude<TimeFilterValue, "">, [number, number]> = {
   morning: [6 * 60, 12 * 60],
@@ -141,10 +153,10 @@ export default function PostListScreen() {
 
   const exerciseFilterLabel = hasExerciseFilter ? selectedExerciseType : "종목";
   const dateFilterLabel = hasDateFilter
-    ? getLabelByValue(DATE_FILTER_OPTIONS, selectedDate) ?? "날짜"
+    ? (getLabelByValue(DATE_FILTER_OPTIONS, selectedDate) ?? "날짜")
     : "날짜";
   const timeFilterLabel = hasTimeFilter
-    ? getLabelByValue(TIME_FILTER_OPTIONS, selectedTime) ?? "시간대"
+    ? (getLabelByValue(TIME_FILTER_OPTIONS, selectedTime) ?? "시간대")
     : "시간대";
   const difficultyFilterLabel = hasDifficultyFilter
     ? CREATE_POST_DIFFICULTY_LABELS[selectedDifficulty as PostDifficulty]
@@ -287,7 +299,10 @@ export default function PostListScreen() {
           >
             <Text
               numberOfLines={1}
-              style={[styles.filterText, hasDateFilter && styles.filterTextActive]}
+              style={[
+                styles.filterText,
+                hasDateFilter && styles.filterTextActive,
+              ]}
             >
               {dateFilterLabel}
             </Text>
@@ -305,7 +320,10 @@ export default function PostListScreen() {
           >
             <Text
               numberOfLines={1}
-              style={[styles.filterText, hasTimeFilter && styles.filterTextActive]}
+              style={[
+                styles.filterText,
+                hasTimeFilter && styles.filterTextActive,
+              ]}
             >
               {timeFilterLabel}
             </Text>
@@ -414,7 +432,7 @@ export default function PostListScreen() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: "#F2F7FF",
+    backgroundColor: "#FFFFFF",
     paddingHorizontal: 16,
     paddingTop: 18,
   },

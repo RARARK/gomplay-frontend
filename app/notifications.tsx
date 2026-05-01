@@ -1,12 +1,13 @@
+import React from "react";
 import { StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import MatchStatusScreen from "@/components/matching/status/MatchStatusScreen";
+import NotificationsScreen from "@/components/notifications/NotificationsScreen";
 
-export default function MatchScreen() {
+export default function NotificationsRoute() {
   return (
     <SafeAreaView edges={["top"]} style={styles.safeArea}>
-      <MatchStatusScreen />
+      <NotificationsScreen />
     </SafeAreaView>
   );
 }

@@ -15,6 +15,6 @@ export default function AttendanceRoute() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#F2F7FF",
+    backgroundColor: "#FFFFFF",
   },
 });

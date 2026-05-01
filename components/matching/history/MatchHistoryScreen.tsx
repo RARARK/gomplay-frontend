@@ -102,10 +102,7 @@ export default function MatchHistoryScreen() {
               style={[styles.filterChip, selected && styles.filterChipActive]}
             >
               <Text
-                style={[
-                  styles.filterText,
-                  selected && styles.filterTextActive,
-                ]}
+                style={[styles.filterText, selected && styles.filterTextActive]}
               >
                 {item.label}
               </Text>
@@ -117,7 +114,11 @@ export default function MatchHistoryScreen() {
       {filteredHistory.length > 0 ? (
         <View style={styles.list}>
           {filteredHistory.map((item) => (
-            <MatchHistoryCard key={item.id} item={item} />
+            <MatchHistoryCard
+              key={item.id}
+              item={item}
+              onReview={() => router.push(`/review/${item.id}` as any)}
+            />
           ))}
         </View>
       ) : (
@@ -132,7 +133,7 @@ export default function MatchHistoryScreen() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: "#F2F7FF",
+    backgroundColor: "#FFFFFF",
   },
   content: {
     paddingHorizontal: 16,

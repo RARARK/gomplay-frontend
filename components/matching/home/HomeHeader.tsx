@@ -1,13 +1,12 @@
 import * as React from "react";
 import { Image } from "expo-image";
-import { type Href, router } from "expo-router";
+import { router } from "expo-router";
 import { StyleSheet, Pressable, View } from "react-native";
 import Frame91 from "@/assets/home/Frame-91.svg";
 import Frame921 from "@/assets/home/Frame-92.svg";
 import Frame110 from "@/assets/home/Frame-110.svg";
 import { Height, Width } from "@/constants/locofyHomeStyles";
 
-const MY_PAGE_ROUTE = "/mypage" as Href;
 
 const HomeHeader = () => {
   return (
@@ -32,7 +31,7 @@ const HomeHeader = () => {
           accessibilityRole="button"
           accessibilityLabel="Open notifications"
           style={styles.iconButton}
-          onPress={() => {}}
+          onPress={() => router.push("/notifications" as any)}
         >
           <Frame91
             style={styles.svgIcon}
@@ -45,7 +44,7 @@ const HomeHeader = () => {
           accessibilityRole="button"
           accessibilityLabel="Open profile"
           style={styles.iconButton}
-          onPress={() => router.push(MY_PAGE_ROUTE)}
+          onPress={() => router.push("/mypage" as any)}
         >
           <Frame921
             style={styles.svgIcon}

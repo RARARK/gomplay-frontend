@@ -87,7 +87,11 @@ export default function MyPageScreen() {
         </View>
       </View>
 
-      <Pressable accessibilityRole="button" style={styles.editButton}>
+      <Pressable
+        accessibilityRole="button"
+        style={styles.editButton}
+        onPress={() => router.push("/profile/edit" as any)}
+      >
         <Text style={styles.editButtonText}>내 정보 편집</Text>
       </Pressable>
 

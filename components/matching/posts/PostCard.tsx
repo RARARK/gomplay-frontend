@@ -3,7 +3,6 @@ import React from "react";
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 
 import MatchDifficultyIcon from "@/assets/match/heroicons-chart-bar-16-solid.svg";
-import MatchLocationIcon from "@/assets/match/mdi-location.svg";
 import { CREATE_POST_DIFFICULTY_LABELS } from "@/components/matching/create-post/createPostConfig";
 import type { Post } from "@/types/domain/post";
 
@@ -88,24 +87,40 @@ export default function PostCard({ post, onPress }: PostCardProps) {
           <Text style={styles.capacity}>{post.capacity}명</Text>
         </View>
 
-        <View style={styles.metaRow}>
-          <MatchLocationIcon width={16} height={16} />
-          <Text numberOfLines={1} style={styles.metaText}>
-            {post.location}
-          </Text>
-          <Ionicons name="time-outline" size={15} color="#413F46" />
-          <Text style={styles.metaText}>
-            {formatPostTimeRange(post.scheduledStartAt, post.scheduledEndAt)}
-          </Text>
-        </View>
+        <View style={styles.detailBlock}>
+          <View style={[styles.detailItem, styles.locationItem]}>
+            <Ionicons name="location-sharp" size={16} color="#EF4444" />
+            <Text
+              numberOfLines={2}
+              style={[styles.detailText, styles.locationText]}
+            >
+              {post.location}
+            </Text>
+          </View>
 
-        <View style={styles.metaRow}>
-          <MatchDifficultyIcon width={16} height={16} />
-          <Text style={styles.metaText}>
-            {CREATE_POST_DIFFICULTY_LABELS[post.difficulty]}
-          </Text>
-          <Ionicons name="fitness-outline" size={15} color="#413F46" />
-          <Text style={styles.metaText}>{post.exerciseType}</Text>
+          <View style={styles.detailRow}>
+            <View style={styles.detailItem}>
+              <Ionicons name="time-outline" size={15} color="#413F46" />
+              <Text numberOfLines={1} style={styles.detailText}>
+                {formatPostTimeRange(
+                  post.scheduledStartAt,
+                  post.scheduledEndAt,
+                )}
+              </Text>
+            </View>
+            <View style={styles.detailItem}>
+              <MatchDifficultyIcon width={16} height={16} />
+              <Text numberOfLines={1} style={styles.detailText}>
+                {CREATE_POST_DIFFICULTY_LABELS[post.difficulty]}
+              </Text>
+            </View>
+            <View style={styles.detailItem}>
+              <Ionicons name="fitness-outline" size={15} color="#413F46" />
+              <Text numberOfLines={1} style={styles.detailText}>
+                {post.exerciseType}
+              </Text>
+            </View>
+          </View>
         </View>
 
         <View style={styles.footerRow}>
@@ -120,7 +135,7 @@ export default function PostCard({ post, onPress }: PostCardProps) {
           </View>
 
           <View style={styles.temperature}>
-            <Ionicons name="thermometer-outline" size={14} color="#4C5BE2" />
+            <Ionicons name="thermometer-outline" size={14} color="#F97316" />
             <Text style={styles.temperatureText}>36.5°C</Text>
           </View>
         </View>
@@ -190,17 +205,35 @@ const styles = StyleSheet.create({
     color: "#4C5BE2",
     fontWeight: "800",
   },
-  metaRow: {
+  detailBlock: {
+    gap: 5,
+  },
+  detailRow: {
     flexDirection: "row",
     alignItems: "center",
+    flexWrap: "wrap",
+    columnGap: 10,
+    rowGap: 4,
+  },
+  detailItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    flexShrink: 1,
     gap: 4,
   },
-  metaText: {
-    maxWidth: 96,
+  locationItem: {
+    alignItems: "flex-start",
+    width: "100%",
+  },
+  detailText: {
+    flexShrink: 1,
     fontSize: 12,
     lineHeight: 16,
     color: "#413F46",
     fontWeight: "600",
+  },
+  locationText: {
+    flex: 1,
   },
   footerRow: {
     flexDirection: "row",

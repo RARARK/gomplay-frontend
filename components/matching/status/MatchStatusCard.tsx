@@ -4,8 +4,6 @@ import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import DifficultyIcon from "@/assets/match/heroicons-chart-bar-16-solid.svg";
-import LocationIcon from "@/assets/match/mdi-location.svg";
-import TimeIcon from "@/assets/match/Vector.svg";
 import ExerciseIcon from "@/assets/match/fluent-run-16-filled.svg";
 
 export type MatchSourceType = "POST" | "PARTNER";
@@ -43,100 +41,163 @@ export default function MatchStatusCard({
   const isHost = item.role === "HOST";
   const isPost = item.sourceType === "POST";
 
-  const badgeBg = isPost ? "#C8960C" : "#4E9B6A";
-  const cardBg = isInProgress ? "#4C5BE2" : "#FFFFFF";
-  const cardBorder = isInProgress ? "#6876E8" : "#D9D9D9";
-  const primaryText = isInProgress ? "#FFFFFF" : "#111827";
-  const secondaryText = isInProgress ? "rgba(255,255,255,0.7)" : "#6B7280";
+  const badgeColor = isPost ? "#C8960C" : "#4E9B6A";
+  const statusLabel = isInProgress ? "진행중" : "수락 대기";
 
-  const details = isPost
-    ? [
-        item.location && { icon: <LocationIcon width={11} height={11} />, label: item.location },
-        item.scheduledTime && { icon: <TimeIcon width={11} height={11} />, label: item.scheduledTime },
-        item.difficulty && { icon: <DifficultyIcon width={11} height={11} />, label: item.difficulty },
-        item.exerciseType && { icon: <ExerciseIcon width={11} height={11} />, label: item.exerciseType },
-      ].filter(Boolean) as { icon: React.ReactNode; label: string }[]
-    : [
-        { icon: <LocationIcon width={11} height={11} />, label: "협의" },
-        { icon: <TimeIcon width={11} height={11} />, label: "협의" },
-        { icon: <DifficultyIcon width={11} height={11} />, label: "협의" },
-        { icon: <ExerciseIcon width={11} height={11} />, label: "협의" },
-      ];
+  const location = isPost ? item.location : (item.location ?? "장소 협의");
+  const scheduledTime = isPost
+    ? item.scheduledTime
+    : (item.scheduledTime ?? "시간 협의");
+  const difficulty = isPost
+    ? item.difficulty
+    : (item.difficulty ?? "난이도 협의");
+  const exerciseType = isPost
+    ? item.exerciseType
+    : (item.exerciseType ?? "종목 협의");
 
   return (
     <View style={styles.container}>
-      <View style={[styles.badge, { backgroundColor: badgeBg }]}>
-        <View style={styles.badgeLeft}>
-          {isPost
-            ? <ExerciseIcon width={13} height={13} />
-            : <Ionicons name="people-outline" size={13} color="#FFFFFF" />}
-          <Text style={styles.badgeLabel}>{isPost ? "운동 모집" : "파트너 모집"}</Text>
-        </View>
-        {isInProgress ? <Text style={styles.badgeStatus}>진행중</Text> : null}
+      <View style={[styles.badge, { backgroundColor: badgeColor }]}>
+        {isPost ? (
+          <ExerciseIcon width={14} height={14} />
+        ) : (
+          <Ionicons name="people-outline" size={14} color="#FFFFFF" />
+        )}
+        <Text style={styles.badgeText}>
+          {isPost ? "운동 모집" : "파트너 모집"}
+        </Text>
       </View>
 
-      <View style={[styles.card, { backgroundColor: cardBg, borderColor: cardBorder }]}>
+      <View style={styles.card}>
         <Image
           source={require("../../../assets/match/Ellipse-12.png")}
           style={styles.avatar}
           contentFit="cover"
         />
 
-        <View style={styles.info}>
-          <View style={styles.nameRow}>
-            <Text style={[styles.name, { color: primaryText }]}>{item.partnerName}</Text>
-            {item.partnerDepartment ? (
-              <Text style={[styles.dept, { color: secondaryText }]}>{item.partnerDepartment}</Text>
-            ) : null}
+        <View style={styles.content}>
+          <View style={styles.titleRow}>
+            <View style={styles.nameBlock}>
+              <Text style={styles.name} numberOfLines={1}>
+                {item.partnerName}
+              </Text>
+              {item.partnerDepartment ? (
+                <Text style={styles.department} numberOfLines={1}>
+                  {item.partnerDepartment}
+                </Text>
+              ) : null}
+            </View>
+            <View
+              style={[
+                styles.statusPill,
+                isInProgress
+                  ? styles.statusPillActive
+                  : styles.statusPillPending,
+              ]}
+            >
+              <Text
+                style={[
+                  styles.statusText,
+                  isInProgress
+                    ? styles.statusTextActive
+                    : styles.statusTextPending,
+                ]}
+              >
+                {statusLabel}
+              </Text>
+            </View>
           </View>
 
-          {details.length > 0 ? (
+          <View style={styles.detailBlock}>
+            {location ? (
+              <View style={[styles.detailItem, styles.locationItem]}>
+                <Ionicons name="location-sharp" size={16} color="#EF4444" />
+                <Text
+                  numberOfLines={2}
+                  style={[styles.detailText, styles.locationText]}
+                >
+                  {location}
+                </Text>
+              </View>
+            ) : null}
+
             <View style={styles.detailRow}>
-              {details.map((d, i) => (
-                <View key={i} style={styles.detailChip}>
-                  {d.icon}
-                  <Text style={[styles.detailText, { color: secondaryText }]}>{d.label}</Text>
+              {scheduledTime ? (
+                <View style={styles.detailItem}>
+                  <Ionicons name="time-outline" size={15} color="#413F46" />
+                  <Text numberOfLines={1} style={styles.detailText}>
+                    {scheduledTime}
+                  </Text>
                 </View>
-              ))}
+              ) : null}
+              {difficulty ? (
+                <View style={styles.detailItem}>
+                  <DifficultyIcon width={16} height={16} />
+                  <Text numberOfLines={1} style={styles.detailText}>
+                    {difficulty}
+                  </Text>
+                </View>
+              ) : null}
+              {exerciseType ? (
+                <View style={styles.detailItem}>
+                  <Ionicons name="fitness-outline" size={15} color="#413F46" />
+                  <Text numberOfLines={1} style={styles.detailText}>
+                    {exerciseType}
+                  </Text>
+                </View>
+              ) : null}
             </View>
-          ) : null}
+          </View>
 
           <View style={styles.actionRow}>
             {isInProgress ? (
               <>
-                <Pressable style={styles.actionBtnLight} onPress={onComplete}>
+                <Pressable
+                  style={[styles.actionButton, styles.primaryActionButton]}
+                  onPress={onComplete}
+                >
                   <Ionicons name="checkmark" size={14} color="#FFFFFF" />
-                  <Text style={styles.actionBtnLightText}>운동 완료하기</Text>
+                  <Text style={styles.primaryActionText}>운동 완료하기</Text>
                 </Pressable>
-                <Pressable style={styles.actionBtnLight} onPress={onChat}>
-                  <Ionicons name="chatbubble-outline" size={14} color="#FFFFFF" />
-                  <Text style={styles.actionBtnLightText}>채팅</Text>
+                <Pressable style={styles.actionButton} onPress={onChat}>
+                  <Ionicons
+                    name="chatbubble-outline"
+                    size={14}
+                    color="#4C5BE2"
+                  />
+                  <Text style={styles.actionText}>채팅</Text>
                 </Pressable>
               </>
             ) : isHost ? (
               <>
-                <Pressable style={styles.actionBtnDark} onPress={onViewApplicants}>
-                  <Text style={styles.actionBtnDarkText}>신청 {item.applicantCount ?? 0}명</Text>
+                <Pressable
+                  style={styles.actionButton}
+                  onPress={onViewApplicants}
+                >
+                  <Text style={styles.actionText}>
+                    신청 {item.applicantCount ?? 0}명
+                  </Text>
                 </Pressable>
-                <Pressable style={styles.actionBtnDark} onPress={onViewApplicants}>
-                  <Text style={styles.actionBtnDarkText}>신청자 보기</Text>
+                <Pressable
+                  style={[styles.actionButton, styles.primaryActionButton]}
+                  onPress={onViewApplicants}
+                >
+                  <Text style={styles.primaryActionText}>신청자 보기</Text>
                 </Pressable>
               </>
             ) : (
-              <View style={[styles.actionBtnDark, styles.pendingBtn]}>
+              <View style={[styles.actionButton, styles.pendingActionButton]}>
                 <Ionicons name="time-outline" size={14} color="#9CA3AF" />
-                <Text style={[styles.actionBtnDarkText, styles.pendingBtnText]}>수락 대기 중 ...</Text>
+                <Text style={[styles.actionText, styles.pendingActionText]}>
+                  수락 대기 중
+                </Text>
               </View>
             )}
           </View>
         </View>
 
         <Pressable style={styles.moreBtn}>
-          <Ionicons
-            name="ellipsis-vertical"
-            size={18}
-            color={isInProgress ? "rgba(255,255,255,0.6)" : "#C4C9D4"}
-          />
+          <Ionicons name="ellipsis-vertical" size={18} color="#C4C9D4" />
         </Pressable>
       </View>
     </View>
@@ -145,129 +206,172 @@ export default function MatchStatusCard({
 
 const styles = StyleSheet.create({
   container: {
-    gap: 0,
+    width: "100%",
   },
   badge: {
+    alignSelf: "flex-start",
+    minHeight: 28,
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderTopLeftRadius: 14,
-    borderTopRightRadius: 14,
+    gap: 4,
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    paddingHorizontal: 12,
   },
-  badgeLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 5,
-  },
-  badgeLabel: {
-    fontSize: 11,
-    lineHeight: 14,
-    color: "#FFFFFF",
-    fontWeight: "600",
-  },
-  badgeStatus: {
+  badgeText: {
     fontSize: 12,
     lineHeight: 16,
     color: "#FFFFFF",
-    fontWeight: "700",
+    fontWeight: "800",
   },
   card: {
     flexDirection: "row",
     alignItems: "flex-start",
-    gap: 10,
+    gap: 12,
+    borderRadius: 16,
+    borderTopLeftRadius: 0,
     borderWidth: 1,
-    borderTopWidth: 0,
-    borderBottomLeftRadius: 14,
-    borderBottomRightRadius: 14,
+    borderColor: "#E3E5EC",
+    backgroundColor: "#FFFFFF",
     paddingHorizontal: 12,
-    paddingTop: 12,
-    paddingBottom: 10,
-    elevation: 2,
+    paddingVertical: 14,
+    shadowColor: "#000000",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
   },
   avatar: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
+    width: 58,
+    height: 58,
+    borderRadius: 29,
     backgroundColor: "#EEF2FF",
     flexShrink: 0,
   },
-  info: {
+  content: {
     flex: 1,
-    gap: 6,
+    minWidth: 0,
+    gap: 8,
   },
-  nameRow: {
+  titleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 8,
+  },
+  nameBlock: {
+    flex: 1,
+    minWidth: 0,
     flexDirection: "row",
     alignItems: "baseline",
     gap: 6,
   },
   name: {
+    flexShrink: 0,
     fontSize: 15,
     lineHeight: 20,
+    color: "#070322",
+    fontWeight: "800",
+  },
+  department: {
+    flexShrink: 1,
+    fontSize: 12,
+    lineHeight: 16,
+    color: "#6B7280",
     fontWeight: "700",
   },
-  dept: {
+  statusPill: {
+    minHeight: 24,
+    borderRadius: 999,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 8,
+    flexShrink: 0,
+  },
+  statusPillActive: {
+    backgroundColor: "#EEF2FF",
+  },
+  statusPillPending: {
+    backgroundColor: "#F3F4F6",
+  },
+  statusText: {
     fontSize: 11,
-    lineHeight: 16,
-    fontWeight: "600",
+    lineHeight: 14,
+    fontWeight: "800",
+  },
+  statusTextActive: {
+    color: "#4C5BE2",
+  },
+  statusTextPending: {
+    color: "#6B7280",
+  },
+  detailBlock: {
+    gap: 5,
   },
   detailRow: {
     flexDirection: "row",
+    alignItems: "center",
     flexWrap: "wrap",
-    gap: 6,
+    columnGap: 10,
+    rowGap: 4,
   },
-  detailChip: {
+  detailItem: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 3,
+    flexShrink: 1,
+    gap: 4,
+  },
+  locationItem: {
+    alignItems: "flex-start",
+    width: "100%",
   },
   detailText: {
-    fontSize: 11,
-    lineHeight: 14,
-    fontWeight: "500",
+    flexShrink: 1,
+    fontSize: 12,
+    lineHeight: 16,
+    color: "#413F46",
+    fontWeight: "600",
+  },
+  locationText: {
+    flex: 1,
   },
   actionRow: {
     flexDirection: "row",
     gap: 8,
     marginTop: 2,
   },
-  actionBtnLight: {
+  actionButton: {
+    minHeight: 32,
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "center",
     gap: 4,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.6)",
     borderRadius: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-  },
-  actionBtnLightText: {
-    fontSize: 12,
-    lineHeight: 16,
-    color: "#FFFFFF",
-    fontWeight: "600",
-  },
-  actionBtnDark: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
     borderWidth: 1,
     borderColor: "#4C5BE2",
-    borderRadius: 8,
     paddingHorizontal: 10,
-    paddingVertical: 5,
+    flexShrink: 1,
   },
-  actionBtnDarkText: {
+  primaryActionButton: {
+    backgroundColor: "#4C5BE2",
+  },
+  pendingActionButton: {
+    borderColor: "#E5E7EB",
+    backgroundColor: "#F9FAFB",
+  },
+  actionText: {
     fontSize: 12,
     lineHeight: 16,
     color: "#4C5BE2",
-    fontWeight: "600",
+    fontWeight: "700",
   },
-  pendingBtn: {
-    borderColor: "#E5E7EB",
+  primaryActionText: {
+    fontSize: 12,
+    lineHeight: 16,
+    color: "#FFFFFF",
+    fontWeight: "700",
   },
-  pendingBtnText: {
+  pendingActionText: {
     color: "#9CA3AF",
   },
   moreBtn: {

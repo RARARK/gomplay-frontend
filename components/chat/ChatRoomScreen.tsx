@@ -205,6 +205,7 @@ export default function ChatRoomScreen() {
           title="Workout finished!"
           description="How was the session today? Please leave a review for your partner."
           buttonLabel="Leave review"
+          onPressReview={() => router.push(`/review/${chatRoom.matchId}` as any)}
           inputPlaceholder={
             isReadOnly ? "This chat is read-only." : "Write a message..."
           }
