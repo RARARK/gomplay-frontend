@@ -1,6 +1,6 @@
 import { Image } from "expo-image";
 import React from "react";
-import { Linking, Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import MatchLocationIcon from "@/assets/match/mdi-location.svg";
 import MatchMapPreview from "@/assets/match/icon.png";

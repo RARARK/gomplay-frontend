@@ -63,7 +63,7 @@ export default function PostApplyScreen({ postId }: PostApplyScreenProps) {
         return;
       }
 
-      const [nextHost, participants] = await Promise.all([
+      const [nextHost, nextParticipants] = await Promise.all([
         getPostHostProfile(nextPost.hostUserId),
         getPostParticipants(nextPost.id),
       ]);
@@ -71,7 +71,7 @@ export default function PostApplyScreen({ postId }: PostApplyScreenProps) {
       if (isMounted) {
         setPost(nextPost);
         setHost(nextHost);
-        setParticipants(participants);
+        setParticipants(nextParticipants);
         setIsLoading(false);
       }
     };
@@ -164,12 +164,6 @@ export default function PostApplyScreen({ postId }: PostApplyScreenProps) {
             <Text style={styles.hostName}>{host.name}</Text>
             <Text style={styles.department}>{host.department}</Text>
           </View>
-          <View style={styles.hostTemperature}>
-            <Ionicons name="thermometer-outline" size={14} color="#4C5BE2" />
-            <Text style={styles.hostTemperatureText}>
-              {host.mannerTemperature.toFixed(1)}°C
-            </Text>
-          </View>
         </View>
       ) : null}
 
@@ -242,7 +236,6 @@ export default function PostApplyScreen({ postId }: PostApplyScreenProps) {
             <Ionicons name="person-outline" size={24} color="#111827" />
             <Text style={styles.capacityLabel}>모집 인원</Text>
           </View>
-
           <View style={styles.capacityCounter}>
             <Text style={styles.capacityValue}>{post.capacity}명</Text>
           </View>
@@ -251,27 +244,20 @@ export default function PostApplyScreen({ postId }: PostApplyScreenProps) {
 
       {participants.length > 0 ? (
         <View style={styles.section}>
-          <Text style={styles.sectionLabel}>참가 인원</Text>
+          <Text style={styles.sectionLabel}>
+            참가 인원 {participants.length}/{post.capacity}
+          </Text>
           <View style={styles.participantList}>
-            {participants.map((p) => (
-              <View key={p.id} style={styles.participantRow}>
+            {participants.map((participant) => (
+              <View key={participant.id} style={styles.participantRow}>
                 <Image
                   source={require("../../../assets/match/Ellipse-12.png")}
                   style={styles.participantImage}
                   contentFit="cover"
                 />
-                <View style={styles.participantInfo}>
-                  <Text style={styles.participantName}>{p.name}</Text>
-                  {p.department ? (
-                    <Text style={styles.participantDepartment}>{p.department}</Text>
-                  ) : null}
-                </View>
-                <View style={styles.participantTemperature}>
-                  <Ionicons name="thermometer-outline" size={14} color="#4C5BE2" />
-                  <Text style={styles.participantTemperatureText}>
-                    {p.mannerTemperature.toFixed(1)}°C
-                  </Text>
-                </View>
+                <Text numberOfLines={1} style={styles.participantName}>
+                  {participant.name}
+                </Text>
               </View>
             ))}
           </View>
@@ -376,17 +362,6 @@ const styles = StyleSheet.create({
     color: "#6B7280",
     fontWeight: "700",
   },
-  hostTemperature: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 2,
-  },
-  hostTemperatureText: {
-    fontSize: 13,
-    lineHeight: 18,
-    color: "#4C5BE2",
-    fontWeight: "700",
-  },
   section: {
     gap: 10,
   },
@@ -473,25 +448,11 @@ const styles = StyleSheet.create({
     color: "#111827",
     fontWeight: "700",
   },
-  messageInput: {
-    minHeight: 132,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#D9D9D9",
-    backgroundColor: "#FFFFFF",
-    paddingHorizontal: 14,
-    paddingVertical: 14,
-  },
-  messageText: {
-    fontSize: 15,
-    lineHeight: 22,
-    color: "#111827",
-    fontWeight: "600",
-  },
   participantList: {
     gap: 10,
   },
   participantRow: {
+    minHeight: 64,
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
@@ -508,32 +469,27 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     backgroundColor: "#EEF2FF",
   },
-  participantInfo: {
-    flex: 1,
-    gap: 2,
-  },
   participantName: {
+    flex: 1,
     fontSize: 15,
     lineHeight: 20,
     color: "#111827",
     fontWeight: "700",
   },
-  participantDepartment: {
-    fontSize: 12,
-    lineHeight: 16,
-    color: "#6B7280",
+  messageInput: {
+    minHeight: 132,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#D9D9D9",
+    backgroundColor: "#FFFFFF",
+    paddingHorizontal: 14,
+    paddingVertical: 14,
+  },
+  messageText: {
+    fontSize: 15,
+    lineHeight: 22,
+    color: "#111827",
     fontWeight: "600",
-  },
-  participantTemperature: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 2,
-  },
-  participantTemperatureText: {
-    fontSize: 13,
-    lineHeight: 18,
-    color: "#4C5BE2",
-    fontWeight: "700",
   },
   submitButton: {
     minHeight: 60,

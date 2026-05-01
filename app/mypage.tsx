@@ -1,12 +1,12 @@
 import { StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import MatchHistoryScreen from "@/components/matching/history/MatchHistoryScreen";
+import MyPageScreen from "@/components/profile/MyPageScreen";
 
-export default function MatchHistoryRoute() {
+export default function MyPageRoute() {
   return (
     <SafeAreaView edges={["top"]} style={styles.safeArea}>
-      <MatchHistoryScreen />
+      <MyPageScreen />
     </SafeAreaView>
   );
 }
