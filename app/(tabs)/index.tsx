@@ -1,6 +1,6 @@
 import * as React from "react";
 import { router } from "expo-router";
-import { ScrollView, StyleSheet, Pressable } from "react-native";
+import { ScrollView, StyleSheet, Pressable, Text } from "react-native";
 import {
   SafeAreaView,
   useSafeAreaInsets,
@@ -21,10 +21,11 @@ export default function HomePage() {
   const insets = useSafeAreaInsets();
 
   const [isQuickMatchOn, setIsQuickMatchOn] = React.useState(false);
+  const [forceMatchedContent, setForceMatchedContent] = React.useState(false);
   const [banners] = React.useState<Banner[]>(homeBanners);
 
   const hasTimetable = false;
-  const isMatched = false;
+  const isMatched = forceMatchedContent;
 
   // Reserve extra scroll space so the last section is not hidden behind the FAB.
   const FAB_SIZE = 56;
@@ -61,6 +62,17 @@ export default function HomePage() {
           showsVerticalScrollIndicator={false}
         >
           <HomeHeader />
+          <Pressable
+            accessibilityRole="button"
+            style={styles.testButton}
+            onPress={() => setForceMatchedContent((value) => !value)}
+          >
+            <Text style={styles.testButtonText}>
+              {forceMatchedContent
+                ? "MatchedContent 끄기"
+                : "MatchedContent 테스트"}
+            </Text>
+          </Pressable>
           <HeroBanner banners={banners} />
 
           {/* Render the status-specific content without changing the page layout. */}
@@ -107,6 +119,25 @@ const styles = StyleSheet.create({
     alignItems: "stretch",
     justifyContent: "flex-start",
     gap: 60,
+  },
+  testButton: {
+    alignSelf: "center",
+    minHeight: 34,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: "#4C5BE2",
+    backgroundColor: "#FFFFFF",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 14,
+    marginTop: -42,
+    marginBottom: -42,
+  },
+  testButtonText: {
+    fontSize: 12,
+    lineHeight: 16,
+    color: "#4C5BE2",
+    fontWeight: "800",
   },
   fab: {
     position: "absolute",

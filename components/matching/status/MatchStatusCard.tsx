@@ -87,24 +87,29 @@ export default function MatchStatusCard({
                 </Text>
               ) : null}
             </View>
-            <View
-              style={[
-                styles.statusPill,
-                isInProgress
-                  ? styles.statusPillActive
-                  : styles.statusPillPending,
-              ]}
-            >
-              <Text
+            <View style={styles.titleMeta}>
+              <View
                 style={[
-                  styles.statusText,
+                  styles.statusPill,
                   isInProgress
-                    ? styles.statusTextActive
-                    : styles.statusTextPending,
+                    ? styles.statusPillActive
+                    : styles.statusPillPending,
                 ]}
               >
-                {statusLabel}
-              </Text>
+                <Text
+                  style={[
+                    styles.statusText,
+                    isInProgress
+                      ? styles.statusTextActive
+                      : styles.statusTextPending,
+                  ]}
+                >
+                  {statusLabel}
+                </Text>
+              </View>
+              <View style={styles.openIndicator}>
+                <Ionicons name="chevron-forward" size={16} color="#9CA3AF" />
+              </View>
             </View>
           </View>
 
@@ -195,10 +200,6 @@ export default function MatchStatusCard({
             )}
           </View>
         </View>
-
-        <Pressable style={styles.moreBtn}>
-          <Ionicons name="ellipsis-vertical" size={18} color="#C4C9D4" />
-        </Pressable>
       </View>
     </View>
   );
@@ -280,6 +281,12 @@ const styles = StyleSheet.create({
     color: "#6B7280",
     fontWeight: "700",
   },
+  titleMeta: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    flexShrink: 0,
+  },
   statusPill: {
     minHeight: 24,
     borderRadius: 999,
@@ -304,6 +311,14 @@ const styles = StyleSheet.create({
   },
   statusTextPending: {
     color: "#6B7280",
+  },
+  openIndicator: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#F9FAFB",
   },
   detailBlock: {
     gap: 5,
@@ -373,10 +388,5 @@ const styles = StyleSheet.create({
   },
   pendingActionText: {
     color: "#9CA3AF",
-  },
-  moreBtn: {
-    padding: 2,
-    marginTop: -2,
-    flexShrink: 0,
   },
 });

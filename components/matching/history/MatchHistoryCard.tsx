@@ -88,7 +88,12 @@ export default function MatchHistoryCard({
                 </Text>
               ) : null}
             </View>
-            <Text style={styles.date}>{item.completedAt}</Text>
+            <View style={styles.titleMeta}>
+              <Text style={styles.date}>{item.completedAt}</Text>
+              <View style={styles.openIndicator}>
+                <Ionicons name="chevron-forward" size={16} color="#9CA3AF" />
+              </View>
+            </View>
           </View>
 
           <Text style={styles.statusText}>
@@ -119,11 +124,23 @@ export default function MatchHistoryCard({
             </Pressable>
             {isCompleted ? (
               <>
-                <Pressable accessibilityRole="button" onPress={onChat} style={styles.actionButton}>
-                  <Ionicons name="chatbubble-outline" size={14} color="#4C5BE2" />
+                <Pressable
+                  accessibilityRole="button"
+                  onPress={onChat}
+                  style={styles.actionButton}
+                >
+                  <Ionicons
+                    name="chatbubble-outline"
+                    size={14}
+                    color="#4C5BE2"
+                  />
                   <Text style={styles.actionText}>채팅 보기</Text>
                 </Pressable>
-                <Pressable accessibilityRole="button" onPress={onReview} style={styles.actionButton}>
+                <Pressable
+                  accessibilityRole="button"
+                  onPress={onReview}
+                  style={styles.actionButton}
+                >
                   <Ionicons name="star-outline" size={14} color="#4C5BE2" />
                   <Text style={styles.actionText}>평가하기</Text>
                 </Pressable>
@@ -214,6 +231,20 @@ const styles = StyleSheet.create({
     lineHeight: 16,
     color: "#6B7280",
     fontWeight: "700",
+  },
+  titleMeta: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    flexShrink: 0,
+  },
+  openIndicator: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#F9FAFB",
   },
   statusText: {
     fontSize: 15,

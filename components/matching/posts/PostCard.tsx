@@ -85,6 +85,10 @@ export default function PostCard({ post, onPress }: PostCardProps) {
           </View>
 
           <Text style={styles.capacity}>{post.capacity}명</Text>
+
+          <View style={styles.openIndicator}>
+            <Ionicons name="chevron-forward" size={16} color="#9CA3AF" />
+          </View>
         </View>
 
         <View style={styles.detailBlock}>
@@ -204,6 +208,15 @@ const styles = StyleSheet.create({
     lineHeight: 14,
     color: "#4C5BE2",
     fontWeight: "800",
+  },
+  openIndicator: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#F9FAFB",
+    flexShrink: 0,
   },
   detailBlock: {
     gap: 5,
