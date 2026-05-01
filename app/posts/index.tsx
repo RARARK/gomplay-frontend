@@ -1,12 +1,13 @@
+import React from "react";
 import { StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import MatchStatusScreen from "@/components/matching/status/MatchStatusScreen";
+import PostListScreen from "@/components/matching/posts/PostListScreen";
 
-export default function MatchScreen() {
+export default function PostListRoute() {
   return (
     <SafeAreaView edges={["top"]} style={styles.safeArea}>
-      <MatchStatusScreen />
+      <PostListScreen />
     </SafeAreaView>
   );
 }
@@ -14,6 +15,6 @@ export default function MatchScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#F2F7FF",
+    backgroundColor: "#FFFFFF",
   },
 });

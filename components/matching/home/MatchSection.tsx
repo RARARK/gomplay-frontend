@@ -7,14 +7,23 @@ import { recommendationCards } from "./homeMockData";
 
 const MatchSection = () => {
   const handleRecommendationHeaderPress = () => {
-    router.push("/(tabs)/match");
+    router.push("/posts" as any);
   };
+
+  const handleCardPress = () => {
+    router.push("/posts" as any);
+  };
+
+  const cardsWithPress = recommendationCards.map((card) => ({
+    ...card,
+    onPress: handleCardPress,
+  }));
 
   return (
     <View style={styles.container}>
       <RecommendationSection
         title="Recommended matches"
-        cards={recommendationCards}
+        cards={cardsWithPress}
         onHeaderPress={handleRecommendationHeaderPress}
       />
     </View>
