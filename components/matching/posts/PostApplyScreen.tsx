@@ -234,9 +234,6 @@ export default function PostApplyScreen({ postId }: PostApplyScreenProps) {
             )
           }
         />
-        <View style={styles.singleLineInput}>
-          <Text style={styles.inputText}>{post.location}</Text>
-        </View>
       </View>
 
       <View style={styles.section}>

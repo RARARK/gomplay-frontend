@@ -27,40 +27,19 @@ async function getCoords(): Promise<Coords> {
   };
 }
 
-export type ReverseGeocodeResult = {
-  name: string;    // 명소 이름 (없으면 주소 첫 줄)
-  address: string; // 도로명 주소
-};
-
-export async function reverseGeocode(coords: Coords): Promise<ReverseGeocodeResult> {
+export async function reverseGeocode(coords: Coords): Promise<string> {
   const { lat, lng } = coords;
 
-  // 도로명 주소 조회
-  const addrRes = await fetch(
+  const res = await fetch(
     `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&language=ko&key=${GOOGLE_API_KEY}`,
   );
-  const addrData = await addrRes.json();
+  const data = await res.json();
 
-  if (addrData.status !== "OK" || addrData.results.length === 0) {
+  if (data.status !== "OK" || data.results.length === 0) {
     throw new Error("주소를 가져올 수 없습니다.");
   }
 
-  const address = addrData.results[0].formatted_address as string;
-
-  // 명소(POI/공원/자연지물) 이름 조회
-  const poiRes = await fetch(
-    `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}` +
-    `&result_type=point_of_interest|park|natural_feature|tourist_attraction` +
-    `&language=ko&key=${GOOGLE_API_KEY}`,
-  );
-  const poiData = await poiRes.json();
-
-  const name =
-    poiData.status === "OK" && poiData.results.length > 0
-      ? (poiData.results[0].formatted_address as string).split(",")[0].trim()
-      : address.split(",")[0].trim();
-
-  return { name, address };
+  return data.results[0].formatted_address as string;
 }
 
 export async function getCurrentCoords(): Promise<Coords> {

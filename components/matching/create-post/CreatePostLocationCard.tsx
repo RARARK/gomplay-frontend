@@ -51,7 +51,7 @@ export default function CreatePostLocationCard({
       <View style={styles.footer}>
         <View style={styles.locationRow}>
           <MatchLocationIcon width={18} height={18} />
-          <Text style={styles.locationText}>선택된 장소: {location}</Text>
+          <Text style={styles.locationText}>{location}</Text>
         </View>
 
         {hasActions ? (

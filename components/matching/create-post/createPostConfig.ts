@@ -12,7 +12,7 @@ export type CreatePostFormState = {
 };
 
 export const CREATE_POST_TITLE = "매칭 등록";
-export const CREATE_POST_DEFAULT_LOCATION = "서양대 체육관 대운동장";
+export const CREATE_POST_DEFAULT_LOCATION = "단국대학교";
 export const CREATE_POST_RECOMMENDED_LOCATION = "서양대 체육관 실내";
 export const CREATE_POST_USE_CURRENT_LOCATION = "서양대 체육관 본관 앞";
 export const CREATE_POST_MAX_TAG_SELECTION = 3;

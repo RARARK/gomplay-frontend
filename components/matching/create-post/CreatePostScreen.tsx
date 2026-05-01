@@ -54,7 +54,7 @@ import { validateCreatePostInput } from "@/utils/validateCreatePost";
 
 const createInitialFormState = (): CreatePostFormState => ({
   title: "",
-  exerciseType: "",
+  exerciseType: "러닝",
   location: CREATE_POST_DEFAULT_LOCATION,
   scheduledStartAt: getRoundedFutureDate(1),
   scheduledEndAt: getRoundedFutureDate(3),
@@ -79,7 +79,7 @@ export default function CreatePostScreen() {
   const [hasSubmitted, setHasSubmitted] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [isLocationLoading, setIsLocationLoading] = React.useState(false);
-  const [locationCoords, setLocationCoords] = React.useState<Coords | null>(null);
+  const [locationCoords, setLocationCoords] = React.useState<Coords | null>({ lat: 37.3218, lng: 127.1254 });
   const [pickerCoords, setPickerCoords] = React.useState<Coords | null>(null);
   const [isPickerModalVisible, setIsPickerModalVisible] = React.useState(false);
   const [nearbyPlaces, setNearbyPlaces] = React.useState<NearbyPlace[]>([]);
@@ -401,6 +401,7 @@ export default function CreatePostScreen() {
             <Text style={styles.sectionLabel}>장소</Text>
             <CreatePostLocationCard
               location={form.location}
+
               locationCoords={locationCoords ?? undefined}
               isLocationLoading={isLocationLoading}
               onMapPress={handleMapPress}
