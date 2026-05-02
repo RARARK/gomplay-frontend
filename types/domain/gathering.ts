@@ -10,7 +10,7 @@ export type GatheringListItem = {
   scheduledAt: string;
   scheduledEndAt: string;
   sportType: string;
-  status: GatheringStatus | "FULL";
+  status: GatheringStatus;
   tags?: string | null;
   title: string;
   venue: string;
@@ -31,11 +31,8 @@ export type GatheringListResponse = {
 export type GatheringListQuery = {
   sportType?: string;
   difficulty?: string;
-  status?: GatheringListItem["status"];
-  scheduledDate?: string;
   page?: number;
   size?: number;
-  sort?: "latest" | "imminent" | string;
 };
 
 export type CreateGatheringRequest = {

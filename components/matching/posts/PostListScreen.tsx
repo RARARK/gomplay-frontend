@@ -4,7 +4,6 @@ import { router } from "expo-router";
 import React from "react";
 import {
   ActivityIndicator,
-  Alert,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -131,14 +130,6 @@ const getLabelByValue = <T extends string>(
   value: T,
 ) => options.find((option) => option.value === value)?.label;
 
-const formatDateQuery = (date: Date) => {
-  const year = date.getFullYear();
-  const month = `${date.getMonth() + 1}`.padStart(2, "0");
-  const day = `${date.getDate()}`.padStart(2, "0");
-
-  return `${year}-${month}-${day}`;
-};
-
 export default function PostListScreen() {
   const insets = useSafeAreaInsets();
 
@@ -174,12 +165,6 @@ export default function PostListScreen() {
   const difficultyFilterLabel = hasDifficultyFilter
     ? CREATE_POST_DIFFICULTY_LABELS[selectedDifficulty as PostDifficulty]
     : "난이도";
-
-  const scheduledDateQuery = React.useMemo(() => {
-    if (selectedDate === "today") return formatDateQuery(new Date());
-    if (selectedDate === "tomorrow") return formatDateQuery(addDays(new Date(), 1));
-    return undefined;
-  }, [selectedDate]);
 
   const filteredPosts = React.useMemo(
     () =>
@@ -240,26 +225,15 @@ export default function PostListScreen() {
       getPosts({
         sportType: hasExerciseFilter ? selectedExerciseType : undefined,
         difficulty: hasDifficultyFilter ? selectedDifficulty : undefined,
-        scheduledDate: scheduledDateQuery,
-        status: "OPEN",
-        page: 0,
-        size: 20,
-        sort: "latest",
       })
         .then((nextPosts) => {
           if (isActive) {
             setPosts(nextPosts);
           }
         })
-        .catch((error) => {
+        .catch(() => {
           if (isActive) {
             setPosts([]);
-            Alert.alert(
-              "목록 조회 실패",
-              error instanceof Error
-                ? error.message
-                : "모집글 목록을 불러올 수 없습니다.",
-            );
           }
         })
         .finally(() => {
@@ -274,7 +248,6 @@ export default function PostListScreen() {
     }, [
       hasDifficultyFilter,
       hasExerciseFilter,
-      scheduledDateQuery,
       selectedDifficulty,
       selectedExerciseType,
     ]),

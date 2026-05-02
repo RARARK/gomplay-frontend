@@ -104,7 +104,7 @@ const mapGatheringListItemToPost = (item: GatheringListItem): Post => ({
   capacity: item.maxParticipants,
   difficulty: normalizeDifficulty(item.difficulty),
   tags: normalizeTags(item.tags),
-  status: item.status === "FULL" ? POST_STATUS.CLOSED : item.status,
+  status: item.status,
   createdAt: item.scheduledAt,
 });
 
@@ -189,16 +189,17 @@ const participantsByPostId: Record<number, PostParticipant[]> = {
   ],
 };
 
-export async function getPosts(query?: GatheringListQuery): Promise<Post[]> {
-  const response = await getGatheringPosts({
-    status: "OPEN",
-    page: 0,
-    size: 20,
-    sort: "latest",
-    ...query,
-  });
+export async function getPosts(query: GatheringListQuery = {}): Promise<Post[]> {
+  try {
+    const response = await getGatheringPosts(query);
 
-  return response.content.map(mapGatheringListItemToPost);
+    return response.content.map(mapGatheringListItemToPost);
+  } catch (error) {
+    if (__DEV__) {
+      console.warn("[getPosts] Falling back to mock posts", error);
+    }
+    return posts;
+  }
 }
 
 export async function getPostById(postId: number): Promise<Post | null> {

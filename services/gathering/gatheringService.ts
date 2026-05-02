@@ -95,12 +95,28 @@ export async function getGatheringPosts(
         throw new ApiError(errorBody?.message ?? "필터 조건을 다시 확인해주세요.");
       }
 
+      if (error.response?.status === 401) {
+        throw new ApiError(errorBody?.message ?? "로그인이 필요합니다.");
+      }
+
+      if (error.response?.status === 403) {
+        throw new ApiError(errorBody?.message ?? "모집글 목록을 조회할 권한이 없습니다.");
+      }
+
+      if (error.response?.status === 404) {
+        throw new ApiError(errorBody?.message ?? "모집글 목록 API를 찾을 수 없습니다.");
+      }
+
       if (error.response?.status === 500) {
         throw new ApiError("서버 내부 오류", "Internal server error");
       }
 
       if (errorBody?.message) {
         throw new ApiError(errorBody.message);
+      }
+
+      if (typeof error.response?.status === "number") {
+        throw new ApiError(`모집글 목록 조회 실패 (${error.response.status})`);
       }
     }
 
