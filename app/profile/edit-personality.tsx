@@ -6,7 +6,11 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import TutorialScreenContent from "@/components/auth/tutorial/TutorialScreenContent";
 import TutorialSportsScreenContent from "@/components/auth/tutorial/TutorialSportsScreenContent";
 import {
+  INITIAL_TUTORIAL_SELECTIONS,
+  NEXT_STEP_BY_QUESTION,
+  PREVIOUS_STEP_BY_STEP,
   SPORTS_STEP,
+  TUTORIAL_MAX_SPORT_SELECTIONS,
   TUTORIAL_STEPS,
 } from "@/components/auth/tutorial/tutorialSteps";
 import type {
@@ -16,25 +20,6 @@ import type {
 import { getSurvey, submitSurvey, updateSurvey } from "@/services/survey/surveyService";
 import { useUserStore } from "@/stores/user/userStore";
 import { mapSurveyToTutorial, mapTutorialToSurvey } from "@/utils/mapTutorialToSurvey";
-
-const PROGRESS: Record<TutorialQuestionStep | "sports", number> = {
-  exerciseStyle: 0.25,
-  intensity: 0.5,
-  motivation: 0.75,
-  sports: 1,
-};
-
-const NEXT_STEP_BY_QUESTION: Record<TutorialQuestionStep, TutorialStep> = {
-  exerciseStyle: "intensity",
-  intensity: "motivation",
-  motivation: "sports",
-};
-
-const PREVIOUS_STEP_BY_STEP: Partial<Record<TutorialStep, TutorialStep>> = {
-  intensity: "exerciseStyle",
-  motivation: "intensity",
-  sports: "motivation",
-};
 
 const isQuestionStep = (step: TutorialStep): step is TutorialQuestionStep =>
   step in TUTORIAL_STEPS;
@@ -52,7 +37,7 @@ export default function EditPersonalityRoute() {
   const [currentStep, setCurrentStep] = React.useState<TutorialStep>("exerciseStyle");
   const [selectedQuestionOptions, setSelectedQuestionOptions] = React.useState<
     Record<TutorialQuestionStep, string | null>
-  >({ exerciseStyle: null, intensity: null, motivation: null });
+  >(INITIAL_TUTORIAL_SELECTIONS);
   const [selectedSports, setSelectedSports] = React.useState<string[]>([]);
 
   React.useEffect(() => {
@@ -79,9 +64,9 @@ export default function EditPersonalityRoute() {
   const handleSportToggle = (optionId: string) => {
     setSelectedSports((current) => {
       if (current.includes(optionId)) return current.filter((id) => id !== optionId);
-      if (current.length >= 3) return current;
+      if (current.length >= TUTORIAL_MAX_SPORT_SELECTIONS) return current;
       const next = [...current, optionId];
-      if (next.length === 3) handleSave(next);
+      if (next.length === TUTORIAL_MAX_SPORT_SELECTIONS) handleSave(next);
       return next;
     });
   };
@@ -143,7 +128,7 @@ export default function EditPersonalityRoute() {
           headerTitle={SPORTS_STEP.headerTitle}
           title={SPORTS_STEP.title}
           description={SPORTS_STEP.description}
-          progressRatio={PROGRESS.sports}
+          progressRatio={SPORTS_STEP.progressRatio}
           options={SPORTS_STEP.options}
           selectedOptionIds={selectedSports}
           onSelectOption={isSaving ? () => {} : handleSportToggle}
@@ -166,7 +151,7 @@ export default function EditPersonalityRoute() {
         headerTitle={currentConfig.headerTitle}
         titleLines={currentConfig.titleLines}
         description={currentConfig.description}
-        progressRatio={PROGRESS[currentStep]}
+        progressRatio={currentConfig.progressRatio}
         options={currentConfig.options}
         selectedOptionId={selectedQuestionOptions[currentStep]}
         centeredOptions={currentConfig.centeredOptions}

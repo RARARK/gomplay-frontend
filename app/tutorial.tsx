@@ -7,8 +7,12 @@ import TutorialScheduleScreenContent from "@/components/auth/tutorial/TutorialSc
 import TutorialScreenContent from "@/components/auth/tutorial/TutorialScreenContent";
 import TutorialSportsScreenContent from "@/components/auth/tutorial/TutorialSportsScreenContent";
 import {
+  INITIAL_TUTORIAL_SELECTIONS,
+  NEXT_STEP_BY_QUESTION,
+  PREVIOUS_STEP_BY_STEP,
   SCHEDULE_STEP,
   SPORTS_STEP,
+  TUTORIAL_MAX_SPORT_SELECTIONS,
   TUTORIAL_STEPS,
 } from "@/components/auth/tutorial/tutorialSteps";
 import type {
@@ -22,25 +26,6 @@ import type {
 } from "@/types/domain/user";
 import { compressTimetableState, createEmptyTimetableState } from "@/utils/timetable";
 import { mapTutorialToSurvey } from "@/utils/mapTutorialToSurvey";
-
-const INITIAL_SELECTIONS: Record<TutorialQuestionStep, string | null> = {
-  exerciseStyle: null,
-  intensity: null,
-  motivation: null,
-};
-
-const NEXT_STEP_BY_QUESTION: Record<TutorialQuestionStep, TutorialStep> = {
-  exerciseStyle: "intensity",
-  intensity: "motivation",
-  motivation: "sports",
-};
-
-const PREVIOUS_STEP_BY_STEP: Partial<Record<TutorialStep, TutorialStep>> = {
-  intensity: "exerciseStyle",
-  motivation: "intensity",
-  sports: "motivation",
-  schedule: "sports",
-};
 
 const isQuestionStep = (step: TutorialStep): step is TutorialQuestionStep =>
   step in TUTORIAL_STEPS;
@@ -56,16 +41,19 @@ export default function TutorialScreen() {
   const [currentStep, setCurrentStep] =
     React.useState<TutorialStep>("exerciseStyle");
   const [selectedQuestionOptions, setSelectedQuestionOptions] =
-    React.useState(INITIAL_SELECTIONS);
+    React.useState(INITIAL_TUTORIAL_SELECTIONS);
   const [selectedSports, setSelectedSports] = React.useState<string[]>([]);
   const [timetable, setTimetable] = React.useState<UserTimetableState>(() =>
     createEmptyTimetableState(),
   );
-  const signupParams = {
-    email: typeof params.email === "string" ? params.email : "",
-    nickname: typeof params.nickname === "string" ? params.nickname : "",
-    studentId: typeof params.studentId === "string" ? params.studentId : "",
-  };
+  const signupParams = React.useMemo(
+    () => ({
+      email: typeof params.email === "string" ? params.email : "",
+      nickname: typeof params.nickname === "string" ? params.nickname : "",
+      studentId: typeof params.studentId === "string" ? params.studentId : "",
+    }),
+    [params.email, params.nickname, params.studentId],
+  );
 
   const saveSurveyAndNavigate = (scheduleRanges?: UserTimetableRange[]) => {
     const mapped = mapTutorialToSurvey({
@@ -99,12 +87,12 @@ export default function TutorialScreen() {
         return current.filter((id) => id !== optionId);
       }
 
-      if (current.length >= 3) {
+      if (current.length >= TUTORIAL_MAX_SPORT_SELECTIONS) {
         return current;
       }
 
       const next = [...current, optionId];
-      if (next.length === 3) {
+      if (next.length === TUTORIAL_MAX_SPORT_SELECTIONS) {
         setCurrentStep("schedule");
       }
       return next;

@@ -10,10 +10,35 @@ import ConversationIcon from "@/assets/login/streamline-freehand-conversation-qu
 import type {
   TutorialOption,
   TutorialQuestionStep,
+  TutorialStep,
   TutorialStepConfig,
 } from "./tutorialTypes";
 
 export const COMMON_BACK_LABEL = "튜토리얼 이전 단계";
+export const TUTORIAL_MAX_SPORT_SELECTIONS = 3;
+export const TUTORIAL_ANALYZING_DELAY_MS = 4000;
+
+export const INITIAL_TUTORIAL_SELECTIONS: Record<
+  TutorialQuestionStep,
+  string | null
+> = {
+  exerciseStyle: null,
+  intensity: null,
+  motivation: null,
+};
+
+export const NEXT_STEP_BY_QUESTION: Record<TutorialQuestionStep, TutorialStep> = {
+  exerciseStyle: "intensity",
+  intensity: "motivation",
+  motivation: "sports",
+};
+
+export const PREVIOUS_STEP_BY_STEP: Partial<Record<TutorialStep, TutorialStep>> = {
+  intensity: "exerciseStyle",
+  motivation: "intensity",
+  sports: "motivation",
+  schedule: "sports",
+};
 
 export const TUTORIAL_STEPS: Record<TutorialQuestionStep, TutorialStepConfig> = {
   exerciseStyle: {
@@ -107,7 +132,7 @@ export const TUTORIAL_STEPS: Record<TutorialQuestionStep, TutorialStepConfig> = 
 export const SPORTS_STEP = {
   headerTitle: "운동 종목",
   title: "어떤 운동을 좋아하시나요?",
-  description: "좋아하는 운동을 최대 3개까지 골라주세요.",
+  description: `좋아하는 운동을 최대 ${TUTORIAL_MAX_SPORT_SELECTIONS}개까지 골라주세요.`,
   progressRatio: 0.8,
   options: [
     {

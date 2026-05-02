@@ -4,6 +4,7 @@ import { StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import TutorialAnalyzingScreen from "@/components/auth/tutorial/TutorialAnalyzingScreen";
+import { TUTORIAL_ANALYZING_DELAY_MS } from "@/components/auth/tutorial/tutorialSteps";
 import { submitSchedule } from "@/services/schedule/scheduleService";
 import { submitSurvey } from "@/services/survey/surveyService";
 import { useSurveyStore } from "@/stores/survey/surveyStore";
@@ -41,7 +42,7 @@ export default function TutorialAnalyzingRoute() {
             typeof params.studentId === "string" ? params.studentId : "",
         },
       });
-    }, 4000);
+    }, TUTORIAL_ANALYZING_DELAY_MS);
 
     return () => clearTimeout(timeoutId);
   // eslint-disable-next-line react-hooks/exhaustive-deps
