@@ -1,8 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
+import { useFocusEffect } from "@react-navigation/native";
 import { router } from "expo-router";
 import React from "react";
 import {
   ActivityIndicator,
+  Alert,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -129,6 +131,14 @@ const getLabelByValue = <T extends string>(
   value: T,
 ) => options.find((option) => option.value === value)?.label;
 
+const formatDateQuery = (date: Date) => {
+  const year = date.getFullYear();
+  const month = `${date.getMonth() + 1}`.padStart(2, "0");
+  const day = `${date.getDate()}`.padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+};
+
 export default function PostListScreen() {
   const insets = useSafeAreaInsets();
 
@@ -165,6 +175,12 @@ export default function PostListScreen() {
     ? CREATE_POST_DIFFICULTY_LABELS[selectedDifficulty as PostDifficulty]
     : "난이도";
 
+  const scheduledDateQuery = React.useMemo(() => {
+    if (selectedDate === "today") return formatDateQuery(new Date());
+    if (selectedDate === "tomorrow") return formatDateQuery(addDays(new Date(), 1));
+    return undefined;
+  }, [selectedDate]);
+
   const filteredPosts = React.useMemo(
     () =>
       posts.filter((post) => {
@@ -172,10 +188,6 @@ export default function PostListScreen() {
         const endAt = new Date(post.scheduledEndAt);
 
         if (Number.isNaN(startAt.getTime()) || Number.isNaN(endAt.getTime())) {
-          return false;
-        }
-
-        if (hasExerciseFilter && post.exerciseType !== selectedExerciseType) {
           return false;
         }
 
@@ -209,44 +221,64 @@ export default function PostListScreen() {
           return false;
         }
 
-        if (hasDifficultyFilter && post.difficulty !== selectedDifficulty) {
-          return false;
-        }
-
         return true;
       }),
     [
       hasDateFilter,
-      hasDifficultyFilter,
-      hasExerciseFilter,
       hasTimeFilter,
       posts,
       selectedDate,
-      selectedDifficulty,
-      selectedExerciseType,
       selectedTime,
     ],
   );
 
-  React.useEffect(() => {
-    let isMounted = true;
+  useFocusEffect(
+    React.useCallback(() => {
+      let isActive = true;
 
-    getPosts()
-      .then((nextPosts) => {
-        if (isMounted) {
-          setPosts(nextPosts);
-        }
+      setIsLoading(true);
+      getPosts({
+        sportType: hasExerciseFilter ? selectedExerciseType : undefined,
+        difficulty: hasDifficultyFilter ? selectedDifficulty : undefined,
+        scheduledDate: scheduledDateQuery,
+        status: "OPEN",
+        page: 0,
+        size: 20,
+        sort: "latest",
       })
-      .finally(() => {
-        if (isMounted) {
-          setIsLoading(false);
-        }
-      });
+        .then((nextPosts) => {
+          if (isActive) {
+            setPosts(nextPosts);
+          }
+        })
+        .catch((error) => {
+          if (isActive) {
+            setPosts([]);
+            Alert.alert(
+              "목록 조회 실패",
+              error instanceof Error
+                ? error.message
+                : "모집글 목록을 불러올 수 없습니다.",
+            );
+          }
+        })
+        .finally(() => {
+          if (isActive) {
+            setIsLoading(false);
+          }
+        });
 
-    return () => {
-      isMounted = false;
-    };
-  }, []);
+      return () => {
+        isActive = false;
+      };
+    }, [
+      hasDifficultyFilter,
+      hasExerciseFilter,
+      scheduledDateQuery,
+      selectedDifficulty,
+      selectedExerciseType,
+    ]),
+  );
 
   return (
     <>

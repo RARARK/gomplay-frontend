@@ -1,23 +1,55 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React from "react";
-import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  Alert,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import TimetableSelector from "@/components/common/TimetableSelector";
+import { getSchedule, updateSchedule } from "@/services/schedule/scheduleService";
 import type { UserTimetableRange, UserTimetableState } from "@/types/domain/user";
-import { createEmptyTimetableState } from "@/utils/timetable";
+import {
+  compressTimetableState,
+  createEmptyTimetableState,
+  expandTimetableRanges,
+} from "@/utils/timetable";
 
 export default function EditTimetableRoute() {
+  const [isLoading, setIsLoading] = React.useState(true);
+  const [isSaving, setIsSaving] = React.useState(false);
   const [timetable, setTimetable] = React.useState<UserTimetableState>(() =>
     createEmptyTimetableState(),
   );
 
-  const handleSave = (_ranges: UserTimetableRange[]) => {
-    // TODO: API 연동
-    Alert.alert("저장 완료", "시간표가 저장됐어요.", [
-      { text: "확인", onPress: () => router.back() },
-    ]);
+  React.useEffect(() => {
+    getSchedule()
+      .then((ranges) => setTimetable(expandTimetableRanges(ranges)))
+      .catch(() => {})
+      .finally(() => setIsLoading(false));
+  }, []);
+
+  const handleSave = async (ranges: UserTimetableRange[]) => {
+    const toSubmit = ranges.length > 0 ? ranges : compressTimetableState(timetable);
+    setIsSaving(true);
+    try {
+      await updateSchedule(toSubmit);
+      Alert.alert("저장 완료", "시간표가 저장됐어요.", [
+        { text: "확인", onPress: () => router.back() },
+      ]);
+    } catch (err) {
+      Alert.alert(
+        "저장 실패",
+        err instanceof Error ? err.message : "저장 중 오류가 발생했습니다.",
+      );
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -34,14 +66,20 @@ export default function EditTimetableRoute() {
         <View style={styles.headerSpacer} />
       </View>
 
-      <TimetableSelector
-        value={timetable}
-        onChange={setTimetable}
-        onSave={handleSave}
-        title="언제 운동할 수 있나요?"
-        subtitle="강의가 있는 시간대를 선택하면 더 잘 맞는 파트너를 추천해드려요."
-        saveLabel="저장하기"
-      />
+      {isLoading ? (
+        <View style={styles.centered}>
+          <ActivityIndicator size="large" color="#4C5BE2" />
+        </View>
+      ) : (
+        <TimetableSelector
+          value={timetable}
+          onChange={setTimetable}
+          onSave={isSaving ? () => {} : handleSave}
+          title="언제 운동할 수 있나요?"
+          subtitle="강의가 있는 시간대를 선택하면 더 잘 맞는 파트너를 추천해드려요."
+          saveLabel={isSaving ? "저장 중..." : "저장하기"}
+        />
+      )}
     </SafeAreaView>
   );
 }
@@ -74,5 +112,10 @@ const styles = StyleSheet.create({
   },
   headerSpacer: {
     width: 40,
+  },
+  centered: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
   },
 });

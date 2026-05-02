@@ -2,6 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import MatchHistoryCard, {
   type MatchHistoryItem,
@@ -25,7 +26,7 @@ const MOCK_HISTORY: MatchHistoryItem[] = [
     completedAt: "2026-04-04",
     location: "체육관",
     scheduledTime: "19:00~21:00",
-    difficulty: "초보",
+    difficulty: "초보자",
     exerciseType: "풋살",
   },
   {
@@ -37,7 +38,7 @@ const MOCK_HISTORY: MatchHistoryItem[] = [
     completedAt: "2026-04-04",
     location: "장소 협의",
     scheduledTime: "시간 협의",
-    difficulty: "난이도 협의",
+    difficulty: "입문자",
     exerciseType: "종목 협의",
   },
   {
@@ -49,12 +50,13 @@ const MOCK_HISTORY: MatchHistoryItem[] = [
     completedAt: "2026-04-02",
     location: "서양대 체육관",
     scheduledTime: "18:30~20:00",
-    difficulty: "가볍게",
+    difficulty: "입문자",
     exerciseType: "배드민턴",
   },
 ];
 
 export default function MatchHistoryScreen() {
+  const insets = useSafeAreaInsets();
   const [filter, setFilter] = React.useState<HistoryFilter>("ALL");
 
   const filteredHistory = React.useMemo(
@@ -68,7 +70,7 @@ export default function MatchHistoryScreen() {
   return (
     <ScrollView
       style={styles.screen}
-      contentContainerStyle={styles.content}
+      contentContainerStyle={[styles.content, { paddingBottom: 32 + insets.bottom }]}
       showsVerticalScrollIndicator={false}
     >
       <View style={styles.headerRow}>
@@ -136,9 +138,9 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
   },
   content: {
+    flexGrow: 1,
     paddingHorizontal: 16,
     paddingTop: 8,
-    paddingBottom: 32,
     gap: 16,
   },
   headerRow: {
@@ -197,8 +199,9 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   empty: {
+    flex: 1,
     alignItems: "center",
-    paddingTop: 60,
+    justifyContent: "center",
   },
   emptyText: {
     fontSize: 15,

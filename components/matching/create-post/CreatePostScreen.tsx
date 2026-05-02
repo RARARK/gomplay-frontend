@@ -37,6 +37,7 @@ import CreatePostTimeRangeModal from "@/components/matching/create-post/CreatePo
 import {
   applyDateStringToRange,
   applyTimePartsToRange,
+  formatGatheringDateTime,
   formatCreatePostDayLabel,
   formatCreatePostTimeRangeLabel,
   getRoundedFutureDate,
@@ -61,7 +62,7 @@ const createInitialFormState = (): CreatePostFormState => ({
   scheduledEndAt: getRoundedFutureDate(3),
   capacity: 1,
   message: "",
-  difficulty: POST_DIFFICULTY.BEGINNER,
+  difficulty: POST_DIFFICULTY.INTRODUCTORY,
 });
 
 export default function CreatePostScreen() {
@@ -291,11 +292,11 @@ export default function CreatePostScreen() {
       const result = await createGathering({
         title: payload.title ?? "같이 운동하실 분 구해요",
         sportType: payload.exerciseType,
-        difficulty: CREATE_POST_DIFFICULTY_LABELS[payload.difficulty],
+        difficulty: payload.difficulty,
         venue: payload.location,
         venueLat: locationCoords.lat,
         venueLng: locationCoords.lng,
-        scheduledAt: payload.scheduledStartAt,
+        scheduledAt: formatGatheringDateTime(form.scheduledStartAt),
         maxParticipants: payload.capacity,
       });
 

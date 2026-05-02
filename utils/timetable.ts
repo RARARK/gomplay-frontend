@@ -57,6 +57,25 @@ export const updateTimetableCell = (
   ),
 });
 
+export const expandTimetableRanges = (
+  ranges: UserTimetableRange[],
+  slotCount = TIME_SLOTS.length,
+): UserTimetableState => {
+  const state = createEmptyTimetableState(slotCount);
+
+  ranges.forEach(({ dayOfWeek, startTime, endTime }) => {
+    const startIndex = TIME_SLOTS.indexOf(startTime);
+    const endIndex = TIME_SLOTS.indexOf(endTime);
+    if (startIndex === -1) return;
+    const last = endIndex === -1 ? slotCount : endIndex;
+    for (let i = startIndex; i < last; i++) {
+      state[dayOfWeek][i] = true;
+    }
+  });
+
+  return state;
+};
+
 export const compressTimetableState = (
   state: UserTimetableState
 ): UserTimetableRange[] => {

@@ -50,7 +50,7 @@ export default function MatchStatusCard({
     : (item.scheduledTime ?? "시간 협의");
   const difficulty = isPost
     ? item.difficulty
-    : (item.difficulty ?? "난이도 협의");
+    : (item.difficulty ?? "입문자");
   const exerciseType = isPost
     ? item.exerciseType
     : (item.exerciseType ?? "종목 협의");

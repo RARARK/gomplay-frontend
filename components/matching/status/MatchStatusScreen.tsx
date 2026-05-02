@@ -31,7 +31,7 @@ const MOCK_MATCHES: MatchItem[] = [
     partnerDepartment: "컴퓨터공학과",
     location: "체육관",
     scheduledTime: "19:00",
-    difficulty: "초보",
+    difficulty: "초보자",
     exerciseType: "풋살",
   },
   {
@@ -43,7 +43,7 @@ const MOCK_MATCHES: MatchItem[] = [
     partnerDepartment: "컴퓨터공학과",
     location: "장소 협의",
     scheduledTime: "시간 협의",
-    difficulty: "난이도 협의",
+    difficulty: "입문자",
     exerciseType: "종목 협의",
   },
   {
@@ -55,7 +55,7 @@ const MOCK_MATCHES: MatchItem[] = [
     partnerDepartment: "컴퓨터공학과",
     location: "체육관",
     scheduledTime: "19:00",
-    difficulty: "초보",
+    difficulty: "초보자",
     exerciseType: "풋살",
   },
   {
@@ -67,7 +67,7 @@ const MOCK_MATCHES: MatchItem[] = [
     partnerDepartment: "컴퓨터공학과",
     location: "장소 협의",
     scheduledTime: "시간 협의",
-    difficulty: "난이도 협의",
+    difficulty: "입문자",
     exerciseType: "종목 협의",
   },
 ];

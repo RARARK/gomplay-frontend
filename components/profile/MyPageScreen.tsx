@@ -5,6 +5,7 @@ import React from "react";
 import {
   ActivityIndicator,
   Animated,
+  type DimensionValue,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -19,10 +20,12 @@ import { useUserStore } from "@/stores/user/userStore";
 
 const MANNER_TEMPERATURE_COLOR = "#F59E0B";
 const MANNER_TEMPERATURE_TRACK = "#FEF3C7";
+const DEFAULT_PROFILE_IMAGE = require("../../assets/match/Ellipse-12.png");
 
 export default function MyPageScreen() {
   const clearAuth = useAuthStore((state) => state.clearAuth);
-  const { profile, setProfile } = useUserStore();
+  const profile = useUserStore((state) => state.profile);
+  const setProfile = useUserStore((state) => state.setProfile);
 
   const [isLoading, setIsLoading] = React.useState(!profile);
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
@@ -30,10 +33,9 @@ export default function MyPageScreen() {
     React.useState(false);
   const mannerDescriptionProgress = React.useRef(new Animated.Value(0)).current;
 
-  React.useEffect(() => {
-    if (profile) return;
-
+  const loadProfile = React.useCallback(() => {
     let cancelled = false;
+
     setIsLoading(true);
     setErrorMessage(null);
 
@@ -42,10 +44,11 @@ export default function MyPageScreen() {
         if (!cancelled) setProfile(data);
       })
       .catch((err: unknown) => {
-        if (!cancelled)
+        if (!cancelled) {
           setErrorMessage(
-            err instanceof Error ? err.message : "프로필을 불러올 수 없습니다."
+            err instanceof Error ? err.message : "프로필을 불러올 수 없습니다.",
           );
+        }
       })
       .finally(() => {
         if (!cancelled) setIsLoading(false);
@@ -54,7 +57,13 @@ export default function MyPageScreen() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [setProfile]);
+
+  React.useEffect(() => {
+    if (profile) return;
+
+    return loadProfile();
+  }, [loadProfile, profile]);
 
   React.useEffect(() => {
     Animated.timing(mannerDescriptionProgress, {
@@ -70,10 +79,26 @@ export default function MyPageScreen() {
     router.replace("/login");
   };
 
-  const exerciseTags = (profile?.exerciseTypes ?? "")
-    .split(",")
-    .map((t) => t.trim())
-    .filter(Boolean);
+  const exerciseTags = React.useMemo(
+    () =>
+      (profile?.exerciseTypes ?? "")
+        .split(",")
+        .map((t) => t.trim())
+        .filter(Boolean),
+    [profile?.exerciseTypes],
+  );
+
+  const profileImageSource = React.useMemo(
+    () =>
+      profile?.profileImageUrl
+        ? { uri: profile.profileImageUrl }
+        : DEFAULT_PROFILE_IMAGE,
+    [profile?.profileImageUrl],
+  );
+
+  const mannerTemperature = profile?.mannerTemperature ?? 36.5;
+  const mannerTemperatureWidth =
+    `${Math.min(mannerTemperature, 100)}%` as DimensionValue;
 
   if (isLoading) {
     return (
@@ -89,19 +114,7 @@ export default function MyPageScreen() {
         <Text style={styles.errorText}>{errorMessage}</Text>
         <Pressable
           style={styles.retryButton}
-          onPress={() => {
-            useUserStore.getState().clearProfile();
-            setErrorMessage(null);
-            setIsLoading(true);
-            getMyProfile()
-              .then(setProfile)
-              .catch((err: unknown) =>
-                setErrorMessage(
-                  err instanceof Error ? err.message : "프로필을 불러올 수 없습니다."
-                )
-              )
-              .finally(() => setIsLoading(false));
-          }}
+          onPress={loadProfile}
         >
           <Text style={styles.retryText}>다시 시도</Text>
         </Pressable>
@@ -133,13 +146,10 @@ export default function MyPageScreen() {
         <View style={styles.profileCard}>
           <View style={styles.profileImageWrap}>
             <Image
-              source={
-                profile?.profileImageUrl
-                  ? { uri: profile.profileImageUrl }
-                  : require("../../assets/match/Ellipse-12.png")
-              }
+              source={profileImageSource}
               style={styles.profileImage}
               contentFit="cover"
+              transition={120}
             />
             <View style={styles.onlineDot} />
           </View>
@@ -217,7 +227,7 @@ export default function MyPageScreen() {
 
           <View style={styles.temperatureRow}>
             <Text style={styles.temperature}>
-              {(profile?.mannerTemperature ?? 36.5).toFixed(1)}°C
+              {mannerTemperature.toFixed(1)}°C
             </Text>
             <Ionicons name="happy-outline" size={30} color={MANNER_TEMPERATURE_COLOR} />
           </View>
@@ -226,9 +236,7 @@ export default function MyPageScreen() {
             <View
               style={[
                 styles.temperatureFill,
-                {
-                  width: `${Math.min(profile?.mannerTemperature ?? 36.5, 100)}%`,
-                },
+                { width: mannerTemperatureWidth },
               ]}
             />
           </View>

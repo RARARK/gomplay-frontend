@@ -154,9 +154,7 @@ export default function MatchHistoryCard({
 }
 
 const styles = StyleSheet.create({
-  container: {
-    width: "100%",
-  },
+  container: {},
   badge: {
     alignSelf: "flex-start",
     minHeight: 28,
@@ -259,7 +257,8 @@ const styles = StyleSheet.create({
     rowGap: 6,
   },
   detailChip: {
-    width: "48.5%",
+    flexBasis: "47%",
+    flexGrow: 1,
     minHeight: 30,
     flexDirection: "row",
     alignItems: "center",
@@ -279,7 +278,6 @@ const styles = StyleSheet.create({
   actionRow: {
     flexDirection: "row",
     gap: 6,
-    marginTop: 4,
   },
   actionButton: {
     flex: 1,

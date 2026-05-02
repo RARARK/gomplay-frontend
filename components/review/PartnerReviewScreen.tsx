@@ -33,7 +33,7 @@ const MOCK_PARTNER = {
   mannerTemperature: 36.5,
   location: "체육관",
   scheduledTime: "19:00~21:00",
-  difficulty: "초보",
+  difficulty: "초보자",
   exerciseType: "풋살",
 };
 

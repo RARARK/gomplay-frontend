@@ -9,6 +9,16 @@ import {
   type ResolveApplicationResult,
 } from "@/types/domain/application";
 import {
+  getGatheringDetail,
+  getGatheringPosts,
+} from "@/services/gathering/gatheringService";
+import type {
+  GatheringListItem,
+  GatheringListQuery,
+  GatheringPostDetailResponse,
+} from "@/types/domain/gathering";
+import {
+  POST_DIFFICULTY,
   POST_STATUS,
   type CreatePostInput,
   type CreatePostResult,
@@ -40,6 +50,63 @@ const createDate = (dayOffset: number, hour: number, minute = 0) => {
   date.setHours(hour, minute, 0, 0);
   return date.toISOString();
 };
+
+const DIFFICULTY_ALIASES: Record<string, Post["difficulty"]> = {
+  입문자: POST_DIFFICULTY.INTRODUCTORY,
+  초보자: POST_DIFFICULTY.BEGINNER,
+  중급자: POST_DIFFICULTY.INTERMEDIATE,
+  숙련자: POST_DIFFICULTY.ADVANCED,
+  전문가: POST_DIFFICULTY.EXPERT,
+  beginner: POST_DIFFICULTY.BEGINNER,
+  intermediate: POST_DIFFICULTY.INTERMEDIATE,
+  advanced: POST_DIFFICULTY.ADVANCED,
+  expert: POST_DIFFICULTY.EXPERT,
+  초급: POST_DIFFICULTY.BEGINNER,
+  중급: POST_DIFFICULTY.INTERMEDIATE,
+  고급: POST_DIFFICULTY.ADVANCED,
+};
+
+const normalizeDifficulty = (value: string): Post["difficulty"] =>
+  DIFFICULTY_ALIASES[value] ?? POST_DIFFICULTY.INTRODUCTORY;
+
+const normalizeTags = (tags?: string | null) =>
+  tags
+    ?.split(/\s+/)
+    .map((tag) => tag.trim())
+    .filter(Boolean);
+
+const mapGatheringDetailToPost = (
+  detail: GatheringPostDetailResponse,
+): Post => ({
+  id: detail.id,
+  hostUserId: 0,
+  title: detail.title,
+  exerciseType: detail.sportType,
+  location: detail.venue,
+  scheduledStartAt: detail.scheduledAt,
+  scheduledEndAt: detail.scheduledEndAt,
+  capacity: detail.maxParticipants,
+  message: detail.description ?? undefined,
+  difficulty: normalizeDifficulty(detail.difficulty),
+  tags: normalizeTags(detail.tags),
+  status: detail.status,
+  createdAt: detail.createdAt,
+});
+
+const mapGatheringListItemToPost = (item: GatheringListItem): Post => ({
+  id: item.id,
+  hostUserId: 0,
+  title: item.title,
+  exerciseType: item.sportType,
+  location: item.venue,
+  scheduledStartAt: item.scheduledAt,
+  scheduledEndAt: item.scheduledEndAt,
+  capacity: item.maxParticipants,
+  difficulty: normalizeDifficulty(item.difficulty),
+  tags: normalizeTags(item.tags),
+  status: item.status === "FULL" ? POST_STATUS.CLOSED : item.status,
+  createdAt: item.scheduledAt,
+});
 
 const hostProfiles: Record<number, PostHostProfile> = {
   1: {
@@ -73,7 +140,7 @@ let posts: Post[] = [
     scheduledEndAt: createDate(1, 20, 30),
     capacity: 4,
     message: "초보도 환영해요. 가볍게 같이 뛰실 분 찾아요.",
-    difficulty: "BEGINNER",
+    difficulty: POST_DIFFICULTY.INTRODUCTORY,
     tags: ["#초보만", "#조용함"],
     status: POST_STATUS.OPEN,
     createdAt: now.toISOString(),
@@ -88,7 +155,7 @@ let posts: Post[] = [
     scheduledEndAt: createDate(2, 20),
     capacity: 2,
     message: "랠리 위주로 편하게 치려고 해요.",
-    difficulty: "EASY",
+    difficulty: POST_DIFFICULTY.BEGINNER,
     tags: ["#가볍게", "#시간맞춤"],
     status: POST_STATUS.OPEN,
     createdAt: now.toISOString(),
@@ -103,7 +170,7 @@ let posts: Post[] = [
     scheduledEndAt: createDate(3, 8),
     capacity: 3,
     message: "페이스는 천천히 맞춰서 뛰어요.",
-    difficulty: "NORMAL",
+    difficulty: POST_DIFFICULTY.INTERMEDIATE,
     tags: ["#아침운동", "#비슷하게"],
     status: POST_STATUS.OPEN,
     createdAt: now.toISOString(),
@@ -122,12 +189,24 @@ const participantsByPostId: Record<number, PostParticipant[]> = {
   ],
 };
 
-export async function getPosts(): Promise<Post[]> {
-  return posts;
+export async function getPosts(query?: GatheringListQuery): Promise<Post[]> {
+  const response = await getGatheringPosts({
+    status: "OPEN",
+    page: 0,
+    size: 20,
+    sort: "latest",
+    ...query,
+  });
+
+  return response.content.map(mapGatheringListItemToPost);
 }
 
 export async function getPostById(postId: number): Promise<Post | null> {
-  return posts.find((post) => post.id === postId) ?? null;
+  try {
+    return mapGatheringDetailToPost(await getGatheringDetail(postId));
+  } catch {
+    return posts.find((post) => post.id === postId) ?? null;
+  }
 }
 
 export async function getPostHostProfile(
@@ -147,6 +226,23 @@ export async function getPostParticipants(
   postId: number,
 ): Promise<PostParticipant[]> {
   return participantsByPostId[postId] ?? [];
+}
+
+export type UpdatePostInput = {
+  title?: string;
+  tags?: string[];
+  capacity?: number;
+  message?: string;
+};
+
+export async function updatePost(
+  postId: number,
+  input: UpdatePostInput,
+): Promise<Post> {
+  const index = posts.findIndex((p) => p.id === postId);
+  if (index === -1) throw new Error("게시글을 찾을 수 없습니다.");
+  posts[index] = { ...posts[index], ...input };
+  return posts[index];
 }
 
 export async function createPost(

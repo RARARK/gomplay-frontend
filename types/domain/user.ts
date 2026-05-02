@@ -1,3 +1,5 @@
+import type { PostDifficulty } from "@/types/domain/post";
+
 export type DayOfWeek = "MON" | "TUE" | "WED" | "THU" | "FRI";
 
 export type UserTimetableState = Record<DayOfWeek, boolean[]>;
@@ -27,7 +29,7 @@ export type User = {
 export type UpdateProfileRequest = {
   profileImageUrl?: string;
   exerciseTypes?: string[];
-  difficulty?: string;
+  difficulty?: PostDifficulty;
   bio?: string;
 };
 
@@ -47,6 +49,6 @@ export type UserProfile = {
   pointBalance: number;
   matchCount: number;
   exerciseTypes: string;
-  difficulty: string;
+  difficulty: PostDifficulty;
   bio: string | null;
 };

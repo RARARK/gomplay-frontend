@@ -15,11 +15,13 @@ import type {
   TutorialQuestionStep,
   TutorialStep,
 } from "@/components/auth/tutorial/tutorialTypes";
+import { useSurveyStore } from "@/stores/survey/surveyStore";
 import type {
   UserTimetableRange,
   UserTimetableState,
 } from "@/types/domain/user";
-import { createEmptyTimetableState } from "@/utils/timetable";
+import { compressTimetableState, createEmptyTimetableState } from "@/utils/timetable";
+import { mapTutorialToSurvey } from "@/utils/mapTutorialToSurvey";
 
 const INITIAL_SELECTIONS: Record<TutorialQuestionStep, string | null> = {
   exerciseStyle: null,
@@ -49,6 +51,8 @@ export default function TutorialScreen() {
     nickname?: string;
     studentId?: string;
   }>();
+  const setPendingSurvey = useSurveyStore((s) => s.setPendingSurvey);
+  const setPendingSchedule = useSurveyStore((s) => s.setPendingSchedule);
   const [currentStep, setCurrentStep] =
     React.useState<TutorialStep>("exerciseStyle");
   const [selectedQuestionOptions, setSelectedQuestionOptions] =
@@ -61,6 +65,20 @@ export default function TutorialScreen() {
     email: typeof params.email === "string" ? params.email : "",
     nickname: typeof params.nickname === "string" ? params.nickname : "",
     studentId: typeof params.studentId === "string" ? params.studentId : "",
+  };
+
+  const saveSurveyAndNavigate = (scheduleRanges?: UserTimetableRange[]) => {
+    const mapped = mapTutorialToSurvey({
+      exerciseStyle: selectedQuestionOptions.exerciseStyle,
+      intensity: selectedQuestionOptions.intensity,
+      motivation: selectedQuestionOptions.motivation,
+      sports: selectedSports,
+    });
+    if (mapped) setPendingSurvey(mapped);
+    if (scheduleRanges && scheduleRanges.length > 0) {
+      setPendingSchedule(scheduleRanges);
+    }
+    router.push({ pathname: "/tutorial-analyzing", params: signupParams });
   };
 
   const handleSelectOption = (optionId: string) => {
@@ -93,18 +111,12 @@ export default function TutorialScreen() {
     });
   };
 
-  const handleScheduleSave = (_ranges: UserTimetableRange[]) => {
-    router.push({
-      pathname: "/tutorial-analyzing",
-      params: signupParams,
-    });
+  const handleScheduleSave = (ranges: UserTimetableRange[]) => {
+    saveSurveyAndNavigate(ranges.length > 0 ? ranges : compressTimetableState(timetable));
   };
 
   const handleScheduleSkip = () => {
-    router.push({
-      pathname: "/tutorial-analyzing",
-      params: signupParams,
-    });
+    saveSurveyAndNavigate();
   };
 
   const handleBack = () => {

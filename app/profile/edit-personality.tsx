@@ -1,6 +1,6 @@
 import { router } from "expo-router";
 import React from "react";
-import { Alert, StyleSheet } from "react-native";
+import { ActivityIndicator, Alert, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import TutorialScreenContent from "@/components/auth/tutorial/TutorialScreenContent";
@@ -13,20 +13,15 @@ import type {
   TutorialQuestionStep,
   TutorialStep,
 } from "@/components/auth/tutorial/tutorialTypes";
-import { updateMyProfile } from "@/services/user/userService";
+import { getSurvey, submitSurvey, updateSurvey } from "@/services/survey/surveyService";
 import { useUserStore } from "@/stores/user/userStore";
+import { mapSurveyToTutorial, mapTutorialToSurvey } from "@/utils/mapTutorialToSurvey";
 
 const PROGRESS: Record<TutorialQuestionStep | "sports", number> = {
   exerciseStyle: 0.25,
   intensity: 0.5,
   motivation: 0.75,
   sports: 1,
-};
-
-const INITIAL_SELECTIONS: Record<TutorialQuestionStep, string | null> = {
-  exerciseStyle: null,
-  intensity: null,
-  motivation: null,
 };
 
 const NEXT_STEP_BY_QUESTION: Record<TutorialQuestionStep, TutorialStep> = {
@@ -41,31 +36,39 @@ const PREVIOUS_STEP_BY_STEP: Partial<Record<TutorialStep, TutorialStep>> = {
   sports: "motivation",
 };
 
-// Maps intensity option ID → API difficulty value
-const INTENSITY_TO_DIFFICULTY: Record<string, string> = {
-  light: "BEGINNER",
-  moderate: "INTERMEDIATE",
-  focused: "ADVANCED",
-  intense: "ADVANCED",
-};
-
-// Maps sports option ID → Korean label sent to API
-const SPORT_ID_TO_LABEL: Record<string, string> = Object.fromEntries(
-  SPORTS_STEP.options.map((o) => [o.id, o.label])
-);
-
 const isQuestionStep = (step: TutorialStep): step is TutorialQuestionStep =>
   step in TUTORIAL_STEPS;
+
+const isSurveyNotFoundError = (error: unknown) =>
+  error instanceof Error &&
+  error.message.includes("설문") &&
+  error.message.includes("찾을 수 없습니다");
 
 export default function EditPersonalityRoute() {
   const clearProfile = useUserStore((state) => state.clearProfile);
 
-  const [currentStep, setCurrentStep] =
-    React.useState<TutorialStep>("exerciseStyle");
-  const [selectedQuestionOptions, setSelectedQuestionOptions] =
-    React.useState(INITIAL_SELECTIONS);
-  const [selectedSports, setSelectedSports] = React.useState<string[]>([]);
+  const [isLoading, setIsLoading] = React.useState(true);
   const [isSaving, setIsSaving] = React.useState(false);
+  const [currentStep, setCurrentStep] = React.useState<TutorialStep>("exerciseStyle");
+  const [selectedQuestionOptions, setSelectedQuestionOptions] = React.useState<
+    Record<TutorialQuestionStep, string | null>
+  >({ exerciseStyle: null, intensity: null, motivation: null });
+  const [selectedSports, setSelectedSports] = React.useState<string[]>([]);
+
+  React.useEffect(() => {
+    getSurvey()
+      .then((survey) => {
+        const mapped = mapSurveyToTutorial(survey);
+        setSelectedQuestionOptions({
+          exerciseStyle: mapped.exerciseStyle,
+          intensity: mapped.intensity,
+          motivation: mapped.motivation,
+        });
+        setSelectedSports(mapped.sports);
+      })
+      .catch(() => {})
+      .finally(() => setIsLoading(false));
+  }, []);
 
   const handleSelectOption = (optionId: string) => {
     if (!isQuestionStep(currentStep)) return;
@@ -75,38 +78,40 @@ export default function EditPersonalityRoute() {
 
   const handleSportToggle = (optionId: string) => {
     setSelectedSports((current) => {
-      if (current.includes(optionId))
-        return current.filter((id) => id !== optionId);
+      if (current.includes(optionId)) return current.filter((id) => id !== optionId);
       if (current.length >= 3) return current;
       const next = [...current, optionId];
-      if (next.length === 3) {
-        handleSave(next, selectedQuestionOptions.intensity);
-      }
+      if (next.length === 3) handleSave(next);
       return next;
     });
   };
 
-  const handleSave = async (
-    sportIds: string[],
-    intensityId: string | null
-  ) => {
+  const handleSave = async (sportIds: string[]) => {
+    const input = mapTutorialToSurvey({
+      exerciseStyle: selectedQuestionOptions.exerciseStyle,
+      intensity: selectedQuestionOptions.intensity,
+      motivation: selectedQuestionOptions.motivation,
+      sports: sportIds,
+    });
+    if (!input) return;
+
     setIsSaving(true);
     try {
-      await updateMyProfile({
-        exerciseTypes: sportIds.map((id) => SPORT_ID_TO_LABEL[id] ?? id),
-        ...(intensityId
-          ? { difficulty: INTENSITY_TO_DIFFICULTY[intensityId] ?? intensityId }
-          : {}),
-      });
-      // Invalidate cached profile so MyPageScreen re-fetches updated data
+      try {
+        await updateSurvey(input);
+      } catch (err) {
+        if (!isSurveyNotFoundError(err)) throw err;
+        await submitSurvey(input);
+      }
       clearProfile();
       Alert.alert("저장 완료", "성향 정보가 업데이트됐어요.", [
         { text: "확인", onPress: () => router.back() },
       ]);
-    } catch (err: unknown) {
-      const message =
-        err instanceof Error ? err.message : "저장 중 오류가 발생했습니다.";
-      Alert.alert("저장 실패", message);
+    } catch (err) {
+      Alert.alert(
+        "저장 실패",
+        err instanceof Error ? err.message : "저장 중 오류가 발생했습니다.",
+      );
     } finally {
       setIsSaving(false);
     }
@@ -120,6 +125,16 @@ export default function EditPersonalityRoute() {
       router.back();
     }
   };
+
+  if (isLoading) {
+    return (
+      <SafeAreaView style={styles.safe}>
+        <View style={styles.centered}>
+          <ActivityIndicator size="large" color="#4C5BE2" />
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   if (currentStep === "sports") {
     return (
@@ -136,6 +151,10 @@ export default function EditPersonalityRoute() {
         />
       </SafeAreaView>
     );
+  }
+
+  if (!isQuestionStep(currentStep)) {
+    return null;
   }
 
   const currentConfig = TUTORIAL_STEPS[currentStep];
@@ -162,5 +181,10 @@ const styles = StyleSheet.create({
   safe: {
     flex: 1,
     backgroundColor: "#FFFFFF",
+  },
+  centered: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
   },
 });

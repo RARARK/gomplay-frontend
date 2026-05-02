@@ -5,11 +5,13 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 type CreatePostCapacitySelectorProps = {
   value: number;
   onChange: (nextValue: number) => void;
+  min?: number;
 };
 
 export default function CreatePostCapacitySelector({
   value,
   onChange,
+  min = 1,
 }: CreatePostCapacitySelectorProps) {
   return (
     <View style={styles.container}>
@@ -21,7 +23,7 @@ export default function CreatePostCapacitySelector({
       <View style={styles.counter}>
         <Pressable
           accessibilityRole="button"
-          onPress={() => onChange(Math.max(1, value - 1))}
+          onPress={() => onChange(Math.max(min, value - 1))}
           style={styles.stepButton}
         >
           <Text style={styles.stepText}>-</Text>
