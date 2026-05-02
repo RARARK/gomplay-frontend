@@ -4,14 +4,25 @@ import * as ImagePicker from "expo-image-picker";
 import { router } from "expo-router";
 import React from "react";
 import {
+  ActivityIndicator,
   Alert,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+
+import {
+  updateMyProfile,
+  uploadProfileImage,
+} from "@/services/user/userService";
+import { useUserStore } from "@/stores/user/userStore";
+
+const DEFAULT_AVATAR = require("../../assets/match/Ellipse-12.png");
+const BIO_MAX_LENGTH = 100;
 
 function SectionLabel({ label }: { label: string }) {
   return <Text style={styles.sectionLabel}>{label}</Text>;
@@ -35,10 +46,16 @@ function MenuRow({
   );
 }
 
-const DEFAULT_AVATAR = require("../../assets/match/Ellipse-12.png");
-
 export default function ProfileEditRoute() {
-  const [photoUri, setPhotoUri] = React.useState<string | null>(null);
+  const { profile, clearProfile } = useUserStore();
+
+  const [photoUri, setPhotoUri] = React.useState<string | null>(
+    profile?.profileImageUrl ?? null
+  );
+  const [isUploadingPhoto, setIsUploadingPhoto] = React.useState(false);
+
+  const [bio, setBio] = React.useState(profile?.bio ?? "");
+  const [isSavingBio, setIsSavingBio] = React.useState(false);
 
   const handlePickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -46,16 +63,48 @@ export default function ProfileEditRoute() {
       Alert.alert("권한 필요", "사진 라이브러리 접근 권한이 필요합니다.");
       return;
     }
+
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ["images"],
       allowsEditing: true,
       aspect: [1, 1],
       quality: 0.8,
     });
-    if (!result.canceled) {
-      setPhotoUri(result.assets[0].uri);
+    if (result.canceled) return;
+
+    const uri = result.assets[0].uri;
+    setPhotoUri(uri);
+    setIsUploadingPhoto(true);
+
+    try {
+      const imageUrl = await uploadProfileImage(uri);
+      await updateMyProfile({ profileImageUrl: imageUrl });
+      clearProfile();
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error ? err.message : "이미지 업로드 실패";
+      Alert.alert("업로드 실패", message);
+      setPhotoUri(profile?.profileImageUrl ?? null);
+    } finally {
+      setIsUploadingPhoto(false);
     }
   };
+
+  const handleSaveBio = async () => {
+    setIsSavingBio(true);
+    try {
+      await updateMyProfile({ bio: bio.trim() });
+      clearProfile();
+      Alert.alert("저장 완료", "소개가 업데이트됐어요.");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "저장 실패";
+      Alert.alert("저장 실패", message);
+    } finally {
+      setIsSavingBio(false);
+    }
+  };
+
+  const bioChanged = bio.trim() !== (profile?.bio ?? "").trim();
 
   return (
     <SafeAreaView edges={["top"]} style={styles.safe}>
@@ -63,6 +112,7 @@ export default function ProfileEditRoute() {
         style={styles.scroll}
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
       >
         {/* 헤더 */}
         <View style={styles.headerRow}>
@@ -89,11 +139,54 @@ export default function ProfileEditRoute() {
               accessibilityRole="button"
               style={styles.photoEditBadge}
               onPress={handlePickImage}
+              disabled={isUploadingPhoto}
             >
-              <Ionicons name="camera" size={16} color="#FFFFFF" />
+              {isUploadingPhoto ? (
+                <ActivityIndicator size="small" color="#FFFFFF" />
+              ) : (
+                <Ionicons name="camera" size={16} color="#FFFFFF" />
+              )}
             </Pressable>
           </View>
-          <Text style={styles.photoHint}>프로필 사진 변경</Text>
+          <Text style={styles.photoHint}>
+            {isUploadingPhoto ? "업로드 중..." : "프로필 사진 변경"}
+          </Text>
+        </View>
+
+        {/* 소개 */}
+        <View style={styles.section}>
+          <SectionLabel label="소개" />
+          <View style={styles.card}>
+            <TextInput
+              style={styles.bioInput}
+              value={bio}
+              onChangeText={setBio}
+              placeholder="나를 소개해보세요"
+              placeholderTextColor="#9CA3AF"
+              multiline
+              maxLength={BIO_MAX_LENGTH}
+              editable={!isSavingBio}
+            />
+            <View style={styles.bioFooter}>
+              <Text style={styles.bioCount}>
+                {bio.length}/{BIO_MAX_LENGTH}
+              </Text>
+              <Pressable
+                style={[
+                  styles.bioSaveButton,
+                  (!bioChanged || isSavingBio) && styles.bioSaveButtonDisabled,
+                ]}
+                onPress={handleSaveBio}
+                disabled={!bioChanged || isSavingBio}
+              >
+                {isSavingBio ? (
+                  <ActivityIndicator size="small" color="#FFFFFF" />
+                ) : (
+                  <Text style={styles.bioSaveText}>저장</Text>
+                )}
+              </Pressable>
+            </View>
+          </View>
         </View>
 
         {/* 계정 */}
@@ -242,5 +335,44 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: "#111827",
     fontWeight: "600",
+  },
+
+  bioInput: {
+    minHeight: 90,
+    paddingHorizontal: 16,
+    paddingTop: 14,
+    paddingBottom: 8,
+    fontSize: 14,
+    color: "#111827",
+    fontFamily: "System",
+    textAlignVertical: "top",
+  },
+  bioFooter: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    paddingBottom: 12,
+  },
+  bioCount: {
+    fontSize: 12,
+    color: "#9CA3AF",
+    fontWeight: "500",
+  },
+  bioSaveButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    borderRadius: 8,
+    backgroundColor: "#4C5BE2",
+    minWidth: 48,
+    alignItems: "center",
+  },
+  bioSaveButtonDisabled: {
+    opacity: 0.4,
+  },
+  bioSaveText: {
+    fontSize: 13,
+    color: "#FFFFFF",
+    fontWeight: "700",
   },
 });

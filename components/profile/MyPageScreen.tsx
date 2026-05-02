@@ -3,6 +3,7 @@ import { Image } from "expo-image";
 import { router } from "expo-router";
 import React from "react";
 import {
+  ActivityIndicator,
   Animated,
   Pressable,
   ScrollView,
@@ -11,25 +12,49 @@ import {
   View,
 } from "react-native";
 
-const USER = {
-  name: "김단국",
-  department: "소프트웨어학과",
-  studentId: "3221234",
-  points: 150,
-  matchCount: 12,
-  mannerTemperature: 36.5,
-  noShowCount: 1,
-  tags: ["#활동적", "#초보", "#열정적"],
-  badges: ["운동왕", "개근왕", "정산왕"],
-};
+import { logout } from "@/services/auth/authService";
+import { getMyProfile } from "@/services/user/userService";
+import { useAuthStore } from "@/stores/auth/authStore";
+import { useUserStore } from "@/stores/user/userStore";
 
 const MANNER_TEMPERATURE_COLOR = "#F59E0B";
 const MANNER_TEMPERATURE_TRACK = "#FEF3C7";
 
 export default function MyPageScreen() {
+  const clearAuth = useAuthStore((state) => state.clearAuth);
+  const { profile, setProfile } = useUserStore();
+
+  const [isLoading, setIsLoading] = React.useState(!profile);
+  const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
   const [isMannerDescriptionVisible, setIsMannerDescriptionVisible] =
     React.useState(false);
   const mannerDescriptionProgress = React.useRef(new Animated.Value(0)).current;
+
+  React.useEffect(() => {
+    if (profile) return;
+
+    let cancelled = false;
+    setIsLoading(true);
+    setErrorMessage(null);
+
+    getMyProfile()
+      .then((data) => {
+        if (!cancelled) setProfile(data);
+      })
+      .catch((err: unknown) => {
+        if (!cancelled)
+          setErrorMessage(
+            err instanceof Error ? err.message : "프로필을 불러올 수 없습니다."
+          );
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   React.useEffect(() => {
     Animated.timing(mannerDescriptionProgress, {
@@ -39,6 +64,51 @@ export default function MyPageScreen() {
     }).start();
   }, [isMannerDescriptionVisible, mannerDescriptionProgress]);
 
+  const handleLogout = async () => {
+    await logout();
+    clearAuth();
+    router.replace("/login");
+  };
+
+  const exerciseTags = (profile?.exerciseTypes ?? "")
+    .split(",")
+    .map((t) => t.trim())
+    .filter(Boolean);
+
+  if (isLoading) {
+    return (
+      <View style={styles.centered}>
+        <ActivityIndicator size="large" color="#4C5BE2" />
+      </View>
+    );
+  }
+
+  if (errorMessage) {
+    return (
+      <View style={styles.centered}>
+        <Text style={styles.errorText}>{errorMessage}</Text>
+        <Pressable
+          style={styles.retryButton}
+          onPress={() => {
+            useUserStore.getState().clearProfile();
+            setErrorMessage(null);
+            setIsLoading(true);
+            getMyProfile()
+              .then(setProfile)
+              .catch((err: unknown) =>
+                setErrorMessage(
+                  err instanceof Error ? err.message : "프로필을 불러올 수 없습니다."
+                )
+              )
+              .finally(() => setIsLoading(false));
+          }}
+        >
+          <Text style={styles.retryText}>다시 시도</Text>
+        </Pressable>
+      </View>
+    );
+  }
+
   return (
     <ScrollView
       style={styles.screen}
@@ -46,187 +116,191 @@ export default function MyPageScreen() {
       showsVerticalScrollIndicator={false}
     >
       <View style={styles.topSection}>
-      <View style={styles.headerRow}>
-        <Pressable
-          accessibilityRole="button"
-          onPress={() => router.back()}
-          style={styles.iconButton}
-        >
-          <Ionicons name="chevron-back" size={28} color="#111111" />
-        </Pressable>
-        <View style={styles.headerSpacer} />
-        <Pressable accessibilityRole="button" style={styles.iconButton}>
-          <Ionicons name="settings-outline" size={24} color="#111111" />
-        </Pressable>
-      </View>
-
-      <View style={styles.profileCard}>
-        <View style={styles.profileImageWrap}>
-          <Image
-            source={require("../../assets/match/Ellipse-12.png")}
-            style={styles.profileImage}
-            contentFit="cover"
-          />
-          <View style={styles.onlineDot} />
+        <View style={styles.headerRow}>
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => router.back()}
+            style={styles.iconButton}
+          >
+            <Ionicons name="chevron-back" size={28} color="#111111" />
+          </Pressable>
+          <View style={styles.headerSpacer} />
+          <Pressable accessibilityRole="button" style={styles.iconButton}>
+            <Ionicons name="settings-outline" size={24} color="#111111" />
+          </Pressable>
         </View>
 
-        <View style={styles.profileInfo}>
-          <Text style={styles.name}>{USER.name}</Text>
-          <Text style={styles.department}>
-            {USER.department}
-            {"\n"}
-            {USER.studentId}
-          </Text>
-        </View>
+        <View style={styles.profileCard}>
+          <View style={styles.profileImageWrap}>
+            <Image
+              source={
+                profile?.profileImageUrl
+                  ? { uri: profile.profileImageUrl }
+                  : require("../../assets/match/Ellipse-12.png")
+              }
+              style={styles.profileImage}
+              contentFit="cover"
+            />
+            <View style={styles.onlineDot} />
+          </View>
 
-        <View style={styles.statGroup}>
-          <View style={styles.statItem}>
-            <Text style={styles.statValue}>{USER.points}P</Text>
-            <Text style={styles.statLabel}>포인트</Text>
+          <View style={styles.profileInfo}>
+            <Text style={styles.name}>{profile?.name ?? ""}</Text>
+            <Text style={styles.department}>
+              {profile?.department ?? ""}
+              {"\n"}
+              {profile?.studentId ?? ""}
+            </Text>
+          </View>
+
+          <View style={styles.statGroup}>
+            <View style={styles.statItem}>
+              <Text style={styles.statValue}>{profile?.pointBalance ?? 0}P</Text>
+              <Text style={styles.statLabel}>포인트</Text>
+            </View>
           </View>
         </View>
-      </View>
 
-      <Pressable
-        accessibilityRole="button"
-        style={styles.editButton}
-        onPress={() => router.push("/profile/edit" as any)}
-      >
-        <Text style={styles.editButtonText}>내 정보 편집</Text>
-      </Pressable>
-
+        <Pressable
+          accessibilityRole="button"
+          style={styles.editButton}
+          onPress={() => router.push("/profile/edit" as any)}
+        >
+          <Text style={styles.editButtonText}>내 정보 편집</Text>
+        </Pressable>
       </View>
 
       <View style={styles.bodySection}>
-      <View style={styles.card}>
-        <View style={styles.mannerHeaderRow}>
-          <Pressable
-            accessibilityRole="button"
-            onPress={() =>
-              setIsMannerDescriptionVisible((isVisible) => !isVisible)
-            }
-            style={styles.cardHeader}
-          >
-            <Text style={styles.cardTitle}>매너온도</Text>
-            <Ionicons
-              name={
-                isMannerDescriptionVisible
-                  ? "chevron-back-circle-outline"
-                  : "information-circle-outline"
+        <View style={styles.card}>
+          <View style={styles.mannerHeaderRow}>
+            <Pressable
+              accessibilityRole="button"
+              onPress={() =>
+                setIsMannerDescriptionVisible((v) => !v)
               }
-              size={20}
-              color="#111827"
-            />
-          </Pressable>
+              style={styles.cardHeader}
+            >
+              <Text style={styles.cardTitle}>매너온도</Text>
+              <Ionicons
+                name={
+                  isMannerDescriptionVisible
+                    ? "chevron-back-circle-outline"
+                    : "information-circle-outline"
+                }
+                size={20}
+                color="#111827"
+              />
+            </Pressable>
 
-          {isMannerDescriptionVisible ? (
-            <Animated.Text
-              numberOfLines={2}
+            {isMannerDescriptionVisible ? (
+              <Animated.Text
+                numberOfLines={2}
+                style={[
+                  styles.mannerInlineDescription,
+                  {
+                    opacity: mannerDescriptionProgress,
+                    transform: [
+                      {
+                        translateX: mannerDescriptionProgress.interpolate({
+                          inputRange: [0, 1],
+                          outputRange: [-10, 0],
+                        }),
+                      },
+                    ],
+                  },
+                ]}
+              >
+                매칭 참여, 노쇼, 후기를 바탕으로 한 신뢰 지표예요.
+              </Animated.Text>
+            ) : null}
+          </View>
+
+          <View style={styles.temperatureRow}>
+            <Text style={styles.temperature}>
+              {(profile?.mannerTemperature ?? 36.5).toFixed(1)}°C
+            </Text>
+            <Ionicons name="happy-outline" size={30} color={MANNER_TEMPERATURE_COLOR} />
+          </View>
+
+          <View style={styles.temperatureTrack}>
+            <View
               style={[
-                styles.mannerInlineDescription,
+                styles.temperatureFill,
                 {
-                  opacity: mannerDescriptionProgress,
-                  transform: [
-                    {
-                      translateX: mannerDescriptionProgress.interpolate({
-                        inputRange: [0, 1],
-                        outputRange: [-10, 0],
-                      }),
-                    },
-                  ],
+                  width: `${Math.min(profile?.mannerTemperature ?? 36.5, 100)}%`,
                 },
               ]}
-            >
-              매칭 참여, 노쇼, 후기를 바탕으로 한 신뢰 지표예요.
-            </Animated.Text>
-          ) : null}
-        </View>
-
-        <View style={styles.temperatureRow}>
-          <Text style={styles.temperature}>
-            {USER.mannerTemperature.toFixed(1)}°C
-          </Text>
-          <Ionicons name="happy-outline" size={30} color={MANNER_TEMPERATURE_COLOR} />
-        </View>
-
-        <View style={styles.temperatureTrack}>
-          <View
-            style={[
-              styles.temperatureFill,
-              { width: `${Math.min(USER.mannerTemperature, 100)}%` },
-            ]}
-          />
-        </View>
-
-        <View style={styles.mannerMetaRow}>
-          <View style={styles.mannerMeta}>
-            <MaterialCommunityIcons
-              name="handshake-outline"
-              size={20}
-              color="#111827"
             />
-            <Text style={styles.mannerMetaText}>매칭 {USER.matchCount}회</Text>
           </View>
-          <View style={styles.mannerMeta}>
-            <Ionicons name="alert-circle-outline" size={20} color="#EF5A24" />
-            <Text style={styles.mannerMetaText}>노쇼 {USER.noShowCount}회</Text>
+
+          <View style={styles.mannerMetaRow}>
+            <View style={styles.mannerMeta}>
+              <MaterialCommunityIcons
+                name="handshake-outline"
+                size={20}
+                color="#111827"
+              />
+              <Text style={styles.mannerMetaText}>
+                매칭 {profile?.matchCount ?? 0}회
+              </Text>
+            </View>
+            <View style={styles.mannerMeta}>
+              <Ionicons name="alert-circle-outline" size={20} color="#EF5A24" />
+              <Text style={styles.mannerMetaText}>
+                노쇼 {profile?.noShowCount ?? 0}회
+              </Text>
+            </View>
+            <Pressable accessibilityRole="button">
+              <Text style={styles.linkText}>코멘트 보기 &gt;</Text>
+            </Pressable>
           </View>
-          <Pressable accessibilityRole="button">
-            <Text style={styles.linkText}>코멘트 보기 &gt;</Text>
-          </Pressable>
         </View>
-      </View>
 
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>나의 성향</Text>
-        <View style={styles.tagRow}>
-          {USER.tags.map((tag) => (
-            <View key={tag} style={styles.tagChip}>
-              <Text style={styles.tagText}>{tag}</Text>
+        {exerciseTags.length > 0 ? (
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>나의 운동 종목</Text>
+            <View style={styles.tagRow}>
+              {exerciseTags.map((tag) => (
+                <View key={tag} style={styles.tagChip}>
+                  <Text style={styles.tagText}>{tag}</Text>
+                </View>
+              ))}
             </View>
-          ))}
+          </View>
+        ) : null}
+
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>빠른 이동</Text>
+          <View style={styles.quickActionRow}>
+            <QuickAction
+              icon={<Ionicons name="calendar-outline" size={28} color="#4C5BE2" />}
+              label="출석체크"
+              onPress={() => router.push("/attendance" as any)}
+            />
+            <QuickAction
+              icon={<Ionicons name="chatbubble-outline" size={28} color="#4C5BE2" />}
+              label="채팅"
+              onPress={() => router.push("/(tabs)/chat")}
+            />
+            <QuickAction
+              icon={<Ionicons name="time-outline" size={28} color="#4C5BE2" />}
+              label="매치 내역"
+              onPress={() => router.push("/matches/history")}
+            />
+            <QuickAction
+              icon={<Ionicons name="wallet-outline" size={28} color="#4C5BE2" />}
+              label="포인트 내역"
+            />
+          </View>
         </View>
 
-        <View style={styles.badgeRow}>
-          {USER.badges.map((badge) => (
-            <View key={badge} style={styles.badgeItem}>
-              <View style={styles.badgeIcon}>
-                <Ionicons name="ribbon-outline" size={24} color="#C8960C" />
-              </View>
-              <Text style={styles.badgeText}>{badge}</Text>
-            </View>
-          ))}
-        </View>
-      </View>
-
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>빠른 이동</Text>
-        <View style={styles.quickActionRow}>
-          <QuickAction
-            icon={<Ionicons name="calendar-outline" size={28} color="#4C5BE2" />}
-            label="출석체크"
-            onPress={() => router.push("/attendance" as any)}
-          />
-          <QuickAction
-            icon={<Ionicons name="chatbubble-outline" size={28} color="#4C5BE2" />}
-            label="채팅"
-            onPress={() => router.push("/(tabs)/chat")}
-          />
-          <QuickAction
-            icon={<Ionicons name="time-outline" size={28} color="#4C5BE2" />}
-            label="매치 내역"
-            onPress={() => router.push("/matches/history")}
-          />
-          <QuickAction
-            icon={<Ionicons name="wallet-outline" size={28} color="#4C5BE2" />}
-            label="포인트 내역"
-          />
-        </View>
-      </View>
-
-      <Pressable accessibilityRole="button" style={styles.logoutButton}>
-        <Text style={styles.logoutText}>로그아웃</Text>
-      </Pressable>
+        <Pressable
+          accessibilityRole="button"
+          style={styles.logoutButton}
+          onPress={handleLogout}
+        >
+          <Text style={styles.logoutText}>로그아웃</Text>
+        </Pressable>
       </View>
     </ScrollView>
   );
@@ -240,7 +314,11 @@ type QuickActionProps = {
 
 function QuickAction({ icon, label, onPress }: QuickActionProps) {
   return (
-    <Pressable accessibilityRole="button" onPress={onPress} style={styles.quickAction}>
+    <Pressable
+      accessibilityRole="button"
+      onPress={onPress}
+      style={styles.quickAction}
+    >
       <View style={styles.quickActionIcon}>{icon}</View>
       <Text style={styles.quickActionText}>{label}</Text>
     </Pressable>
@@ -254,6 +332,31 @@ const styles = StyleSheet.create({
   },
   content: {
     paddingBottom: 0,
+  },
+  centered: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 16,
+    backgroundColor: "#F2F7FF",
+  },
+  errorText: {
+    fontSize: 14,
+    color: "#EF4444",
+    textAlign: "center",
+    fontFamily: "System",
+  },
+  retryButton: {
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 8,
+    backgroundColor: "#4C5BE2",
+  },
+  retryText: {
+    fontSize: 14,
+    color: "#FFFFFF",
+    fontWeight: "600",
+    fontFamily: "System",
   },
   topSection: {
     backgroundColor: "#FFFFFF",
@@ -462,28 +565,6 @@ const styles = StyleSheet.create({
     lineHeight: 16,
     color: "#2A327D",
     fontWeight: "800",
-  },
-  badgeRow: {
-    flexDirection: "row",
-    gap: 22,
-  },
-  badgeItem: {
-    alignItems: "center",
-    gap: 6,
-  },
-  badgeIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "#FFF7E0",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  badgeText: {
-    fontSize: 12,
-    lineHeight: 16,
-    color: "#111827",
-    fontWeight: "700",
   },
   quickActionRow: {
     flexDirection: "row",

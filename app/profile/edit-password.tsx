@@ -2,7 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React from "react";
 import {
-  Alert,
+  ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -14,6 +14,8 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { changePassword } from "@/services/user/userService";
+
 type Field = "current" | "next" | "confirm";
 
 export default function EditPasswordRoute() {
@@ -23,9 +25,13 @@ export default function EditPasswordRoute() {
     next: false,
     confirm: false,
   });
+  const [isSaving, setIsSaving] = React.useState(false);
+  const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
 
-  const set = (field: Field, value: string) =>
+  const set = (field: Field, value: string) => {
+    setErrorMessage(null);
     setValues((prev) => ({ ...prev, [field]: value }));
+  };
 
   const toggleVisible = (field: Field) =>
     setVisible((prev) => ({ ...prev, [field]: !prev[field] }));
@@ -35,12 +41,20 @@ export default function EditPasswordRoute() {
     values.next.length >= 8 &&
     values.next === values.confirm;
 
-  const handleSave = () => {
-    if (!isValid) return;
-    // TODO: API 연동
-    Alert.alert("완료", "비밀번호가 변경됐어요.", [
-      { text: "확인", onPress: () => router.back() },
-    ]);
+  const handleSave = async () => {
+    if (!isValid || isSaving) return;
+    setIsSaving(true);
+    setErrorMessage(null);
+    try {
+      await changePassword(values.current, values.next);
+      router.back();
+    } catch (err: unknown) {
+      setErrorMessage(
+        err instanceof Error ? err.message : "비밀번호 변경 중 오류가 발생했습니다."
+      );
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -100,13 +114,20 @@ export default function EditPasswordRoute() {
         </ScrollView>
 
         <View style={styles.footer}>
+          {errorMessage ? (
+            <Text style={styles.footerError}>{errorMessage}</Text>
+          ) : null}
           <Pressable
             accessibilityRole="button"
-            style={[styles.saveButton, !isValid && styles.saveButtonDisabled]}
+            style={[styles.saveButton, (!isValid || isSaving) && styles.saveButtonDisabled]}
             onPress={handleSave}
-            disabled={!isValid}
+            disabled={!isValid || isSaving}
           >
-            <Text style={styles.saveButtonText}>변경하기</Text>
+            {isSaving ? (
+              <ActivityIndicator size="small" color="#FFFFFF" />
+            ) : (
+              <Text style={styles.saveButtonText}>변경하기</Text>
+            )}
           </Pressable>
         </View>
       </KeyboardAvoidingView>
@@ -236,6 +257,13 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
 
+  footerError: {
+    fontSize: 13,
+    color: "#EF4444",
+    fontWeight: "600",
+    textAlign: "center",
+    marginBottom: 8,
+  },
   footer: {
     paddingHorizontal: 16,
     paddingBottom: 24,

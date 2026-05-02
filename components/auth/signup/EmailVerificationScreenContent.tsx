@@ -1,32 +1,50 @@
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
-import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import {
+  ActivityIndicator,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 
 const CLOSE_LABEL = "이메일 인증 닫기";
 const HEADER_TITLE = "회원가입";
 const SCREEN_TITLE = "받은 인증을 확인하세요";
-const CODE_PLACEHOLDER = "6자리 코드";
+const TOKEN_PLACEHOLDER = "6자리 코드";
 const SUBMIT_LABEL = "다음";
 const RESEND_PREFIX = "코드를 받지 못하셨나요? ";
+const RESEND_LABEL = "재전송";
 
 type EmailVerificationScreenContentProps = {
   email: string;
-  code: string;
-  countdownText: string;
-  onChangeCode: (value: string) => void;
+  token: string;
+  onChangeToken: (value: string) => void;
   onSubmit: () => void;
   onClose: () => void;
+  isLoading?: boolean;
+  errorMessage?: string | null;
+  onResend: () => void;
+  isResending?: boolean;
+  resendMessage?: string | null;
 };
 
 export default function EmailVerificationScreenContent({
   email,
-  code,
-  countdownText,
-  onChangeCode,
+  token,
+  onChangeToken,
   onSubmit,
   onClose,
+  isLoading = false,
+  errorMessage,
+  onResend,
+  isResending = false,
+  resendMessage,
 }: EmailVerificationScreenContentProps) {
   const description = `회원가입을 완료하려면 ${email}에게\n보내드린 코드를 입력하세요`;
+  const isBusy = isLoading || isResending;
 
   return (
     <ScrollView
@@ -41,6 +59,7 @@ export default function EmailVerificationScreenContent({
           hitSlop={10}
           onPress={onClose}
           style={styles.closeButton}
+          disabled={isBusy}
         >
           <Ionicons name="close" size={22} color="#111827" />
         </Pressable>
@@ -56,22 +75,45 @@ export default function EmailVerificationScreenContent({
         <View style={styles.form}>
           <TextInput
             style={styles.codeInput}
-            placeholder={CODE_PLACEHOLDER}
+            placeholder={TOKEN_PLACEHOLDER}
             placeholderTextColor="#070322"
-            value={code}
-            onChangeText={onChangeCode}
+            value={token}
+            onChangeText={onChangeToken}
             keyboardType="number-pad"
             maxLength={6}
+            editable={!isBusy}
           />
 
-          <Pressable onPress={onSubmit} style={styles.submitButton}>
-            <Text style={styles.submitText}>{SUBMIT_LABEL}</Text>
+          {errorMessage ? (
+            <Text style={styles.errorText}>{errorMessage}</Text>
+          ) : null}
+
+          <Pressable
+            onPress={onSubmit}
+            style={[styles.submitButton, isLoading && styles.submitButtonDisabled]}
+            disabled={isBusy}
+          >
+            {isLoading ? (
+              <ActivityIndicator color="#FFFFFF" />
+            ) : (
+              <Text style={styles.submitText}>{SUBMIT_LABEL}</Text>
+            )}
           </Pressable>
 
-          <Text style={styles.resendText}>
-            <Text style={styles.resendLabel}>{RESEND_PREFIX}</Text>
-            <Text style={styles.countdown}>{countdownText}</Text>
-          </Text>
+          <View style={styles.resendRow}>
+            <Text style={styles.resendPrefix}>{RESEND_PREFIX}</Text>
+            <Pressable onPress={onResend} disabled={isBusy}>
+              {isResending ? (
+                <ActivityIndicator size="small" color="#4C5BE2" />
+              ) : (
+                <Text style={styles.resendLink}>{RESEND_LABEL}</Text>
+              )}
+            </Pressable>
+          </View>
+
+          {resendMessage ? (
+            <Text style={styles.resendMessageText}>{resendMessage}</Text>
+          ) : null}
         </View>
       </View>
     </ScrollView>
@@ -155,6 +197,12 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
     fontFamily: "System",
   },
+  errorText: {
+    fontSize: 13,
+    color: "#FF3B30",
+    textAlign: "center",
+    fontFamily: "System",
+  },
   submitButton: {
     width: "100%",
     height: 45,
@@ -165,6 +213,9 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
+  submitButtonDisabled: {
+    opacity: 0.6,
+  },
   submitText: {
     fontSize: 16,
     lineHeight: 21,
@@ -172,18 +223,32 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontFamily: "System",
   },
-  resendText: {
+  resendRow: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 4,
+  },
+  resendPrefix: {
     fontSize: 15,
     lineHeight: 20,
+    letterSpacing: -0.24,
     color: "#111827",
-    textAlign: "center",
     fontFamily: "System",
   },
-  resendLabel: {
-    letterSpacing: -0.24,
-  },
-  countdown: {
+  resendLink: {
+    fontSize: 15,
+    lineHeight: 20,
     letterSpacing: -0.5,
     fontWeight: "600",
+    color: "#4C5BE2",
+    fontFamily: "System",
+    textDecorationLine: "underline",
+  },
+  resendMessageText: {
+    fontSize: 13,
+    color: "#6B7280",
+    textAlign: "center",
+    fontFamily: "System",
   },
 });

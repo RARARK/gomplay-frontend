@@ -10,7 +10,7 @@ export type UserTimetableRange = {
 
 export type User = {
   id: number;
-  nickname: string;
+  nickname?: string;
   email?: string;
   studentId?: string;
 
@@ -22,4 +22,31 @@ export type User = {
   tags?: string[];
 
   isVerified?: boolean;
+};
+
+export type UpdateProfileRequest = {
+  profileImageUrl?: string;
+  exerciseTypes?: string[];
+  difficulty?: string;
+  bio?: string;
+};
+
+export type UpdateProfileResponse = {
+  userId: number;
+  updateAt: string;
+};
+
+export type UserProfile = {
+  id: number;
+  name: string;
+  department: string;
+  studentId: string;
+  profileImageUrl: string | null;
+  mannerTemperature: number;
+  noShowCount: number;
+  pointBalance: number;
+  matchCount: number;
+  exerciseTypes: string;
+  difficulty: string;
+  bio: string | null;
 };

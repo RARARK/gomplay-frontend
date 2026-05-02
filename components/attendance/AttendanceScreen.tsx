@@ -33,7 +33,7 @@ function parseDateParts(dateStr: string) {
 }
 
 export default function AttendanceScreen() {
-  const { user } = useAuthStore();
+  const userId = useAuthStore((state) => state.userId);
   const today = new Date();
 
   const [status, setStatus] = React.useState<AttendanceStatus | null>(null);
@@ -44,12 +44,12 @@ export default function AttendanceScreen() {
 
   const loadStatus = React.useCallback(async () => {
     try {
-      const data = await getAttendanceStatus(user?.id ?? 0);
+      const data = await getAttendanceStatus(userId ?? 0);
       setStatus(data);
     } finally {
       setIsLoading(false);
     }
-  }, [user?.id]);
+  }, [userId]);
 
   React.useEffect(() => {
     loadStatus();
@@ -59,7 +59,7 @@ export default function AttendanceScreen() {
     if (isCheckingIn || status?.todayCheckedIn) return;
     setIsCheckingIn(true);
     try {
-      const result = await checkIn(user?.id ?? 0);
+      const result = await checkIn(userId ?? 0);
       setStatus((prev) =>
         prev
           ? {

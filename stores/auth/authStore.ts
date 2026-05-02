@@ -1,27 +1,54 @@
 import { create } from "zustand";
-import type { User } from "@/types/domain/user";
 
 type AuthState = {
-  user: User | null;
+  userId: number | null;
   isLoggedIn: boolean;
+  accessToken: string | null;
+  refreshToken: string | null;
+  matching: boolean;
+  pendingCredentials: { schoolEmail: string; password: string } | null;
 
-  setUser: (user: User | null) => void;
-  clearUser: () => void;
+  setAuth: (params: {
+    userId: number;
+    accessToken: string;
+    refreshToken: string;
+    matching: boolean;
+  }) => void;
+  clearAuth: () => void;
+  getAuthorizationHeader: () => string | null;
+  setPendingCredentials: (creds: { schoolEmail: string; password: string } | null) => void;
 };
 
-export const useAuthStore = create<AuthState>((set) => ({
-  user: null,
+export const useAuthStore = create<AuthState>((set, get) => ({
+  userId: null,
   isLoggedIn: false,
+  accessToken: null,
+  refreshToken: null,
+  matching: false,
+  pendingCredentials: null,
 
-  setUser: (user) =>
+  setAuth: ({ userId, accessToken, refreshToken, matching }) =>
     set({
-      user,
-      isLoggedIn: !!user,
+      userId,
+      isLoggedIn: true,
+      accessToken,
+      refreshToken,
+      matching,
     }),
 
-  clearUser: () =>
+  clearAuth: () =>
     set({
-      user: null,
+      userId: null,
       isLoggedIn: false,
+      accessToken: null,
+      refreshToken: null,
+      matching: false,
     }),
+
+  getAuthorizationHeader: () => {
+    const token = get().accessToken;
+    return token ? `Bearer ${token}` : null;
+  },
+
+  setPendingCredentials: (creds) => set({ pendingCredentials: creds }),
 }));

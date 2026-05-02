@@ -1,37 +1,36 @@
-import { router, useLocalSearchParams } from "expo-router";
+import { router } from "expo-router";
 import React from "react";
 import { StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import TutorialCompleteScreen from "@/components/auth/tutorial/TutorialCompleteScreen";
+import { login } from "@/services/auth/authService";
 import { useAuthStore } from "@/stores/auth/authStore";
-import { createMockUserFromSignup } from "@/utils/createMockUserFromSignup";
 
 export default function TutorialCompleteRoute() {
-  const params = useLocalSearchParams<{
-    email?: string;
-    nickname?: string;
-    studentId?: string;
-  }>();
-  const setUser = useAuthStore((state) => state.setUser);
+  const { pendingCredentials, setAuth, setPendingCredentials } = useAuthStore();
 
-  const handlePressCta = () => {
-    const email = typeof params.email === "string" ? params.email : "";
-    const nickname = typeof params.nickname === "string" ? params.nickname : "";
-    const studentId =
-      typeof params.studentId === "string" ? params.studentId : "";
-
-    if (email || nickname || studentId) {
-      setUser(
-        createMockUserFromSignup({
-          email,
-          nickname,
-          studentId,
-        }),
-      );
+  const handlePressCta = async () => {
+    if (pendingCredentials) {
+      try {
+        const data = await login(
+          pendingCredentials.schoolEmail,
+          pendingCredentials.password
+        );
+        setAuth({
+          userId: data.userId,
+          accessToken: data.accessToken,
+          refreshToken: data.refreshToken,
+          matching: data.matching,
+        });
+        setPendingCredentials(null);
+        router.replace("/(tabs)");
+        return;
+      } catch {
+        // credentials 만료 또는 오류 시 로그인 화면으로
+      }
     }
-
-    router.replace("/(tabs)");
+    router.replace("/login");
   };
 
   return (

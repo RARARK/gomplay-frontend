@@ -1,5 +1,6 @@
 import React from "react";
 import {
+  ActivityIndicator,
   Pressable,
   StyleSheet,
   Text,
@@ -12,54 +13,72 @@ const SIGNUP_PROMPT = "계정이 없으신가요?";
 const SIGNUP_LABEL = "가입하기";
 
 type LoginFormProps = {
-  email: string;
+  schoolEmail: string;
   password: string;
-  onChangeEmail: (value: string) => void;
+  onChangeSchoolEmail: (value: string) => void;
   onChangePassword: (value: string) => void;
   onLoginPress: () => void;
   onSignupPress: () => void;
   onFindAccountPress?: () => void;
+  isLoading?: boolean;
+  errorMessage?: string | null;
 };
 
 export default function LoginForm({
-  email,
+  schoolEmail,
   password,
-  onChangeEmail,
+  onChangeSchoolEmail,
   onChangePassword,
   onLoginPress,
   onSignupPress,
   onFindAccountPress,
+  isLoading = false,
+  errorMessage,
 }: LoginFormProps) {
   return (
     <View style={styles.loginContainer}>
       <View style={styles.inputGroup}>
         <TextInput
           style={styles.input}
-          placeholder="Username or Email"
+          placeholder="학교 이메일"
           placeholderTextColor="#676767"
-          value={email}
-          onChangeText={onChangeEmail}
+          value={schoolEmail}
+          onChangeText={onChangeSchoolEmail}
           autoCapitalize="none"
           keyboardType="email-address"
+          editable={!isLoading}
         />
         <TextInput
           style={styles.input}
-          placeholder="Password"
+          placeholder="비밀번호"
           placeholderTextColor="#676767"
           value={password}
           onChangeText={onChangePassword}
           secureTextEntry
+          editable={!isLoading}
         />
       </View>
 
+      {errorMessage ? (
+        <Text style={styles.errorText}>{errorMessage}</Text>
+      ) : null}
+
       <View style={styles.actions}>
-        <Pressable onPress={onLoginPress} style={styles.loginButtonArea}>
-          <Text style={styles.login}>Login</Text>
+        <Pressable
+          onPress={onLoginPress}
+          style={[styles.loginButtonArea, isLoading && styles.loginButtonDisabled]}
+          disabled={isLoading}
+        >
+          {isLoading ? (
+            <ActivityIndicator color="#FFFFFF" />
+          ) : (
+            <Text style={styles.login}>로그인</Text>
+          )}
         </Pressable>
 
         <Pressable
           accessibilityRole="button"
-          disabled={!onFindAccountPress}
+          disabled={!onFindAccountPress || isLoading}
           onPress={onFindAccountPress}
           style={styles.findAccount}
         >
@@ -70,7 +89,7 @@ export default function LoginForm({
       <View style={styles.createAccountArea}>
         <View style={styles.createAccountRow}>
           <Text style={styles.createAccountPrompt}>{SIGNUP_PROMPT}</Text>
-          <Pressable accessibilityRole="button" onPress={onSignupPress}>
+          <Pressable accessibilityRole="button" onPress={onSignupPress} disabled={isLoading}>
             <Text style={styles.createAccountLink}>{SIGNUP_LABEL}</Text>
           </Pressable>
         </View>
@@ -100,6 +119,12 @@ const styles = StyleSheet.create({
     color: "#111827",
     fontFamily: "System",
   },
+  errorText: {
+    fontSize: 13,
+    color: "#FF3B30",
+    textAlign: "center",
+    fontFamily: "System",
+  },
   actions: {
     gap: 25,
   },
@@ -110,6 +135,9 @@ const styles = StyleSheet.create({
     backgroundColor: "#4C5BE2",
     justifyContent: "center",
     alignItems: "center",
+  },
+  loginButtonDisabled: {
+    opacity: 0.6,
   },
   login: {
     fontSize: 20,

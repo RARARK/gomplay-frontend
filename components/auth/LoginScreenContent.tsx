@@ -6,23 +6,27 @@ import LoginForm from "./LoginForm";
 const SCREEN_TITLE = "로그인";
 
 type LoginScreenContentProps = {
-  email: string;
+  schoolEmail: string;
   password: string;
-  onChangeEmail: (value: string) => void;
+  onChangeSchoolEmail: (value: string) => void;
   onChangePassword: (value: string) => void;
   onLoginPress: () => void;
   onSignupPress: () => void;
   onFindAccountPress?: () => void;
+  isLoading?: boolean;
+  errorMessage?: string | null;
 };
 
 export default function LoginScreenContent({
-  email,
+  schoolEmail,
   password,
-  onChangeEmail,
+  onChangeSchoolEmail,
   onChangePassword,
   onLoginPress,
   onSignupPress,
   onFindAccountPress,
+  isLoading,
+  errorMessage,
 }: LoginScreenContentProps) {
   return (
     <ScrollView
@@ -34,13 +38,15 @@ export default function LoginScreenContent({
       <View style={styles.section}>
         <Text style={styles.title}>{SCREEN_TITLE}</Text>
         <LoginForm
-          email={email}
+          schoolEmail={schoolEmail}
           password={password}
-          onChangeEmail={onChangeEmail}
+          onChangeSchoolEmail={onChangeSchoolEmail}
           onChangePassword={onChangePassword}
           onLoginPress={onLoginPress}
           onSignupPress={onSignupPress}
           onFindAccountPress={onFindAccountPress}
+          isLoading={isLoading}
+          errorMessage={errorMessage}
         />
       </View>
     </ScrollView>

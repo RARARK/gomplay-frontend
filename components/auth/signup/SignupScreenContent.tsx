@@ -1,6 +1,13 @@
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 
 import SignupField from "./SignupField";
 
@@ -10,36 +17,46 @@ const EMAIL_LABEL = "이메일 주소";
 const EMAIL_PLACEHOLDER = "단국대 이메일 주소 입력";
 const PASSWORD_LABEL = "비밀번호";
 const PASSWORD_PLACEHOLDER = "영문, 숫자, 특수문자 포함 8자리 이상";
-const NICKNAME_LABEL = "닉네임";
-const NICKNAME_PLACEHOLDER = "닉네임";
+const NAME_LABEL = "이름";
+const NAME_PLACEHOLDER = "이름";
 const STUDENT_ID_LABEL = "학번";
 const STUDENT_ID_PLACEHOLDER = "학번";
+const DEPARTMENT_LABEL = "학과";
+const DEPARTMENT_PLACEHOLDER = "학과명";
 const SUBMIT_LABEL = "다음";
 
 type SignupScreenContentProps = {
-  email: string;
+  schoolEmail: string;
   password: string;
-  nickname: string;
+  name: string;
   studentId: string;
-  onChangeEmail: (value: string) => void;
+  department: string;
+  onChangeSchoolEmail: (value: string) => void;
   onChangePassword: (value: string) => void;
-  onChangeNickname: (value: string) => void;
+  onChangeName: (value: string) => void;
   onChangeStudentId: (value: string) => void;
+  onChangeDepartment: (value: string) => void;
   onSubmit: () => void;
   onClose: () => void;
+  isLoading?: boolean;
+  errorMessage?: string | null;
 };
 
 export default function SignupScreenContent({
-  email,
+  schoolEmail,
   password,
-  nickname,
+  name,
   studentId,
-  onChangeEmail,
+  department,
+  onChangeSchoolEmail,
   onChangePassword,
-  onChangeNickname,
+  onChangeName,
   onChangeStudentId,
+  onChangeDepartment,
   onSubmit,
   onClose,
+  isLoading = false,
+  errorMessage,
 }: SignupScreenContentProps) {
   return (
     <ScrollView
@@ -54,6 +71,7 @@ export default function SignupScreenContent({
           hitSlop={10}
           onPress={onClose}
           style={styles.closeButton}
+          disabled={isLoading}
         >
           <Ionicons name="close" size={22} color="#111827" />
         </Pressable>
@@ -64,9 +82,10 @@ export default function SignupScreenContent({
         <SignupField
           label={EMAIL_LABEL}
           placeholder={EMAIL_PLACEHOLDER}
-          value={email}
-          onChangeText={onChangeEmail}
+          value={schoolEmail}
+          onChangeText={onChangeSchoolEmail}
           keyboardType="email-address"
+          editable={!isLoading}
         />
         <SignupField
           label={PASSWORD_LABEL}
@@ -74,12 +93,14 @@ export default function SignupScreenContent({
           value={password}
           onChangeText={onChangePassword}
           secureTextEntry
+          editable={!isLoading}
         />
         <SignupField
-          label={NICKNAME_LABEL}
-          placeholder={NICKNAME_PLACEHOLDER}
-          value={nickname}
-          onChangeText={onChangeNickname}
+          label={NAME_LABEL}
+          placeholder={NAME_PLACEHOLDER}
+          value={name}
+          onChangeText={onChangeName}
+          editable={!isLoading}
         />
         <SignupField
           label={STUDENT_ID_LABEL}
@@ -87,11 +108,31 @@ export default function SignupScreenContent({
           value={studentId}
           onChangeText={onChangeStudentId}
           keyboardType="number-pad"
+          editable={!isLoading}
+        />
+        <SignupField
+          label={DEPARTMENT_LABEL}
+          placeholder={DEPARTMENT_PLACEHOLDER}
+          value={department}
+          onChangeText={onChangeDepartment}
+          editable={!isLoading}
         />
       </View>
 
-      <Pressable onPress={onSubmit} style={styles.submitButton}>
-        <Text style={styles.submitText}>{SUBMIT_LABEL}</Text>
+      {errorMessage ? (
+        <Text style={styles.errorText}>{errorMessage}</Text>
+      ) : null}
+
+      <Pressable
+        onPress={onSubmit}
+        style={[styles.submitButton, isLoading && styles.submitButtonDisabled]}
+        disabled={isLoading}
+      >
+        {isLoading ? (
+          <ActivityIndicator color="#FFFFFF" />
+        ) : (
+          <Text style={styles.submitText}>{SUBMIT_LABEL}</Text>
+        )}
       </Pressable>
     </ScrollView>
   );
@@ -139,6 +180,12 @@ const styles = StyleSheet.create({
   form: {
     gap: 18,
   },
+  errorText: {
+    fontSize: 13,
+    color: "#FF3B30",
+    textAlign: "center",
+    fontFamily: "System",
+  },
   submitButton: {
     width: "100%",
     height: 45,
@@ -148,6 +195,9 @@ const styles = StyleSheet.create({
     backgroundColor: "#4C5BE2",
     justifyContent: "center",
     alignItems: "center",
+  },
+  submitButtonDisabled: {
+    opacity: 0.6,
   },
   submitText: {
     fontSize: 16,

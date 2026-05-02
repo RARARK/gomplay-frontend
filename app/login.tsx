@@ -4,30 +4,53 @@ import { StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import LoginScreenContent from "@/components/auth/LoginScreenContent";
+import { AuthError, login } from "@/services/auth/authService";
 import { useAuthStore } from "@/stores/auth/authStore";
 
 export default function LoginScreen() {
-  const setUser = useAuthStore((state) => state.setUser);
-  const [email, setEmail] = React.useState("");
+  const setAuth = useAuthStore((state) => state.setAuth);
+  const [schoolEmail, setSchoolEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
+  const [isLoading, setIsLoading] = React.useState(false);
+  const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
 
-  const handleLoginPress = () => {
-    setUser({
-      id: 1,
-      nickname: email.trim() || "Gomplay User",
-    });
-    router.replace("/(tabs)");
+  const handleLoginPress = async () => {
+    setErrorMessage(null);
+    setIsLoading(true);
+
+    try {
+      const data = await login(schoolEmail.trim(), password);
+
+      setAuth({
+        userId: data.userId,
+        accessToken: data.accessToken,
+        refreshToken: data.refreshToken,
+        matching: data.matching,
+      });
+
+      router.replace("/(tabs)");
+    } catch (error) {
+      if (error instanceof AuthError) {
+        setErrorMessage(error.message);
+      } else {
+        setErrorMessage("알 수 없는 오류가 발생하였습니다.");
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <LoginScreenContent
-        email={email}
+        schoolEmail={schoolEmail}
         password={password}
-        onChangeEmail={setEmail}
+        onChangeSchoolEmail={setSchoolEmail}
         onChangePassword={setPassword}
         onLoginPress={handleLoginPress}
         onSignupPress={() => router.push("/signup")}
+        isLoading={isLoading}
+        errorMessage={errorMessage}
       />
     </SafeAreaView>
   );
