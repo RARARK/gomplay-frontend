@@ -12,6 +12,7 @@ import {
   Text,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import MatchRunIcon from "@/assets/match/fluent-run-16-filled.svg";
 import MatchDifficultyIcon from "@/assets/match/heroicons-chart-bar-16-solid.svg";
@@ -44,6 +45,8 @@ const toDate = (value: string) => {
 };
 
 export default function PostApplyScreen({ postId }: PostApplyScreenProps) {
+  const insets = useSafeAreaInsets();
+
   const [post, setPost] = React.useState<Post | null>(null);
   const [host, setHost] = React.useState<PostHostProfile | null>(null);
   const [participants, setParticipants] = React.useState<PostParticipant[]>([]);
@@ -137,7 +140,7 @@ export default function PostApplyScreen({ postId }: PostApplyScreenProps) {
 
   return (
     <ScrollView
-      contentContainerStyle={styles.scrollContent}
+      contentContainerStyle={[styles.scrollContent, { paddingBottom: 28 + insets.bottom }]}
       showsVerticalScrollIndicator={false}
     >
       <View style={styles.headerRow}>
@@ -303,7 +306,6 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: 16,
     paddingTop: 8,
-    paddingBottom: 28,
     gap: 18,
     backgroundColor: "#FFFFFF",
   },

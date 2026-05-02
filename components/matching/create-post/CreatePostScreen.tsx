@@ -12,6 +12,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import MatchRunIcon from "@/assets/match/fluent-run-16-filled.svg";
 import MatchDifficultyIcon from "@/assets/match/heroicons-chart-bar-16-solid.svg";
@@ -64,6 +65,8 @@ const createInitialFormState = (): CreatePostFormState => ({
 });
 
 export default function CreatePostScreen() {
+  const insets = useSafeAreaInsets();
+
   const [form, setForm] = React.useState<CreatePostFormState>(
     createInitialFormState,
   );
@@ -285,7 +288,7 @@ export default function CreatePostScreen() {
         [
           {
             text: "확인",
-            onPress: () => router.replace("/(tabs)/match"),
+            onPress: () => router.replace("/posts"),
           },
         ],
       );
@@ -306,7 +309,7 @@ export default function CreatePostScreen() {
         style={styles.keyboardAvoidingView}
       >
         <ScrollView
-          contentContainerStyle={styles.scrollContent}
+          contentContainerStyle={[styles.scrollContent, { paddingBottom: 28 + insets.bottom }]}
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.headerRow}>
@@ -527,7 +530,6 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: 16,
     paddingTop: 8,
-    paddingBottom: 28,
     gap: 18,
     backgroundColor: "#FFFFFF",
   },

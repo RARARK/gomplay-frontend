@@ -9,6 +9,7 @@ import {
   Text,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import CreatePostChoiceModal from "@/components/matching/create-post/CreatePostChoiceModal";
 import {
@@ -129,6 +130,8 @@ const getLabelByValue = <T extends string>(
 ) => options.find((option) => option.value === value)?.label;
 
 export default function PostListScreen() {
+  const insets = useSafeAreaInsets();
+
   const [posts, setPosts] = React.useState<Post[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
   const [selectedExerciseType, setSelectedExerciseType] =
@@ -362,7 +365,8 @@ export default function PostListScreen() {
           </View>
         ) : filteredPosts.length > 0 ? (
           <ScrollView
-            contentContainerStyle={styles.listContent}
+            style={styles.listScrollView}
+            contentContainerStyle={[styles.listContent, { paddingBottom: 88 + insets.bottom }]}
             showsVerticalScrollIndicator={false}
           >
             {filteredPosts.map((post) => (
@@ -383,7 +387,7 @@ export default function PostListScreen() {
         <Pressable
           accessibilityRole="button"
           onPress={() => router.push("/posts/create")}
-          style={styles.fab}
+          style={[styles.fab, { bottom: 20 + insets.bottom }]}
         >
           <Ionicons name="pencil" size={18} color="#FFFFFF" />
           <Text style={styles.fabText}>모집하기</Text>
@@ -501,9 +505,11 @@ const styles = StyleSheet.create({
   filterTextActive: {
     color: "#FFFFFF",
   },
+  listScrollView: {
+    flex: 1,
+  },
   listContent: {
     gap: 12,
-    paddingBottom: 88,
   },
   stateBox: {
     flex: 1,
@@ -526,7 +532,6 @@ const styles = StyleSheet.create({
   fab: {
     position: "absolute",
     right: 18,
-    bottom: 20,
     minHeight: 48,
     flexDirection: "row",
     alignItems: "center",
