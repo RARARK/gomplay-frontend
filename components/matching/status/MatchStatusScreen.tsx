@@ -16,6 +16,11 @@ const STATUS_FILTERS = ["진행중", "수락 대기"] as const;
 type SourceFilter = (typeof SOURCE_FILTERS)[number] | null;
 type StatusFilter = (typeof STATUS_FILTERS)[number] | null;
 
+type MatchStatusScreenProps = {
+  initialMatches?: MatchItem[];
+  initialApplicantsByMatch?: Record<string, Applicant[]>;
+};
+
 const MOCK_MATCHES: MatchItem[] = [
   {
     id: "1",
@@ -64,7 +69,6 @@ const MOCK_MATCHES: MatchItem[] = [
     scheduledTime: "시간 협의",
     difficulty: "난이도 협의",
     exerciseType: "종목 협의",
-    applicantCount: 1,
   },
 ];
 
@@ -100,21 +104,49 @@ const MOCK_APPLICANTS: Record<string, Applicant[]> = {
   ],
 };
 
-export default function MatchStatusScreen() {
+export default function MatchStatusScreen({
+  initialMatches = MOCK_MATCHES,
+  initialApplicantsByMatch = MOCK_APPLICANTS,
+}: MatchStatusScreenProps) {
   const [sourceFilter, setSourceFilter] = React.useState<SourceFilter>(null);
   const [statusFilter, setStatusFilter] = React.useState<StatusFilter>(null);
   const [panelMatchId, setPanelMatchId] = React.useState<string | null>(null);
-  const [applicantsByMatch, setApplicantsByMatch] =
-    React.useState<Record<string, Applicant[]>>(MOCK_APPLICANTS);
+  const [matches] = React.useState<MatchItem[]>(initialMatches);
+  const [applicantsByMatch, setApplicantsByMatch] = React.useState<
+    Record<string, Applicant[]>
+  >(initialApplicantsByMatch);
 
-  const filtered = MOCK_MATCHES.filter((m) => {
-    if (sourceFilter === "운동 모집" && m.sourceType !== "POST") return false;
-    if (sourceFilter === "파트너 모집" && m.sourceType !== "PARTNER")
-      return false;
-    if (statusFilter === "진행중" && m.status !== "IN_PROGRESS") return false;
-    if (statusFilter === "수락 대기" && m.status !== "PENDING") return false;
-    return true;
-  });
+  const matchesWithApplicantCount = React.useMemo(
+    () =>
+      matches.map((match) =>
+        match.role === "HOST"
+          ? {
+              ...match,
+              applicantCount:
+                applicantsByMatch[match.id]?.filter(
+                  (a) => a.status === "pending",
+                ).length ?? 0,
+            }
+          : match,
+      ),
+    [applicantsByMatch, matches],
+  );
+
+  const filtered = React.useMemo(
+    () =>
+      matchesWithApplicantCount.filter((m) => {
+        if (sourceFilter === "운동 모집" && m.sourceType !== "POST")
+          return false;
+        if (sourceFilter === "파트너 모집" && m.sourceType !== "PARTNER")
+          return false;
+        if (statusFilter === "진행중" && m.status !== "IN_PROGRESS")
+          return false;
+        if (statusFilter === "수락 대기" && m.status !== "PENDING")
+          return false;
+        return true;
+      }),
+    [matchesWithApplicantCount, sourceFilter, statusFilter],
+  );
 
   const isAllSelected = sourceFilter === null && statusFilter === null;
 
@@ -126,7 +158,9 @@ export default function MatchStatusScreen() {
     if (!panelMatchId) return;
     setApplicantsByMatch((prev) => ({
       ...prev,
-      [panelMatchId]: prev[panelMatchId].filter((a) => a.id !== applicantId),
+      [panelMatchId]: (prev[panelMatchId] ?? []).filter(
+        (a) => a.id !== applicantId,
+      ),
     }));
   };
 
@@ -134,7 +168,9 @@ export default function MatchStatusScreen() {
     if (!panelMatchId) return;
     setApplicantsByMatch((prev) => ({
       ...prev,
-      [panelMatchId]: prev[panelMatchId].filter((a) => a.id !== applicantId),
+      [panelMatchId]: (prev[panelMatchId] ?? []).filter(
+        (a) => a.id !== applicantId,
+      ),
     }));
   };
 

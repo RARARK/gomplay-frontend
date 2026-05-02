@@ -261,7 +261,7 @@ export default function PostListScreen() {
             <Ionicons name="chevron-back" size={24} color="#070322" />
           </Pressable>
 
-          <Text style={styles.title}>추천 매칭 리스트</Text>
+          <Text style={styles.title} numberOfLines={1}>추천 매칭 리스트</Text>
 
           <View style={styles.headerSpacer} />
         </View>
@@ -459,9 +459,7 @@ const styles = StyleSheet.create({
     height: 36,
   },
   title: {
-    position: "absolute",
-    left: 80,
-    right: 80,
+    flex: 1,
     fontSize: 20,
     lineHeight: 28,
     color: "#070322",

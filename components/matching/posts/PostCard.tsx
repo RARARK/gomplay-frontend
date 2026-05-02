@@ -1,6 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
+import { Image } from "expo-image";
 import React from "react";
-import { Image, Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import MatchDifficultyIcon from "@/assets/match/heroicons-chart-bar-16-solid.svg";
 import { CREATE_POST_DIFFICULTY_LABELS } from "@/components/matching/create-post/createPostConfig";
@@ -70,6 +71,7 @@ export default function PostCard({ post, onPress }: PostCardProps) {
       <Image
         source={require("../../../assets/match/Ellipse-12.png")}
         style={styles.profileImage}
+        contentFit="cover"
       />
 
       <View style={styles.content}>
@@ -127,7 +129,7 @@ export default function PostCard({ post, onPress }: PostCardProps) {
           </View>
         </View>
 
-        <View style={styles.footerRow}>
+        {tags.length > 0 ? (
           <View style={styles.tagRow}>
             {tags.map((tag) => (
               <View key={tag} style={styles.tag}>
@@ -137,12 +139,7 @@ export default function PostCard({ post, onPress }: PostCardProps) {
               </View>
             ))}
           </View>
-
-          <View style={styles.temperature}>
-            <Ionicons name="thermometer-outline" size={14} color="#F97316" />
-            <Text style={styles.temperatureText}>36.5°C</Text>
-          </View>
-        </View>
+        ) : null}
       </View>
     </Pressable>
   );
@@ -248,15 +245,9 @@ const styles = StyleSheet.create({
   locationText: {
     flex: 1,
   },
-  footerRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: 8,
-  },
   tagRow: {
-    flex: 1,
     flexDirection: "row",
+    flexWrap: "wrap",
     gap: 6,
   },
   tag: {
@@ -270,17 +261,6 @@ const styles = StyleSheet.create({
     fontSize: 11,
     lineHeight: 13,
     color: "#FFFFFF",
-    fontWeight: "700",
-  },
-  temperature: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 2,
-  },
-  temperatureText: {
-    fontSize: 11,
-    lineHeight: 13,
-    color: "#070322",
     fontWeight: "700",
   },
 });

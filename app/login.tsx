@@ -7,10 +7,17 @@ import LoginScreenContent from "@/components/auth/LoginScreenContent";
 import { AuthError, login } from "@/services/auth/authService";
 import { useAuthStore } from "@/stores/auth/authStore";
 
+const DEV_LOGIN_EMAIL = "32201274@dankook.ac.kr";
+const DEV_LOGIN_PASSWORD = "password12345";
+
 export default function LoginScreen() {
   const setAuth = useAuthStore((state) => state.setAuth);
-  const [schoolEmail, setSchoolEmail] = React.useState("");
-  const [password, setPassword] = React.useState("");
+  const [schoolEmail, setSchoolEmail] = React.useState(
+    __DEV__ ? DEV_LOGIN_EMAIL : "",
+  );
+  const [password, setPassword] = React.useState(
+    __DEV__ ? DEV_LOGIN_PASSWORD : "",
+  );
   const [isLoading, setIsLoading] = React.useState(false);
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
 

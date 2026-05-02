@@ -63,7 +63,7 @@ export default function MatchStatusCard({
         ) : (
           <Ionicons name="people-outline" size={14} color="#FFFFFF" />
         )}
-        <Text style={styles.badgeText}>
+        <Text style={styles.badgeText} numberOfLines={1}>
           {isPost ? "운동 모집" : "파트너 모집"}
         </Text>
       </View>
@@ -107,7 +107,7 @@ export default function MatchStatusCard({
                   {statusLabel}
                 </Text>
               </View>
-              <View style={styles.openIndicator}>
+              <View style={styles.openIndicator} pointerEvents="none">
                 <Ionicons name="chevron-forward" size={16} color="#9CA3AF" />
               </View>
             </View>
@@ -211,6 +211,7 @@ const styles = StyleSheet.create({
   },
   badge: {
     alignSelf: "flex-start",
+    maxWidth: "100%",
     minHeight: 28,
     flexDirection: "row",
     alignItems: "center",
@@ -256,7 +257,7 @@ const styles = StyleSheet.create({
   },
   titleRow: {
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "flex-start",
     justifyContent: "space-between",
     gap: 8,
   },
@@ -352,10 +353,12 @@ const styles = StyleSheet.create({
   },
   actionRow: {
     flexDirection: "row",
+    flexWrap: "wrap",
     gap: 8,
     marginTop: 2,
   },
   actionButton: {
+    flexGrow: 1,
     minHeight: 32,
     flexDirection: "row",
     alignItems: "center",

@@ -49,7 +49,7 @@ import {
   type NearbyPlace,
 } from "@/services/location/locationService";
 import CreatePostLocationPickerModal from "@/components/matching/create-post/CreatePostLocationPickerModal";
-import { createPost } from "@/services/post/postService";
+import { createGathering } from "@/services/gathering/gatheringService";
 import { POST_DIFFICULTY, type CreatePostInput } from "@/types/domain/post";
 import { validateCreatePostInput } from "@/utils/validateCreatePost";
 
@@ -82,7 +82,10 @@ export default function CreatePostScreen() {
   const [hasSubmitted, setHasSubmitted] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [isLocationLoading, setIsLocationLoading] = React.useState(false);
-  const [locationCoords, setLocationCoords] = React.useState<Coords | null>({ lat: 37.3218, lng: 127.1254 });
+  const [locationCoords, setLocationCoords] = React.useState<Coords | null>({
+    lat: 37.3218,
+    lng: 127.1254,
+  });
   const [pickerCoords, setPickerCoords] = React.useState<Coords | null>(null);
   const [isPickerModalVisible, setIsPickerModalVisible] = React.useState(false);
   const [nearbyPlaces, setNearbyPlaces] = React.useState<NearbyPlace[]>([]);
@@ -277,14 +280,28 @@ export default function CreatePostScreen() {
       return;
     }
 
+    if (!locationCoords) {
+      Alert.alert("장소 확인 필요", "지도에서 정확한 장소를 선택해주세요.");
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
-      const result = await createPost(payload);
+      const result = await createGathering({
+        title: payload.title ?? "같이 운동하실 분 구해요",
+        sportType: payload.exerciseType,
+        difficulty: CREATE_POST_DIFFICULTY_LABELS[payload.difficulty],
+        venue: payload.location,
+        venueLat: locationCoords.lat,
+        venueLng: locationCoords.lng,
+        scheduledAt: payload.scheduledStartAt,
+        maxParticipants: payload.capacity,
+      });
 
       Alert.alert(
         "모집글이 등록되었어요",
-        `모집글 #${result.postId}가 생성되었습니다.`,
+        `모집글 #${result.id}가 생성되었습니다.`,
         [
           {
             text: "확인",
@@ -309,7 +326,10 @@ export default function CreatePostScreen() {
         style={styles.keyboardAvoidingView}
       >
         <ScrollView
-          contentContainerStyle={[styles.scrollContent, { paddingBottom: 28 + insets.bottom }]}
+          contentContainerStyle={[
+            styles.scrollContent,
+            { paddingBottom: 28 + insets.bottom },
+          ]}
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.headerRow}>
@@ -362,7 +382,9 @@ export default function CreatePostScreen() {
                 onPress={() => setIsDatePickerVisible(true)}
               />
               <CreatePostDetailCard
-                icon={<Ionicons name="time-outline" size={28} color="#111827" />}
+                icon={
+                  <Ionicons name="time-outline" size={28} color="#111827" />
+                }
                 label="시간"
                 value={formatCreatePostTimeRangeLabel(
                   form.scheduledStartAt,
@@ -390,7 +412,9 @@ export default function CreatePostScreen() {
               </Text>
             ) : null}
             {!visibleErrors.scheduledStartAt && visibleErrors.scheduledEndAt ? (
-              <Text style={styles.errorText}>{visibleErrors.scheduledEndAt}</Text>
+              <Text style={styles.errorText}>
+                {visibleErrors.scheduledEndAt}
+              </Text>
             ) : null}
             {visibleErrors.difficulty ? (
               <Text style={styles.errorText}>{visibleErrors.difficulty}</Text>
@@ -404,7 +428,6 @@ export default function CreatePostScreen() {
             <Text style={styles.sectionLabel}>장소</Text>
             <CreatePostLocationCard
               location={form.location}
-
               locationCoords={locationCoords ?? undefined}
               isLocationLoading={isLocationLoading}
               onMapPress={handleMapPress}

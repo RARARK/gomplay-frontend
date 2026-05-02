@@ -31,13 +31,12 @@ import {
   type PostHostProfile,
   type PostParticipant,
 } from "@/services/post/postService";
+import { useAuthStore } from "@/stores/auth/authStore";
 import type { Post } from "@/types/domain/post";
 
 type PostApplyScreenProps = {
   postId: number;
 };
-
-const CURRENT_USER_ID = 99;
 
 const toDate = (value: string) => {
   const date = new Date(value);
@@ -46,6 +45,7 @@ const toDate = (value: string) => {
 
 export default function PostApplyScreen({ postId }: PostApplyScreenProps) {
   const insets = useSafeAreaInsets();
+  const userId = useAuthStore((s) => s.userId);
 
   const [post, setPost] = React.useState<Post | null>(null);
   const [host, setHost] = React.useState<PostHostProfile | null>(null);
@@ -97,7 +97,7 @@ export default function PostApplyScreen({ postId }: PostApplyScreenProps) {
       await applyToPost(
         { postId: post.id },
         {
-          currentUserId: CURRENT_USER_ID,
+          currentUserId: userId ?? 0,
           hostUserId: post.hostUserId,
           postStatus: post.status,
           currentParticipantCount: participants.length,
