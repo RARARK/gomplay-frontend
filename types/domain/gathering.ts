@@ -79,7 +79,7 @@ export type UpdateGatheringResponse = {
   title: string;
   description?: string;
   sportType: string;
-  difficulty: PostDifficulty;
+  difficulty: string;
   venue: string;
   scheduledAt: string;
   scheduledEndAt?: string;

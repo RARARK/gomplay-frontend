@@ -4,63 +4,46 @@ import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import MatchDifficultyIcon from "@/assets/match/heroicons-chart-bar-16-solid.svg";
-import { CREATE_POST_DIFFICULTY_LABELS } from "@/components/matching/create-post/createPostConfig";
-import type { Post } from "@/types/domain/post";
+import type { GatheringListItem } from "@/types/domain/gathering";
 
 type PostCardProps = {
-  post: Post;
-  onPress?: (post: Post) => void;
+  post: GatheringListItem;
+  onPress?: (post: GatheringListItem) => void;
 };
 
 const getValidDate = (value: string) => {
   const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return null;
-  }
-
-  return date;
+  return Number.isNaN(date.getTime()) ? null : date;
 };
 
 const formatPostDay = (value: string) => {
   const date = getValidDate(value);
-
-  if (!date) {
-    return "";
-  }
-
+  if (!date) return "";
   const month = `${date.getMonth() + 1}`.padStart(2, "0");
   const day = `${date.getDate()}`.padStart(2, "0");
-
   return `${month}.${day}`;
 };
 
 const formatPostTime = (value: string) => {
   const date = getValidDate(value);
-
-  if (!date) {
-    return "";
-  }
-
-  const hour = `${date.getHours()}`.padStart(2, "0");
-  const minute = `${date.getMinutes()}`.padStart(2, "0");
-
-  return `${hour}:${minute}`;
+  if (!date) return "";
+  return `${`${date.getHours()}`.padStart(2, "0")}:${`${date.getMinutes()}`.padStart(2, "0")}`;
 };
 
 const formatPostTimeRange = (startAt: string, endAt: string) => {
   const startTime = formatPostTime(startAt);
   const endTime = formatPostTime(endAt);
-
-  if (!startTime || !endTime) {
-    return startTime || endTime;
-  }
-
+  if (!startTime || !endTime) return startTime || endTime;
   return `${startTime} - ${endTime}`;
 };
 
+const parseTags = (tags: string | null | undefined): string[] => {
+  if (!tags) return [];
+  return tags.split(" ").filter(Boolean);
+};
+
 export default function PostCard({ post, onPress }: PostCardProps) {
-  const tags = post.tags?.slice(0, 2) ?? [];
+  const tags = parseTags(post.tags).slice(0, 2);
 
   return (
     <Pressable
@@ -69,7 +52,11 @@ export default function PostCard({ post, onPress }: PostCardProps) {
       style={styles.card}
     >
       <Image
-        source={require("../../../assets/match/Ellipse-12.png")}
+        source={
+          post.hostProfileImageUrl
+            ? { uri: post.hostProfileImageUrl }
+            : require("../../../assets/match/Ellipse-12.png")
+        }
         style={styles.profileImage}
         contentFit="cover"
       />
@@ -82,11 +69,11 @@ export default function PostCard({ post, onPress }: PostCardProps) {
 
           <View style={styles.dateBadge}>
             <Text style={styles.dateText}>
-              {formatPostDay(post.scheduledStartAt)}
+              {formatPostDay(post.scheduledAt)}
             </Text>
           </View>
 
-          <Text style={styles.capacity}>{post.capacity}명</Text>
+          <Text style={styles.capacity}>{post.maxParticipants}명</Text>
 
           <View style={styles.openIndicator}>
             <Ionicons name="chevron-forward" size={16} color="#9CA3AF" />
@@ -96,11 +83,8 @@ export default function PostCard({ post, onPress }: PostCardProps) {
         <View style={styles.detailBlock}>
           <View style={[styles.detailItem, styles.locationItem]}>
             <Ionicons name="location-sharp" size={16} color="#EF4444" />
-            <Text
-              numberOfLines={2}
-              style={[styles.detailText, styles.locationText]}
-            >
-              {post.location}
+            <Text numberOfLines={2} style={[styles.detailText, styles.locationText]}>
+              {post.venue}
             </Text>
           </View>
 
@@ -108,22 +92,19 @@ export default function PostCard({ post, onPress }: PostCardProps) {
             <View style={styles.detailItem}>
               <Ionicons name="time-outline" size={15} color="#413F46" />
               <Text numberOfLines={1} style={styles.detailText}>
-                {formatPostTimeRange(
-                  post.scheduledStartAt,
-                  post.scheduledEndAt,
-                )}
+                {formatPostTimeRange(post.scheduledAt, post.scheduledEndAt)}
               </Text>
             </View>
             <View style={styles.detailItem}>
               <MatchDifficultyIcon width={16} height={16} />
               <Text numberOfLines={1} style={styles.detailText}>
-                {CREATE_POST_DIFFICULTY_LABELS[post.difficulty]}
+                {post.difficulty}
               </Text>
             </View>
             <View style={styles.detailItem}>
               <Ionicons name="fitness-outline" size={15} color="#413F46" />
               <Text numberOfLines={1} style={styles.detailText}>
-                {post.exerciseType}
+                {post.sportType}
               </Text>
             </View>
           </View>

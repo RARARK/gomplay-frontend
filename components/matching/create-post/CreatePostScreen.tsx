@@ -50,7 +50,7 @@ import {
   type NearbyPlace,
 } from "@/services/location/locationService";
 import CreatePostLocationPickerModal from "@/components/matching/create-post/CreatePostLocationPickerModal";
-import { createGathering } from "@/services/gathering/gatheringService";
+import { createGathering, updateGathering } from "@/services/gathering/gatheringService";
 import { POST_DIFFICULTY, type CreatePostInput } from "@/types/domain/post";
 import { validateCreatePostInput } from "@/utils/validateCreatePost";
 
@@ -299,6 +299,13 @@ export default function CreatePostScreen() {
         scheduledAt: formatGatheringDateTime(form.scheduledStartAt),
         maxParticipants: payload.capacity,
       });
+
+      if (payload.message || payload.tags) {
+        await updateGathering(result.id, {
+          description: payload.message,
+          tags: payload.tags,
+        }).catch(() => {});
+      }
 
       Alert.alert(
         "모집글이 등록되었어요",

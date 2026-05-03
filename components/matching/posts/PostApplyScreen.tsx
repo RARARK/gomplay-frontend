@@ -20,7 +20,6 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import MatchRunIcon from "@/assets/match/fluent-run-16-filled.svg";
 import MatchDifficultyIcon from "@/assets/match/heroicons-chart-bar-16-solid.svg";
 import {
-  CREATE_POST_DIFFICULTY_LABELS,
   CREATE_POST_MAX_TAG_SELECTION,
   CREATE_POST_TAG_OPTIONS,
 } from "@/components/matching/create-post/createPostConfig";
@@ -33,20 +32,12 @@ import {
 } from "@/components/matching/create-post/createPostUtils";
 import {
   deleteGathering,
+  getGatheringDetail,
   joinGathering,
   updateGathering,
 } from "@/services/gathering/gatheringService";
-import {
-  applyToPost,
-  getPostById,
-  getPostHostProfile,
-  getPostParticipants,
-  type PostHostProfile,
-  type PostParticipant,
-  updatePost,
-} from "@/services/post/postService";
-import { useAuthStore } from "@/stores/auth/authStore";
-import { POST_STATUS, type Post } from "@/types/domain/post";
+import type { GatheringPostDetailResponse } from "@/types/domain/gathering";
+import { POST_STATUS } from "@/types/domain/post";
 
 const BIO_MAX_LENGTH = 200;
 
@@ -59,15 +50,15 @@ const toDate = (value: string) => {
   return Number.isNaN(date.getTime()) ? new Date() : date;
 };
 
-const isMockPostId = (postId: number) => postId >= 300;
+const parseTags = (tags: string | null | undefined): string[] => {
+  if (!tags) return [];
+  return tags.split(" ").filter(Boolean);
+};
 
 export default function PostApplyScreen({ postId }: PostApplyScreenProps) {
   const insets = useSafeAreaInsets();
-  const userId = useAuthStore((s) => s.userId);
 
-  const [post, setPost] = React.useState<Post | null>(null);
-  const [host, setHost] = React.useState<PostHostProfile | null>(null);
-  const [participants, setParticipants] = React.useState<PostParticipant[]>([]);
+  const [post, setPost] = React.useState<GatheringPostDetailResponse | null>(null);
   const [isLoading, setIsLoading] = React.useState(true);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [isSaving, setIsSaving] = React.useState(false);
@@ -82,26 +73,18 @@ export default function PostApplyScreen({ postId }: PostApplyScreenProps) {
     let isMounted = true;
 
     const loadPost = async () => {
-      const nextPost = await getPostById(postId);
-
-      if (!nextPost) {
+      try {
+        const nextPost = await getGatheringDetail(postId);
+        if (isMounted) {
+          setPost(nextPost);
+          setEditTitle(nextPost.title ?? "");
+          setEditTags(parseTags(nextPost.tags));
+          setEditMessage(nextPost.description ?? "");
+        }
+      } catch {
+        // post stays null → "게시물을 찾을 수 없어요" shown
+      } finally {
         if (isMounted) setIsLoading(false);
-        return;
-      }
-
-      const [nextHost, nextParticipants] = await Promise.all([
-        getPostHostProfile(nextPost.hostUserId),
-        getPostParticipants(nextPost.id),
-      ]);
-
-      if (isMounted) {
-        setPost(nextPost);
-        setHost(nextHost);
-        setParticipants(nextParticipants);
-        setEditTitle(nextPost.title ?? "");
-        setEditTags(nextPost.tags ?? []);
-        setEditMessage(nextPost.message ?? "");
-        setIsLoading(false);
       }
     };
 
@@ -112,8 +95,8 @@ export default function PostApplyScreen({ postId }: PostApplyScreenProps) {
     };
   }, [postId]);
 
-  const isOwner =
-    userId !== null && post !== null && post.hostUserId === userId;
+  // hostUserId is not returned by GET /api/gathering/:id — ownership detection needs backend fix
+  const isOwner = false;
   const canEdit = isOwner && post?.status === POST_STATUS.OPEN;
   const canApply = !isOwner && post?.status === POST_STATUS.OPEN;
 
@@ -129,19 +112,11 @@ export default function PostApplyScreen({ postId }: PostApplyScreenProps) {
     if (!post) return;
     setIsSaving(true);
     try {
-      if (isMockPostId(post.id)) {
-        await updatePost(post.id, {
-          title: editTitle.trim() || undefined,
-          tags: editTags.length > 0 ? editTags : undefined,
-          message: editMessage.trim() || undefined,
-        });
-      } else {
-        await updateGathering(post.id, {
-          title: editTitle.trim() || undefined,
-          tags: editTags.length > 0 ? editTags : undefined,
-          description: editMessage.trim() || undefined,
-        });
-      }
+      await updateGathering(post.id, {
+        title: editTitle.trim() || undefined,
+        tags: editTags.length > 0 ? editTags : undefined,
+        description: editMessage.trim() || undefined,
+      });
       router.back();
     } catch (err) {
       Alert.alert(
@@ -180,20 +155,7 @@ export default function PostApplyScreen({ postId }: PostApplyScreenProps) {
 
     setIsSubmitting(true);
     try {
-      if (isMockPostId(post.id)) {
-        await applyToPost(
-          { postId: post.id },
-          {
-            currentUserId: userId ?? 0,
-            hostUserId: post.hostUserId,
-            postStatus: post.status,
-            currentParticipantCount: participants.length,
-            capacity: post.capacity,
-          },
-        );
-      } else {
-        await joinGathering(post.id);
-      }
+      await joinGathering(post.id);
       Alert.alert("신청 완료", "매칭 참여 신청이 완료되었습니다.", [
         { text: "확인", onPress: () => router.back() },
       ]);
@@ -223,7 +185,7 @@ export default function PostApplyScreen({ postId }: PostApplyScreenProps) {
     );
   }
 
-  const scheduledStartAt = toDate(post.scheduledStartAt);
+  const scheduledStartAt = toDate(post.scheduledAt);
   const scheduledEndAt = toDate(post.scheduledEndAt);
 
   return (
@@ -271,19 +233,22 @@ export default function PostApplyScreen({ postId }: PostApplyScreenProps) {
               마감된 모집글이라 읽기 전용으로만 확인할 수 있어요.
             </Text>
           </View>
-        ) : host ? (
+        ) : (
           <View style={styles.profileCard}>
             <Image
-              source={require("../../../assets/match/Ellipse-12.png")}
+              source={
+                post.hostProfileImageUrl
+                  ? { uri: post.hostProfileImageUrl }
+                  : require("../../../assets/match/Ellipse-12.png")
+              }
               style={styles.profileImage}
               contentFit="cover"
             />
             <View style={styles.profileInfo}>
-              <Text style={styles.hostName}>{host.name}</Text>
-              <Text style={styles.department}>{host.department}</Text>
+              <Text style={styles.hostName}>{post.hostName}</Text>
             </View>
           </View>
-        ) : null}
+        )}
 
         <View style={styles.section}>
           <Text style={styles.sectionLabel}>제목</Text>
@@ -315,9 +280,9 @@ export default function PostApplyScreen({ postId }: PostApplyScreenProps) {
               onToggleExpanded={() => setIsTagSelectorExpanded((v) => !v)}
               onToggleTag={handleToggleTag}
             />
-          ) : (post.tags ?? []).length > 0 ? (
+          ) : parseTags(post.tags).length > 0 ? (
             <View style={styles.selectedTagRow}>
-              {(post.tags ?? []).map((tag) => (
+              {parseTags(post.tags).map((tag) => (
                 <View key={tag} style={styles.selectedTagChip}>
                   <Text style={styles.selectedTagText}>{tag}</Text>
                 </View>
@@ -347,12 +312,12 @@ export default function PostApplyScreen({ postId }: PostApplyScreenProps) {
             <CreatePostDetailCard
               icon={<MatchDifficultyIcon width={28} height={28} />}
               label="난이도"
-              value={CREATE_POST_DIFFICULTY_LABELS[post.difficulty]}
+              value={post.difficulty}
             />
             <CreatePostDetailCard
               icon={<MatchRunIcon width={28} height={28} />}
               label="운동 종목"
-              value={post.exerciseType}
+              value={post.sportType}
             />
           </View>
         </View>
@@ -360,10 +325,10 @@ export default function PostApplyScreen({ postId }: PostApplyScreenProps) {
         <View style={styles.section}>
           <Text style={styles.sectionLabel}>장소</Text>
           <CreatePostLocationCard
-            location={post.location}
+            location={post.venue}
             onMapPress={() =>
               Linking.openURL(
-                `https://maps.google.com/maps?q=${encodeURIComponent(post.location)}`,
+                `https://maps.google.com/maps?q=${encodeURIComponent(post.venue)}`,
               )
             }
           />
@@ -376,30 +341,16 @@ export default function PostApplyScreen({ postId }: PostApplyScreenProps) {
               <Text style={styles.capacityLabel}>모집 인원</Text>
             </View>
             <View style={styles.capacityCounter}>
-              <Text style={styles.capacityValue}>{post.capacity}명</Text>
+              <Text style={styles.capacityValue}>{post.maxParticipants}명</Text>
             </View>
           </View>
         </View>
 
-        {!isOwner && participants.length > 0 ? (
+        {!isOwner && post.currentParticipants > 0 ? (
           <View style={styles.section}>
             <Text style={styles.sectionLabel}>
-              참가 인원 {participants.length}/{post.capacity}
+              참가 인원 {post.currentParticipants}/{post.maxParticipants}
             </Text>
-            <View style={styles.participantList}>
-              {participants.map((participant) => (
-                <View key={participant.id} style={styles.participantRow}>
-                  <Image
-                    source={require("../../../assets/match/Ellipse-12.png")}
-                    style={styles.participantImage}
-                    contentFit="cover"
-                  />
-                  <Text numberOfLines={1} style={styles.participantName}>
-                    {participant.name}
-                  </Text>
-                </View>
-              ))}
-            </View>
           </View>
         ) : null}
 
@@ -425,7 +376,7 @@ export default function PostApplyScreen({ postId }: PostApplyScreenProps) {
           ) : (
             <View style={styles.messageInputView}>
               <Text style={styles.messageText}>
-                {post.message || "작성자가 추가 설명을 입력하지 않았어요."}
+                {post.description || "작성자가 추가 설명을 입력하지 않았어요."}
               </Text>
             </View>
           )}

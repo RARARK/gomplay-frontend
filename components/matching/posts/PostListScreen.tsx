@@ -23,8 +23,9 @@ import {
   type CreatePostExerciseGridOption,
 } from "@/components/matching/create-post/createPostExerciseOptions";
 import PostCard from "@/components/matching/posts/PostCard";
-import { getPosts } from "@/services/post/postService";
-import type { Post, PostDifficulty } from "@/types/domain/post";
+import { getGatheringPosts } from "@/services/gathering/gatheringService";
+import type { GatheringListItem } from "@/types/domain/gathering";
+import type { PostDifficulty } from "@/types/domain/post";
 
 const ALL_FILTER_VALUE = "";
 
@@ -133,8 +134,9 @@ const getLabelByValue = <T extends string>(
 export default function PostListScreen() {
   const insets = useSafeAreaInsets();
 
-  const [posts, setPosts] = React.useState<Post[]>([]);
+  const [posts, setPosts] = React.useState<GatheringListItem[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
+  const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
   const [selectedExerciseType, setSelectedExerciseType] =
     React.useState<string>(ALL_FILTER_VALUE);
   const [selectedDate, setSelectedDate] =
@@ -169,10 +171,21 @@ export default function PostListScreen() {
   const filteredPosts = React.useMemo(
     () =>
       posts.filter((post) => {
-        const startAt = new Date(post.scheduledStartAt);
+        const startAt = new Date(post.scheduledAt);
         const endAt = new Date(post.scheduledEndAt);
 
         if (Number.isNaN(startAt.getTime()) || Number.isNaN(endAt.getTime())) {
+          return false;
+        }
+
+        if (hasExerciseFilter && post.sportType !== selectedExerciseType) {
+          return false;
+        }
+
+        if (
+          hasDifficultyFilter &&
+          post.difficulty !== CREATE_POST_DIFFICULTY_LABELS[selectedDifficulty as PostDifficulty]
+        ) {
           return false;
         }
 
@@ -183,10 +196,7 @@ export default function PostListScreen() {
             return false;
           }
 
-          if (
-            selectedDate === "tomorrow" &&
-            !isSameDay(startAt, addDays(today, 1))
-          ) {
+          if (selectedDate === "tomorrow" && !isSameDay(startAt, addDays(today, 1))) {
             return false;
           }
 
@@ -197,11 +207,7 @@ export default function PostListScreen() {
 
         if (
           hasTimeFilter &&
-          !doesTimeRangeOverlap(
-            startAt,
-            endAt,
-            selectedTime as Exclude<TimeFilterValue, "">,
-          )
+          !doesTimeRangeOverlap(startAt, endAt, selectedTime as Exclude<TimeFilterValue, "">)
         ) {
           return false;
         }
@@ -209,10 +215,14 @@ export default function PostListScreen() {
         return true;
       }),
     [
+      hasDifficultyFilter,
       hasDateFilter,
+      hasExerciseFilter,
       hasTimeFilter,
       posts,
       selectedDate,
+      selectedDifficulty,
+      selectedExerciseType,
       selectedTime,
     ],
   );
@@ -222,18 +232,19 @@ export default function PostListScreen() {
       let isActive = true;
 
       setIsLoading(true);
-      getPosts({
-        sportType: hasExerciseFilter ? selectedExerciseType : undefined,
-        difficulty: hasDifficultyFilter ? selectedDifficulty : undefined,
-      })
-        .then((nextPosts) => {
+      setErrorMessage(null);
+      getGatheringPosts({ size: 50 })
+        .then((res) => {
           if (isActive) {
-            setPosts(nextPosts);
+            setPosts(res.content);
           }
         })
-        .catch(() => {
+        .catch((err) => {
           if (isActive) {
             setPosts([]);
+            setErrorMessage(
+              err instanceof Error ? err.message : "모집글을 불러오지 못했어요.",
+            );
           }
         })
         .finally(() => {
@@ -245,12 +256,7 @@ export default function PostListScreen() {
       return () => {
         isActive = false;
       };
-    }, [
-      hasDifficultyFilter,
-      hasExerciseFilter,
-      selectedDifficulty,
-      selectedExerciseType,
-    ]),
+    }, []),
   );
 
   return (
@@ -367,6 +373,11 @@ export default function PostListScreen() {
         {isLoading ? (
           <View style={styles.stateBox}>
             <ActivityIndicator color="#4C5BE2" />
+          </View>
+        ) : errorMessage ? (
+          <View style={styles.stateBox}>
+            <Text style={styles.emptyTitle}>불러오기 실패</Text>
+            <Text style={styles.emptyText}>{errorMessage}</Text>
           </View>
         ) : filteredPosts.length > 0 ? (
           <ScrollView
