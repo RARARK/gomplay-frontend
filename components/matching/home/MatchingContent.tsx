@@ -64,7 +64,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
     letterSpacing: -0.08,
     lineHeight: 18,
-    color: Color.nuetral900,
+    color: Color.neutral900,
   },
 
   highlight: {

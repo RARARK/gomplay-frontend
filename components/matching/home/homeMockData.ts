@@ -72,14 +72,14 @@ export const matchedPartners: PartnerCardProps[] = [
     name: "Minjun Kim",
     age: 21,
     description: "Looking for a light weekend morning workout partner",
-    tags: ["Tennis", "Beginner", "Jamsil", "Fair Play"],
+    tags: ["테니스", "배드민턴", "농구", "가볍게", "같이", "스트레스"],
     matchScore: 87,
   },
   {
     name: "Seoyoon Lee",
     age: 24,
     description: "Best matched for weekday evening rallies and steady play",
-    tags: ["Badminton", "Intermediate", "Gangnam", "After Work"],
+    tags: ["배드민턴", "헬스", "수영", "적당히", "각자", "체력"],
     matchScore: 82,
   },
   {
@@ -87,7 +87,7 @@ export const matchedPartners: PartnerCardProps[] = [
     age: 23,
     description:
       "Prefers active weekend sessions and consistent cardio routines",
-    tags: ["Running", "All Levels", "Han River", "Morning"],
+    tags: ["러닝", "사이클", "축구", "제대로", "같이", "경쟁"],
     matchScore: 79,
   },
 ];

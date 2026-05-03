@@ -10,7 +10,6 @@ import {
 import Mdifire from "@/assets/home/mdi-fire.svg";
 import {
   Border,
-  BoxShadow,
   Color,
   FontFamily,
   FontSize,
@@ -35,11 +34,12 @@ const PartnerCard = ({
   matchScore = 87,
   rejectLabel = "Pass",
   acceptLabel = "Accept",
+  width,
   onReject,
   onAccept,
 }: PartnerCardProps) => {
   return (
-    <View style={styles.card}>
+    <View style={[styles.card, width != null && { width }]}>
       <ImageBackground
         source={imageSource}
         resizeMode="cover"
@@ -104,7 +104,6 @@ const PartnerCard = ({
 
 const styles = StyleSheet.create({
   card: {
-    width: HomeLayout.partnerCardWidth,
     minHeight: HomeLayout.partnerCardMinHeight,
     borderRadius: Border.br_16,
     backgroundColor: Color.colorWhite,
@@ -112,7 +111,10 @@ const styles = StyleSheet.create({
     borderColor: Color.colorGray,
     overflow: "hidden",
     elevation: 8,
-    boxShadow: BoxShadow.shadow_drop,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
   },
 
   visual: {
@@ -163,7 +165,7 @@ const styles = StyleSheet.create({
   },
 
   age: {
-    color: Color.nuetral500,
+    color: Color.neutral500,
     fontFamily: FontFamily.inter,
     fontSize: FontSize.fs_15,
     lineHeight: LineHeight.lh_20,
@@ -171,7 +173,7 @@ const styles = StyleSheet.create({
   },
 
   description: {
-    color: Color.nuetral500,
+    color: Color.neutral500,
     fontFamily: FontFamily.inter,
     fontSize: FontSize.fs_13,
     lineHeight: LineHeight.lh_18,
@@ -250,7 +252,7 @@ const styles = StyleSheet.create({
   },
 
   acceptLabel: {
-    color: Color.nuetral100,
+    color: Color.neutral100,
   },
 });
 

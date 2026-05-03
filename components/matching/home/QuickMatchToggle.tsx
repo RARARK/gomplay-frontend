@@ -97,7 +97,7 @@ const styles = StyleSheet.create({
     color: Color.colorWhite,
   },
   text: {
-    color: Color.nuetral300,
+    color: Color.neutral300,
   },
   matchingIcon: {
     marginTop: -13,

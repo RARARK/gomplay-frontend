@@ -108,7 +108,7 @@ const styles = StyleSheet.create({
   },
 
   dateText: {
-    color: Color.nuetral100,
+    color: Color.neutral100,
     fontFamily: FontFamily.inter,
     fontSize: FontSize.fs_11,
     lineHeight: LineHeight.lh_13,
@@ -134,7 +134,7 @@ const styles = StyleSheet.create({
   },
 
   sportText: {
-    color: Color.nuetral900,
+    color: Color.neutral900,
     fontFamily: FontFamily.inter,
     fontSize: FontSize.fs_15,
     lineHeight: LineHeight.lh_20,

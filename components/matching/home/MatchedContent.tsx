@@ -8,7 +8,6 @@ import {
   Color,
   FontFamily,
   FontSize,
-  HomeLayout,
   LineHeight,
 } from "@/constants/locofyHomeStyles";
 
@@ -51,7 +50,6 @@ const MatchedContent = ({
 const styles = StyleSheet.create({
   container: {
     width: "100%",
-    minHeight: HomeLayout.matchedContentMinHeight,
     alignItems: "center",
     gap: 20,
     paddingVertical: 14,
@@ -87,7 +85,7 @@ const styles = StyleSheet.create({
   },
 
   description: {
-    color: Color.nuetral700,
+    color: Color.neutral700,
     fontFamily: FontFamily.inter,
     fontSize: FontSize.fs_13,
     lineHeight: LineHeight.lh_18,

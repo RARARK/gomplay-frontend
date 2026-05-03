@@ -62,7 +62,7 @@ export default function PostMatchReviewCard({
         <TextInput
           editable={!inputDisabled}
           placeholder={inputPlaceholder}
-          placeholderTextColor={Color.nuetral700}
+          placeholderTextColor={Color.neutral700}
           value={messageValue}
           onChangeText={onChangeMessage}
           style={styles.messageInput}
@@ -127,7 +127,7 @@ const styles = StyleSheet.create({
     fontSize: FontSize.fs_11,
     lineHeight: 16,
     fontFamily: FontFamily.inter,
-    color: Color.nuetral700,
+    color: Color.neutral700,
   },
   actionButton: {
     alignSelf: "flex-start",

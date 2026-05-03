@@ -312,7 +312,7 @@ const styles = StyleSheet.create({
     fontSize: FontSize.fs_12,
     lineHeight: 16,
     fontFamily: FontFamily.inter,
-    color: Color.nuetral700,
+    color: Color.neutral700,
   },
   partnerMessageSection: {
     gap: 8,
@@ -386,6 +386,6 @@ const styles = StyleSheet.create({
     fontSize: FontSize.fs_12,
     lineHeight: 16,
     fontFamily: FontFamily.inter,
-    color: Color.nuetral700,
+    color: Color.neutral700,
   },
 });

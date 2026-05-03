@@ -44,7 +44,7 @@ export default function MatchInfoCard({
 
         <View style={styles.infoPanel}>
           <View style={styles.timeRow}>
-            <Ionicons name="time-outline" size={16} color={Color.nuetral700} />
+            <Ionicons name="time-outline" size={16} color={Color.neutral700} />
             <Text style={styles.timeText}>{timeLabel}</Text>
           </View>
 

@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Pressable, StyleSheet, View } from "react-native";
+import { Pressable, StyleSheet, View, type LayoutChangeEvent } from "react-native";
 import PreviousButton from "@/assets/home/PreviousButton.svg";
 import { HomeLayout } from "@/constants/locofyHomeStyles";
 import type { PartnerCardProps } from "@/types/ui/homeCards";
@@ -17,6 +17,15 @@ const PartnerCarousel = ({
   onIndexChange,
 }: PartnerCarouselProps) => {
   const [currentIndex, setCurrentIndex] = React.useState(initialIndex);
+  const [containerWidth, setContainerWidth] = React.useState(0);
+
+  const cardWidth = containerWidth > 0
+    ? containerWidth - HomeLayout.navButtonSize * 2 - 24
+    : undefined;
+
+  const handleLayout = (e: LayoutChangeEvent) => {
+    setContainerWidth(e.nativeEvent.layout.width);
+  };
 
   React.useEffect(() => {
     if (partners.length === 0) {
@@ -50,7 +59,7 @@ const PartnerCarousel = ({
   const isLast = currentIndex === partners.length - 1;
 
   return (
-    <View style={styles.container}>
+    <View style={styles.container} onLayout={handleLayout}>
       <Pressable
         accessibilityRole="button"
         disabled={isFirst}
@@ -63,7 +72,7 @@ const PartnerCarousel = ({
         />
       </Pressable>
 
-      <PartnerCard {...currentPartner} />
+      <PartnerCard {...currentPartner} width={cardWidth} />
 
       <Pressable
         accessibilityRole="button"

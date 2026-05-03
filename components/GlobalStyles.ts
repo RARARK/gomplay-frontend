@@ -2,7 +2,7 @@ export const Color = {
   colorSilver: "#d9d9d9",
   colorAliceblue: "#eef4ff",
   labelsPrimary: "#111827",
-  nuetral700: "#6b7280",
+  neutral700: "#6b7280",
   colorWhite: "#ffffff",
   colorGhostwhite100: "#f7f8fc",
   colorGainsboro: "#e5e7eb",

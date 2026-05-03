@@ -10,6 +10,7 @@ export type PartnerCardProps = {
   matchScore?: number;
   rejectLabel?: string;
   acceptLabel?: string;
+  width?: number;
   onReject?: () => void;
   onAccept?: () => void;
 };
