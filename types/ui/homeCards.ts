@@ -5,6 +5,8 @@ export type PartnerCardProps = {
   profileImageSource?: ImageSourcePropType;
   name?: string;
   age?: number;
+  department?: string;
+  studentId?: string;
   description?: string;
   tags?: string[];
   matchScore?: number;

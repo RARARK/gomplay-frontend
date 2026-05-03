@@ -41,17 +41,18 @@ export default function MyPageScreen() {
 
     getMyProfile()
       .then((data) => {
-        if (!cancelled) setProfile(data);
+        if (!cancelled) {
+          setProfile(data);
+          setIsLoading(false);
+        }
       })
       .catch((err: unknown) => {
         if (!cancelled) {
           setErrorMessage(
             err instanceof Error ? err.message : "프로필을 불러올 수 없습니다.",
           );
+          setIsLoading(false);
         }
-      })
-      .finally(() => {
-        if (!cancelled) setIsLoading(false);
       });
 
     return () => {

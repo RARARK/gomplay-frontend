@@ -71,6 +71,8 @@ export const matchedPartners: PartnerCardProps[] = [
   {
     name: "Minjun Kim",
     age: 21,
+    department: "컴퓨터공학과",
+    studentId: "22학번",
     description: "Looking for a light weekend morning workout partner",
     tags: ["테니스", "배드민턴", "농구", "가볍게", "같이", "스트레스"],
     matchScore: 87,
@@ -78,6 +80,8 @@ export const matchedPartners: PartnerCardProps[] = [
   {
     name: "Seoyoon Lee",
     age: 24,
+    department: "경영학과",
+    studentId: "21학번",
     description: "Best matched for weekday evening rallies and steady play",
     tags: ["배드민턴", "헬스", "수영", "적당히", "각자", "체력"],
     matchScore: 82,
@@ -85,6 +89,8 @@ export const matchedPartners: PartnerCardProps[] = [
   {
     name: "Jiwon Park",
     age: 23,
+    department: "체육교육과",
+    studentId: "23학번",
     description:
       "Prefers active weekend sessions and consistent cardio routines",
     tags: ["러닝", "사이클", "축구", "제대로", "같이", "경쟁"],

@@ -29,6 +29,8 @@ const PartnerCard = ({
   profileImageSource = DEFAULT_PROFILE_IMAGE,
   name = "Minjun Kim",
   age = 21,
+  department,
+  studentId,
   description = "A partner with a routine that fits well with yours",
   tags = ["Tennis", "Beginner", "Weekend AM", "Fair Play"],
   matchScore = 87,
@@ -58,8 +60,13 @@ const PartnerCard = ({
       <View style={styles.content}>
         <View style={styles.header}>
           <Text style={styles.name}>{name}</Text>
-          <Text style={styles.age}>{age}</Text>
         </View>
+
+        {(department || studentId) ? (
+          <Text style={styles.subInfo}>
+            {[department, studentId].filter(Boolean).join(" · ")}
+          </Text>
+        ) : null}
 
         <Text style={styles.description}>{description}</Text>
 
@@ -170,6 +177,15 @@ const styles = StyleSheet.create({
     fontSize: FontSize.fs_15,
     lineHeight: LineHeight.lh_20,
     fontWeight: "600",
+  },
+
+  subInfo: {
+    color: Color.neutral500,
+    fontFamily: FontFamily.inter,
+    fontSize: FontSize.fs_13,
+    lineHeight: LineHeight.lh_18,
+    fontWeight: "500",
+    textAlign: "center",
   },
 
   description: {
