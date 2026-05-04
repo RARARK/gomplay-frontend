@@ -1,5 +1,5 @@
 import * as React from "react";
-import { View, StyleSheet } from "react-native";
+import { LayoutAnimation, Platform, UIManager, StyleSheet, View } from "react-native";
 import QuickMatchToggle from "./QuickMatchToggle";
 import type { HomeStatusVariant } from "@/types/ui/homeStatus";
 import DefaultMatchContent from "./DefaultMatchContent";
@@ -7,6 +7,10 @@ import MatchedContent from "./MatchedContent";
 import MatchedContentNew from "./MatchedContentNew";
 import MatchingContent from "./MatchingContent";
 import NoScheduleContent from "./NoScheduleContent";
+
+if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
 
 type Props = {
   state: HomeStatusVariant;
@@ -21,7 +25,7 @@ const STATUS_VARIANTS: HomeStatusVariant[] = [
   "MatchedNew",
 ];
 
-const FALLBACK_CONTENT_HEIGHT = 520;
+const FALLBACK_HEIGHT = 500;
 
 const CONTENT_BY_VARIANT: Record<HomeStatusVariant, () => React.JSX.Element> = {
   Default: () => <DefaultMatchContent />,
@@ -32,16 +36,32 @@ const CONTENT_BY_VARIANT: Record<HomeStatusVariant, () => React.JSX.Element> = {
 };
 
 const HomeStatusSection = ({ state, onToggleQuickMatch }: Props) => {
-  const [contentHeight, setContentHeight] = React.useState(
-    FALLBACK_CONTENT_HEIGHT,
+  const [variantHeights, setVariantHeights] = React.useState<Record<HomeStatusVariant, number>>(
+    () =>
+      Object.fromEntries(
+        STATUS_VARIANTS.map((v) => [v, FALLBACK_HEIGHT])
+      ) as Record<HomeStatusVariant, number>
   );
 
-  const handleMeasure = (height: number) => {
-    setContentHeight((previous) => Math.max(previous, Math.ceil(height)));
-  };
+  const contentHeight = variantHeights[state];
+  const prevHeightRef = React.useRef(contentHeight);
 
-  const renderContent = (variant: HomeStatusVariant) =>
-    CONTENT_BY_VARIANT[variant]();
+  // Configure LayoutAnimation in render before the native layout change applies.
+  if (contentHeight !== prevHeightRef.current) {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    prevHeightRef.current = contentHeight;
+  }
+
+  const handleMeasure = React.useCallback(
+    (variant: HomeStatusVariant, height: number) => {
+      const ceiled = Math.ceil(height);
+      setVariantHeights((prev) => {
+        if (ceiled <= prev[variant]) return prev;
+        return { ...prev, [variant]: ceiled };
+      });
+    },
+    []
+  );
 
   return (
     <View style={styles.homeStatusSection}>
@@ -51,17 +71,22 @@ const HomeStatusSection = ({ state, onToggleQuickMatch }: Props) => {
       />
 
       <View style={[styles.contentViewport, { minHeight: contentHeight }]}>
-        <View style={styles.contentInner}>{renderContent(state)}</View>
+        <View style={styles.contentInner}>
+          {CONTENT_BY_VARIANT[state]()}
+        </View>
       </View>
 
+      {/* Invisible layer that measures each variant independently */}
       <View style={styles.measureLayer} pointerEvents="none">
         {STATUS_VARIANTS.map((variant) => (
           <View
             key={variant}
             style={styles.measureItem}
-            onLayout={(event) => handleMeasure(event.nativeEvent.layout.height)}
+            onLayout={(e) =>
+              handleMeasure(variant, e.nativeEvent.layout.height)
+            }
           >
-            {renderContent(variant)}
+            {CONTENT_BY_VARIANT[variant]()}
           </View>
         ))}
       </View>
@@ -72,19 +97,19 @@ const HomeStatusSection = ({ state, onToggleQuickMatch }: Props) => {
 const styles = StyleSheet.create({
   homeStatusSection: {
     width: "100%",
-    paddingVertical: 17,
+    paddingTop: 17,
+    paddingBottom: 8,
     gap: 16,
     alignItems: "center",
   },
   contentViewport: {
     width: "100%",
-    justifyContent: "center",
+    justifyContent: "flex-start",
     alignItems: "center",
   },
   contentInner: {
     width: "100%",
     alignItems: "center",
-    justifyContent: "center",
   },
   measureLayer: {
     position: "absolute",

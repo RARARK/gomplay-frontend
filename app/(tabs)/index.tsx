@@ -130,7 +130,7 @@ const styles = StyleSheet.create({
     flexDirection: "column",
     alignItems: "stretch",
     justifyContent: "flex-start",
-    gap: 60,
+    gap: 28,
   },
   testButtonRow: {
     flexDirection: "row",

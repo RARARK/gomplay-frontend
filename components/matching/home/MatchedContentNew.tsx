@@ -1,8 +1,8 @@
+import { Ionicons } from "@expo/vector-icons";
 import * as React from "react";
 import { Pressable, StyleSheet, Text, View, type LayoutChangeEvent } from "react-native";
-import SuccessIcon from "@/assets/home/Success-Icon.svg";
 import PreviousButton from "@/assets/home/PreviousButton.svg";
-import { Color, FontFamily, FontSize, HomeLayout, LineHeight } from "@/constants/locofyHomeStyles";
+import { HomeLayout } from "@/constants/locofyHomeStyles";
 import { matchedPartners } from "./homeMockData";
 import type { PartnerCardProps } from "@/types/ui/homeCards";
 import PartnerCardNew from "./PartnerCardNew";
@@ -89,20 +89,18 @@ const carouselStyles = StyleSheet.create({
 });
 
 const MatchedContentNew = ({
-  title = "Partner found!",
-  description = "Your match is ready. Connect right away.",
   partners = matchedPartners,
   initialIndex = 0,
   onPartnerIndexChange,
 }: MatchedContentNewProps) => {
   return (
     <View style={styles.container}>
-      <View style={styles.banner}>
+      <View style={styles.header}>
         <View style={styles.titleRow}>
-          <SuccessIcon width={36} height={36} />
-          <Text style={styles.title}>{title}</Text>
+          <Ionicons name="sparkles" size={32} color="#F6C85F" />
+          <Text style={styles.title}>Partner found!</Text>
         </View>
-        <Text style={styles.desc}>{description}</Text>
+        <Text style={styles.subtitle}>Your match is ready. Connect right away.</Text>
       </View>
 
       <CarouselNew
@@ -119,33 +117,28 @@ const styles = StyleSheet.create({
     width: "100%",
     alignItems: "center",
     gap: 20,
-    paddingVertical: 14,
+    paddingBottom: 8,
   },
-  banner: {
-    width: "100%",
+  header: {
     alignItems: "center",
-    paddingHorizontal: 24,
-    gap: 4,
+    gap: 6,
   },
   titleRow: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
+    gap: 10,
   },
   title: {
-    color: Color.colorBlack,
-    fontFamily: FontFamily.inter,
-    fontSize: 20,
-    lineHeight: 25,
-    fontWeight: "700",
-    textAlign: "center",
+    fontSize: 30,
+    lineHeight: 36,
+    color: "#111827",
+    fontWeight: "900",
   },
-  desc: {
-    color: Color.neutral700,
-    fontFamily: FontFamily.inter,
-    fontSize: FontSize.fs_13,
-    lineHeight: LineHeight.lh_18,
+  subtitle: {
+    fontSize: 15,
+    lineHeight: 21,
+    color: "#6B7280",
+    fontWeight: "500",
     textAlign: "center",
   },
 });

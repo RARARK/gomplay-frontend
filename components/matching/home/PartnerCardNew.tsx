@@ -16,41 +16,26 @@ import Svg, {
   Stop,
 } from "react-native-svg";
 
+import { HomeLayout } from "@/constants/locofyHomeStyles";
 import type { PartnerCardProps } from "@/types/ui/homeCards";
 
 const DEFAULT_AVATAR = require("../../../assets/match/Ellipse-12.png");
 
 const CARD_RADIUS = 24;
-const RING_SIZE = 104;
-const RING_STROKE = 10;
+const RING_SIZE = 100;
+const RING_STROKE = 9;
 const RING_RADIUS = (RING_SIZE - RING_STROKE) / 2;
 const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
 
 const SPORT_TAGS = new Set([
-  "테니스",
-  "배드민턴",
-  "농구",
-  "러닝",
-  "축구",
-  "풋살",
-  "헬스",
-  "수영",
+  "테니스", "배드민턴", "농구", "러닝", "축구", "풋살", "헬스", "수영",
 ]);
 const STYLE_TAGS = new Set(["같이", "각자", "Together", "Solo"]);
 const INTENSITY_TAGS = new Set([
-  "가볍게",
-  "적당히",
-  "제대로",
-  "한계까지",
-  "Light",
-  "Moderate",
+  "가볍게", "적당히", "제대로", "한계까지", "Light", "Moderate",
 ]);
 const GOAL_TAGS = new Set([
-  "스트레스",
-  "체력",
-  "경쟁",
-  "친목",
-  "Stress relief",
+  "스트레스", "체력", "경쟁", "친목", "Stress relief",
 ]);
 
 type InfoBlock = {
@@ -74,100 +59,78 @@ const getAvatarSource = (
   imageSource?: ImageSourcePropType,
 ) => profileImageSource ?? imageSource ?? DEFAULT_AVATAR;
 
-function TopGradient() {
+function CardGradient() {
   return (
     <Svg height="100%" width="100%" style={StyleSheet.absoluteFill}>
       <Defs>
-        <LinearGradient id="topGradient" x1="0" y1="0" x2="1" y2="1">
+        <LinearGradient id="cardGradient" x1="0" y1="0" x2="1" y2="1">
           <Stop offset="0" stopColor="#D9F0FF" />
-          <Stop offset="0.55" stopColor="#EAF0FF" />
+          <Stop offset="0.5" stopColor="#EAF0FF" />
           <Stop offset="1" stopColor="#DCD7FF" />
         </LinearGradient>
       </Defs>
-      <Rect
-        width="100%"
-        height="100%"
-        rx={CARD_RADIUS}
-        fill="url(#topGradient)"
-      />
+      <Rect width="100%" height="100%" rx={CARD_RADIUS} fill="url(#cardGradient)" />
     </Svg>
   );
 }
 
 function MatchRing({ score }: { score: number }) {
-  const normalizedScore = Math.max(0, Math.min(score, 100));
-  const dashOffset = RING_CIRCUMFERENCE * (1 - normalizedScore / 100);
+  const normalized = Math.max(0, Math.min(score, 100));
+  const dashOffset = RING_CIRCUMFERENCE * (1 - normalized / 100);
 
   return (
     <View style={styles.matchRing}>
       <Svg width={RING_SIZE} height={RING_SIZE}>
         <Defs>
-          <LinearGradient id="ringGradient" x1="0" y1="0" x2="1" y2="1">
-            <Stop offset="0" stopColor="#6D5DF6" />
-            <Stop offset="1" stopColor="#8B5CF6" />
+          <LinearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1">
+            <Stop offset="0" stopColor="#7C6FF7" />
+            <Stop offset="1" stopColor="#4F46E5" />
           </LinearGradient>
         </Defs>
-
         <Circle
-          cx={RING_SIZE / 2}
-          cy={RING_SIZE / 2}
-          r={RING_RADIUS}
-          stroke="#E7E9FF"
-          strokeWidth={RING_STROKE}
-          fill="#FFFFFF"
+          cx={RING_SIZE / 2} cy={RING_SIZE / 2} r={RING_RADIUS}
+          stroke="#E7E9FF" strokeWidth={RING_STROKE} fill="#FFFFFF"
         />
-
         <Circle
-          cx={RING_SIZE / 2}
-          cy={RING_SIZE / 2}
-          r={RING_RADIUS}
-          stroke="url(#ringGradient)"
-          strokeWidth={RING_STROKE}
-          fill="transparent"
+          cx={RING_SIZE / 2} cy={RING_SIZE / 2} r={RING_RADIUS}
+          stroke="url(#ringGrad)" strokeWidth={RING_STROKE} fill="transparent"
           strokeLinecap="round"
           strokeDasharray={`${RING_CIRCUMFERENCE} ${RING_CIRCUMFERENCE}`}
           strokeDashoffset={dashOffset}
           transform={`rotate(-90 ${RING_SIZE / 2} ${RING_SIZE / 2})`}
         />
       </Svg>
-
       <View style={styles.matchRingLabel}>
-        <Text style={styles.matchPercent}>{normalizedScore}%</Text>
+        <Text style={styles.matchPercent}>{normalized}%</Text>
         <Text style={styles.matchText}>MATCH</Text>
       </View>
     </View>
   );
 }
 
-function PrimaryButtonGradient() {
+function ButtonGradient() {
   return (
     <Svg height="100%" width="100%" style={StyleSheet.absoluteFill}>
       <Defs>
-        <LinearGradient id="buttonGradient" x1="0" y1="0" x2="1" y2="1">
-          <Stop offset="0" stopColor="#6D5DF6" />
+        <LinearGradient id="btnGrad" x1="0" y1="0" x2="1" y2="0">
+          <Stop offset="0" stopColor="#7C6FF7" />
           <Stop offset="1" stopColor="#4F46E5" />
         </LinearGradient>
       </Defs>
-      <Rect width="100%" height="100%" rx={22} fill="url(#buttonGradient)" />
+      <Rect width="100%" height="100%" rx={22} fill="url(#btnGrad)" />
     </Svg>
   );
 }
 
-function InfoBlock({ block }: { block: InfoBlock }) {
+function InfoRow({ block }: { block: InfoBlock }) {
   return (
-    <View style={styles.infoBlock}>
+    <View style={styles.infoRow}>
       <View style={styles.infoLeft}>
-        <Ionicons name={block.icon} size={22} color={block.textColor} />
-        <Text style={[styles.infoLabel, { color: block.textColor }]}>
-          {block.label}
-        </Text>
+        <Ionicons name={block.icon} size={20} color={block.textColor} />
+        <Text style={[styles.infoLabel, { color: "#374151" }]}>{block.label}</Text>
       </View>
-
       <View style={[styles.valuePill, { backgroundColor: block.color }]}>
-        <Text
-          numberOfLines={1}
-          style={[styles.infoValue, { color: block.textColor }]}
-        >
+        <Text numberOfLines={1} style={[styles.infoValue, { color: block.textColor }]}>
           {block.values.join("  ")}
         </Text>
       </View>
@@ -192,11 +155,11 @@ export default function PartnerCardNew({
   onAccept,
 }: PartnerCardProps) {
   const sports = getSports(tags);
-  const style = getFirstKnown(tags, STYLE_TAGS, "같이 하는 스타일");
+  const style = getFirstKnown(tags, STYLE_TAGS, "같이");
   const intensity = getFirstKnown(tags, INTENSITY_TAGS, "가볍게");
-  const goal = getFirstKnown(tags, GOAL_TAGS, "스트레스 해소");
+  const goal = getFirstKnown(tags, GOAL_TAGS, "스트레스");
 
-  const blocks: InfoBlock[] = [
+  const infoBlocks: InfoBlock[] = [
     {
       label: "운동 종목",
       values: sports,
@@ -228,97 +191,88 @@ export default function PartnerCardNew({
   ];
 
   return (
-    <View style={[styles.wrapper, width ? { width } : null]}>
-      <View style={styles.pageHeader}>
-        <View style={styles.titleRow}>
-          <Ionicons name="sparkles-outline" size={34} color="#F6C85F" />
-          <Text style={styles.pageTitle}>Partner found!</Text>
+    <View style={[styles.card, width != null && { width }]}>
+      {/* Gradient top area */}
+      <View style={styles.topArea}>
+        <CardGradient />
+        <View style={styles.profileRow}>
+          {/* Avatar */}
+          <View style={styles.avatarWrap}>
+            <Image
+              source={getAvatarSource(profileImageSource, imageSource)}
+              style={styles.avatar}
+              contentFit="cover"
+            />
+            <View style={styles.onlineBadge} />
+          </View>
+
+          {/* Name / dept / active */}
+          <View style={styles.profileInfo}>
+            <View style={styles.nameRow}>
+              <Text numberOfLines={1} style={styles.name}>{name}</Text>
+              <Text style={styles.age}>{age}</Text>
+            </View>
+            <View style={styles.deptPill}>
+              <Text numberOfLines={1} style={styles.deptText}>
+                {department} · {studentId}
+              </Text>
+            </View>
+            <View style={styles.activeRow}>
+              <View style={styles.activeDot} />
+              <Text style={styles.activeText}>Active now</Text>
+            </View>
+          </View>
+
+          {/* Match ring */}
+          <MatchRing score={matchScore} />
         </View>
-        <Text style={styles.pageSubtitle}>
-          Your match is ready. Connect right away.
-        </Text>
       </View>
 
-      <View style={styles.card}>
-        <View style={styles.topArea}>
-          <TopGradient />
-
-          <View style={styles.profileArea}>
-            <View style={styles.avatarWrap}>
-              <Image
-                source={getAvatarSource(profileImageSource, imageSource)}
-                style={styles.avatar}
-                contentFit="cover"
-              />
-              <View style={styles.onlineBadge} />
-            </View>
-
-            <View style={styles.profileInfo}>
-              <View style={styles.nameRow}>
-                <Text numberOfLines={1} style={styles.name}>
-                  {name}
-                </Text>
-                <Text style={styles.age}>{age}</Text>
-              </View>
-
-              <View style={styles.subInfoPill}>
-                <Text numberOfLines={1} style={styles.subInfo}>
-                  {department} · {studentId}
-                </Text>
-              </View>
-
-              <View style={styles.activeRow}>
-                <View style={styles.activeDot} />
-                <Text style={styles.activeText}>Active now</Text>
-              </View>
-            </View>
-
-            <MatchRing score={matchScore} />
+      {/* White body */}
+      <View style={styles.body}>
+        {/* One-line summary */}
+        <View style={styles.summary}>
+          <Text style={styles.quoteMark}>{"“"}</Text>
+          <View style={styles.summaryText}>
+            <Text numberOfLines={1} style={styles.summaryTitle}>
+              Weekend morning · Light workout
+            </Text>
+            <Text numberOfLines={2} style={styles.summaryDesc}>
+              {description}
+            </Text>
           </View>
         </View>
 
-        <View style={styles.body}>
-          <View style={styles.summary}>
-            <Text style={styles.quoteMark}>“</Text>
-            <View style={styles.summaryTextBox}>
-              <Text numberOfLines={1} style={styles.summaryTitle}>
-                Weekend morning · Light workout
-              </Text>
-              <Text numberOfLines={2} style={styles.summaryDescription}>
-                {description}
-              </Text>
-            </View>
-          </View>
+        {/* Tag groups */}
+        <View style={styles.infoList}>
+          {infoBlocks.map((block) => (
+            <InfoRow key={block.label} block={block} />
+          ))}
+        </View>
 
-          <View style={styles.infoList}>
-            {blocks.map((block) => (
-              <InfoBlock key={block.label} block={block} />
-            ))}
-          </View>
+        <View style={styles.divider} />
 
-          <View style={styles.divider} />
+        {/* Buttons */}
+        <View style={styles.buttonRow}>
+          <Pressable
+            accessibilityRole="button"
+            onPress={onReject}
+            style={styles.passButton}
+          >
+            <Ionicons name="close" size={24} color="#6B7280" />
+            <Text style={styles.passLabel}>{rejectLabel}</Text>
+          </Pressable>
 
-          <View style={styles.buttonRow}>
-            <Pressable
-              accessibilityRole="button"
-              onPress={onReject}
-              style={styles.passButton}
-            >
-              <Ionicons name="close" size={30} color="#6B7280" />
-              <Text style={styles.passButtonText}>{rejectLabel}</Text>
-            </Pressable>
-
-            <Pressable
-              accessibilityRole="button"
-              onPress={onAccept}
-              style={styles.matchButton}
-            >
-              <PrimaryButtonGradient />
-              <Ionicons name="checkmark" size={26} color="#FFFFFF" />
-              <Text style={styles.matchButtonText}>{acceptLabel}</Text>
-              <Ionicons name="arrow-forward" size={24} color="#FFFFFF" />
-            </Pressable>
-          </View>
+          <Pressable
+            accessibilityRole="button"
+            onPress={onAccept}
+            style={styles.matchButton}
+          >
+            <ButtonGradient />
+            <Ionicons name="checkmark" size={22} color="#FFFFFF" />
+            <Text style={styles.matchLabel}>{acceptLabel}</Text>
+            <Ionicons name="arrow-forward" size={20} color="#FFFFFF" />
+          </Pressable>
         </View>
       </View>
     </View>
@@ -326,272 +280,257 @@ export default function PartnerCardNew({
 }
 
 const styles = StyleSheet.create({
-  wrapper: {
-    width: "100%",
-    alignItems: "center",
-  },
-  pageHeader: {
-    alignItems: "center",
-    marginBottom: 24,
-  },
-  titleRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-  },
-  pageTitle: {
-    fontSize: 31,
-    lineHeight: 38,
-    color: "#111827",
-    fontWeight: "900",
-  },
-  pageSubtitle: {
-    marginTop: 4,
-    fontSize: 16,
-    lineHeight: 22,
-    color: "#5B5B66",
-    fontWeight: "500",
-  },
   card: {
     width: "100%",
+    minHeight: HomeLayout.partnerCardMinHeight,
     borderRadius: CARD_RADIUS,
-    overflow: "hidden",
     backgroundColor: "#FFFFFF",
-    shadowColor: "#111827",
-    shadowOffset: { width: 0, height: 18 },
-    shadowOpacity: 0.16,
-    shadowRadius: 28,
-    elevation: 10,
-  },
-  topArea: {
-    height: 168,
-    paddingHorizontal: 22,
-    paddingVertical: 24,
+    shadowColor: "#1F2937",
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.12,
+    shadowRadius: 24,
+    elevation: 8,
     overflow: "hidden",
   },
-  profileArea: {
-    flex: 1,
+
+  // ── Top gradient area ──────────────────────────────────────────
+  topArea: {
+    height: HomeLayout.partnerCardVisualHeight,
+    paddingHorizontal: 20,
+    justifyContent: "center",
+    overflow: "hidden",
+  },
+  profileRow: {
     flexDirection: "row",
     alignItems: "center",
+    gap: 12,
   },
   avatarWrap: {
-    width: 104,
-    height: 104,
-    borderRadius: 52,
+    width: 88,
+    height: 88,
+    borderRadius: 44,
     backgroundColor: "#FFFFFF",
     alignItems: "center",
     justifyContent: "center",
-    marginRight: 18,
     shadowColor: "#111827",
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
-    elevation: 4,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
   },
   avatar: {
-    width: 92,
-    height: 92,
-    borderRadius: 46,
+    width: 78,
+    height: 78,
+    borderRadius: 39,
   },
   onlineBadge: {
     position: "absolute",
-    right: 5,
-    bottom: 11,
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    borderWidth: 4,
+    right: 4,
+    bottom: 8,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 3,
     borderColor: "#FFFFFF",
     backgroundColor: "#22C55E",
   },
   profileInfo: {
     flex: 1,
     minWidth: 0,
+    gap: 6,
   },
   nameRow: {
     flexDirection: "row",
     alignItems: "flex-end",
-    gap: 8,
+    gap: 6,
   },
   name: {
     flexShrink: 1,
-    fontSize: 26,
-    lineHeight: 32,
+    fontSize: 22,
+    lineHeight: 28,
     color: "#111827",
     fontWeight: "900",
   },
   age: {
-    fontSize: 19,
-    lineHeight: 27,
+    fontSize: 16,
+    lineHeight: 24,
     color: "#4B5563",
     fontWeight: "500",
+    paddingBottom: 1,
   },
-  subInfoPill: {
+  deptPill: {
     alignSelf: "flex-start",
-    marginTop: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: 13,
-    backgroundColor: "rgba(255,255,255,0.45)",
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 12,
+    backgroundColor: "rgba(255,255,255,0.5)",
   },
-  subInfo: {
-    fontSize: 14,
-    lineHeight: 18,
-    color: "#4B5563",
-    fontWeight: "700",
+  deptText: {
+    fontSize: 12,
+    lineHeight: 16,
+    color: "#374151",
+    fontWeight: "600",
   },
   activeRow: {
-    marginTop: 12,
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    gap: 6,
   },
   activeDot: {
-    width: 11,
-    height: 11,
-    borderRadius: 6,
+    width: 9,
+    height: 9,
+    borderRadius: 5,
     backgroundColor: "#22C55E",
   },
   activeText: {
-    fontSize: 16,
-    lineHeight: 20,
+    fontSize: 13,
+    lineHeight: 18,
     color: "#16A34A",
-    fontWeight: "800",
+    fontWeight: "700",
   },
+
+  // ── Match ring ─────────────────────────────────────────────────
   matchRing: {
     width: RING_SIZE,
     height: RING_SIZE,
     alignItems: "center",
     justifyContent: "center",
-    marginLeft: 12,
   },
   matchRingLabel: {
     position: "absolute",
     alignItems: "center",
   },
   matchPercent: {
-    fontSize: 34,
-    lineHeight: 39,
+    fontSize: 22,
+    lineHeight: 26,
     color: "#111827",
     fontWeight: "900",
   },
   matchText: {
-    marginTop: 2,
-    fontSize: 14,
-    lineHeight: 18,
+    fontSize: 10,
+    lineHeight: 14,
     color: "#6D5DF6",
     fontWeight: "900",
+    letterSpacing: 0.5,
   },
+
+  // ── Body ───────────────────────────────────────────────────────
   body: {
-    paddingHorizontal: 24,
-    paddingTop: 28,
+    paddingHorizontal: 20,
+    paddingTop: 20,
     paddingBottom: 20,
     backgroundColor: "#FFFFFF",
+    gap: 0,
   },
+
+  // ── Summary ────────────────────────────────────────────────────
   summary: {
     flexDirection: "row",
     alignItems: "flex-start",
-    marginBottom: 28,
+    marginBottom: 20,
+    gap: 4,
   },
   quoteMark: {
-    width: 54,
-    marginTop: -10,
-    fontSize: 64,
-    lineHeight: 66,
-    color: "#D9D4FF",
+    fontSize: 56,
+    lineHeight: 52,
+    color: "#DDD8FF",
     fontWeight: "900",
+    marginTop: -4,
+    width: 40,
   },
-  summaryTextBox: {
+  summaryText: {
     flex: 1,
-    paddingTop: 5,
+    paddingTop: 4,
   },
   summaryTitle: {
-    fontSize: 22,
-    lineHeight: 29,
+    fontSize: 18,
+    lineHeight: 24,
     color: "#111827",
     fontWeight: "900",
   },
-  summaryDescription: {
-    marginTop: 8,
-    fontSize: 16,
-    lineHeight: 23,
+  summaryDesc: {
+    marginTop: 4,
+    fontSize: 13,
+    lineHeight: 19,
     color: "#6B7280",
     fontWeight: "500",
   },
+
+  // ── Info rows ──────────────────────────────────────────────────
   infoList: {
-    gap: 12,
+    gap: 8,
   },
-  infoBlock: {
-    minHeight: 62,
-    borderRadius: 20,
+  infoRow: {
+    height: 52,
+    borderRadius: 16,
     backgroundColor: "#F8FAFC",
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 18,
-    paddingVertical: 12,
+    paddingHorizontal: 14,
   },
   infoLeft: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
-    minWidth: 118,
+    gap: 8,
   },
   infoLabel: {
-    fontSize: 16,
-    lineHeight: 21,
-    fontWeight: "900",
-  },
-  valuePill: {
-    maxWidth: "58%",
-    paddingHorizontal: 18,
-    paddingVertical: 9,
-    borderRadius: 18,
-  },
-  infoValue: {
-    fontSize: 15,
-    lineHeight: 19,
+    fontSize: 14,
+    lineHeight: 18,
     fontWeight: "800",
   },
+  valuePill: {
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderRadius: 14,
+    maxWidth: "58%",
+  },
+  infoValue: {
+    fontSize: 13,
+    lineHeight: 17,
+    fontWeight: "700",
+  },
+
+  // ── Divider + buttons ──────────────────────────────────────────
   divider: {
     height: 1,
-    backgroundColor: "#E5E7EB",
-    marginTop: 28,
-    marginBottom: 18,
+    backgroundColor: "#F3F4F6",
+    marginTop: 20,
+    marginBottom: 16,
   },
   buttonRow: {
     flexDirection: "row",
-    gap: 16,
+    gap: 12,
   },
   passButton: {
-    flex: 0.85,
-    minHeight: 66,
-    borderRadius: 24,
-    backgroundColor: "#F2F2F7",
+    flex: 0.8,
+    height: 58,
+    borderRadius: 20,
+    backgroundColor: "#F3F4F6",
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: 10,
+    gap: 8,
   },
-  passButtonText: {
-    fontSize: 20,
-    lineHeight: 25,
-    color: "#111827",
-    fontWeight: "600",
+  passLabel: {
+    fontSize: 17,
+    lineHeight: 22,
+    color: "#374151",
+    fontWeight: "700",
   },
   matchButton: {
-    flex: 1.35,
-    minHeight: 66,
-    borderRadius: 24,
+    flex: 1.4,
+    height: 58,
+    borderRadius: 20,
     overflow: "hidden",
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: 10,
+    gap: 8,
   },
-  matchButtonText: {
-    fontSize: 20,
-    lineHeight: 25,
+  matchLabel: {
+    fontSize: 17,
+    lineHeight: 22,
     color: "#FFFFFF",
     fontWeight: "800",
   },
