@@ -1,6 +1,6 @@
 import * as React from "react";
 import { router } from "expo-router";
-import { ScrollView, StyleSheet, Pressable, Text } from "react-native";
+import { ScrollView, StyleSheet, Pressable, Text, View } from "react-native";
 import {
   SafeAreaView,
   useSafeAreaInsets,
@@ -22,10 +22,12 @@ export default function HomePage() {
 
   const [isQuickMatchOn, setIsQuickMatchOn] = React.useState(false);
   const [forceMatchedContent, setForceMatchedContent] = React.useState(false);
+  const [forceMatchedContentNew, setForceMatchedContentNew] = React.useState(false);
   const [banners] = React.useState<Banner[]>(homeBanners);
 
   const hasTimetable = false;
   const isMatched = forceMatchedContent;
+  const isMatchedNew = forceMatchedContentNew;
 
   // Reserve extra scroll space so the last section is not hidden behind the FAB.
   const FAB_SIZE = 56;
@@ -34,6 +36,7 @@ export default function HomePage() {
 
   // Decide which home status content should be shown based on the current state.
   const getHomeStatusVariant = (): HomeStatusVariant => {
+    if (isMatchedNew) return "MatchedNew";
     if (isMatched) return "Matched";
     if (isQuickMatchOn) return "Matching";
     if (!hasTimetable) return "NoSchedule";
@@ -62,17 +65,26 @@ export default function HomePage() {
           showsVerticalScrollIndicator={false}
         >
           <HomeHeader />
-          <Pressable
-            accessibilityRole="button"
-            style={styles.testButton}
-            onPress={() => setForceMatchedContent((value) => !value)}
-          >
-            <Text style={styles.testButtonText}>
-              {forceMatchedContent
-                ? "MatchedContent 끄기"
-                : "MatchedContent 테스트"}
-            </Text>
-          </Pressable>
+          <View style={styles.testButtonRow}>
+            <Pressable
+              accessibilityRole="button"
+              style={styles.testButton}
+              onPress={() => setForceMatchedContent((value) => !value)}
+            >
+              <Text style={styles.testButtonText}>
+                {forceMatchedContent ? "기존 끄기" : "기존 카드"}
+              </Text>
+            </Pressable>
+            <Pressable
+              accessibilityRole="button"
+              style={[styles.testButton, styles.testButtonNew]}
+              onPress={() => setForceMatchedContentNew((value) => !value)}
+            >
+              <Text style={[styles.testButtonText, styles.testButtonNewText]}>
+                {forceMatchedContentNew ? "새 카드 끄기" : "새 카드 (New)"}
+              </Text>
+            </Pressable>
+          </View>
           <HeroBanner banners={banners} />
 
           {/* Render the status-specific content without changing the page layout. */}
@@ -120,8 +132,14 @@ const styles = StyleSheet.create({
     justifyContent: "flex-start",
     gap: 60,
   },
+  testButtonRow: {
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: 8,
+    marginTop: -42,
+    marginBottom: -42,
+  },
   testButton: {
-    alignSelf: "center",
     minHeight: 34,
     borderRadius: 999,
     borderWidth: 1,
@@ -130,14 +148,18 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: 14,
-    marginTop: -42,
-    marginBottom: -42,
   },
   testButtonText: {
     fontSize: 12,
     lineHeight: 16,
     color: "#4C5BE2",
     fontWeight: "800",
+  },
+  testButtonNew: {
+    borderColor: "#E24CB5",
+  },
+  testButtonNewText: {
+    color: "#E24CB5",
   },
   fab: {
     position: "absolute",

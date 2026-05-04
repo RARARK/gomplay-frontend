@@ -43,15 +43,23 @@ export type CreateGatheringRequest = {
   venueLat: number;
   venueLng: number;
   scheduledAt: string;
+  scheduledEndAt: string;
   maxParticipants: number;
+  description?: string;
+  tags?: string;
 };
 
 export type GatheringStatus = "OPEN" | "CLOSED" | "CANCELLED";
 
 export type UpdateGatheringRequest = {
+  hostId: number;
   title?: string;
   description?: string;
-  tags?: string[];
+  tags?: string;
+};
+
+export type DeleteGatheringRequest = {
+  hostId: number;
 };
 
 export type GatheringPostDetailResponse = {
@@ -70,12 +78,14 @@ export type GatheringPostDetailResponse = {
   tags?: string | null;
   status: GatheringStatus;
   createdAt: string;
+  hostId: number;
   hostName: string;
   hostProfileImageUrl: string | null;
 };
 
 export type UpdateGatheringResponse = {
   id: number;
+  hostId: number;
   title: string;
   description?: string;
   sportType: string;
@@ -88,6 +98,14 @@ export type UpdateGatheringResponse = {
   status: GatheringStatus;
   tags?: string;
   updatedAt: string;
+};
+
+export type JoinGatheringResponse = {
+  id: number;
+  gatheringId: number;
+  userId: number;
+  status: string;
+  createdAt: string;
 };
 
 export type CreateGatheringResponse = {

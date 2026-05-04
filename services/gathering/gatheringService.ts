@@ -4,9 +4,11 @@ import apiClient, { ApiError } from "@/lib/api/client";
 import type {
   CreateGatheringRequest,
   CreateGatheringResponse,
+  DeleteGatheringRequest,
   GatheringListQuery,
   GatheringListResponse,
   GatheringPostDetailResponse,
+  JoinGatheringResponse,
   UpdateGatheringRequest,
   UpdateGatheringResponse,
 } from "@/types/domain/gathering";
@@ -14,11 +16,6 @@ import type {
 type BackendErrorBody = {
   code?: number;
   message?: string;
-};
-
-type JoinGatheringResponse = {
-  success: boolean;
-  message: string;
 };
 
 const getBackendErrorBody = (value: unknown): BackendErrorBody | null => {
@@ -237,9 +234,9 @@ export async function joinGathering(postId: number): Promise<JoinGatheringRespon
   }
 }
 
-export async function deleteGathering(postId: number): Promise<void> {
+export async function deleteGathering(postId: number, body: DeleteGatheringRequest): Promise<void> {
   try {
-    await apiClient.delete(`/api/gathering/${postId}`);
+    await apiClient.delete(`/api/gathering/${postId}`, { data: body });
   } catch (error) {
     if (error instanceof ApiError) throw error;
 

@@ -4,6 +4,7 @@ import QuickMatchToggle from "./QuickMatchToggle";
 import type { HomeStatusVariant } from "@/types/ui/homeStatus";
 import DefaultMatchContent from "./DefaultMatchContent";
 import MatchedContent from "./MatchedContent";
+import MatchedContentNew from "./MatchedContentNew";
 import MatchingContent from "./MatchingContent";
 import NoScheduleContent from "./NoScheduleContent";
 
@@ -17,6 +18,7 @@ const STATUS_VARIANTS: HomeStatusVariant[] = [
   "NoSchedule",
   "Matching",
   "Matched",
+  "MatchedNew",
 ];
 
 const FALLBACK_CONTENT_HEIGHT = 520;
@@ -26,6 +28,7 @@ const CONTENT_BY_VARIANT: Record<HomeStatusVariant, () => React.JSX.Element> = {
   NoSchedule: () => <NoScheduleContent />,
   Matching: () => <MatchingContent nearbyCount={7} />,
   Matched: () => <MatchedContent />,
+  MatchedNew: () => <MatchedContentNew />,
 };
 
 const HomeStatusSection = ({ state, onToggleQuickMatch }: Props) => {

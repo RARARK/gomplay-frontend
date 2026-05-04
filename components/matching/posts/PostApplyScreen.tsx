@@ -36,6 +36,7 @@ import {
   joinGathering,
   updateGathering,
 } from "@/services/gathering/gatheringService";
+import { useAuthStore } from "@/stores/auth/authStore";
 import type { GatheringPostDetailResponse } from "@/types/domain/gathering";
 import { POST_STATUS } from "@/types/domain/post";
 
@@ -57,6 +58,7 @@ const parseTags = (tags: string | null | undefined): string[] => {
 
 export default function PostApplyScreen({ postId }: PostApplyScreenProps) {
   const insets = useSafeAreaInsets();
+  const userId = useAuthStore((s) => s.userId);
 
   const [post, setPost] = React.useState<GatheringPostDetailResponse | null>(null);
   const [isLoading, setIsLoading] = React.useState(true);
@@ -95,8 +97,7 @@ export default function PostApplyScreen({ postId }: PostApplyScreenProps) {
     };
   }, [postId]);
 
-  // hostUserId is not returned by GET /api/gathering/:id — ownership detection needs backend fix
-  const isOwner = false;
+  const isOwner = userId !== null && post?.hostId === userId;
   const canEdit = isOwner && post?.status === POST_STATUS.OPEN;
   const canApply = !isOwner && post?.status === POST_STATUS.OPEN;
 
@@ -109,12 +110,13 @@ export default function PostApplyScreen({ postId }: PostApplyScreenProps) {
   };
 
   const handleSave = async () => {
-    if (!post) return;
+    if (!post || userId === null) return;
     setIsSaving(true);
     try {
       await updateGathering(post.id, {
+        hostId: userId,
         title: editTitle.trim() || undefined,
-        tags: editTags.length > 0 ? editTags : undefined,
+        tags: editTags.length > 0 ? editTags.join(" ") : undefined,
         description: editMessage.trim() || undefined,
       });
       router.back();
@@ -137,7 +139,7 @@ export default function PostApplyScreen({ postId }: PostApplyScreenProps) {
         onPress: async () => {
           if (!post) return;
           try {
-            await deleteGathering(post.id);
+            await deleteGathering(post.id, { hostId: userId ?? 0 });
             router.back();
           } catch (err) {
             Alert.alert(
