@@ -25,3 +25,17 @@ export type RecommendationMatchCardProps = {
   buttonText?: string;
   onPress?: () => void;
 };
+
+export type ModernMatchCardProps = {
+  imageSource?: ImageSourcePropType;
+  date: string;
+  dayOfWeek: string;
+  sport: string;
+  time: string;
+  location: string;
+  tags?: string[];
+  difficulty?: string;
+  currentParticipants?: number;
+  maxParticipants?: number;
+  onPress?: () => void;
+};
