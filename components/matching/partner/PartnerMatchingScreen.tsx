@@ -11,12 +11,7 @@ import {
   Text,
   View,
 } from "react-native";
-import Svg, {
-  Circle,
-  Defs,
-  LinearGradient,
-  Stop,
-} from "react-native-svg";
+import Svg, { Circle, Defs, LinearGradient, Stop } from "react-native-svg";
 
 type RecommendedPartner = {
   id: string;
@@ -73,7 +68,6 @@ const RECOMMENDED_PARTNERS: RecommendedPartner[] = [
   },
 ];
 
-
 // ── Match ring ────────────────────────────────────────────────────────────────
 function MatchRing({ score }: { score: number }) {
   const normalized = Math.max(0, Math.min(score, 100));
@@ -89,12 +83,20 @@ function MatchRing({ score }: { score: number }) {
           </LinearGradient>
         </Defs>
         <Circle
-          cx={RING_SIZE / 2} cy={RING_SIZE / 2} r={RING_RADIUS_SVG}
-          stroke="#E7E9FF" strokeWidth={RING_STROKE} fill="#FFFFFF"
+          cx={RING_SIZE / 2}
+          cy={RING_SIZE / 2}
+          r={RING_RADIUS_SVG}
+          stroke="#E7E9FF"
+          strokeWidth={RING_STROKE}
+          fill="#FFFFFF"
         />
         <Circle
-          cx={RING_SIZE / 2} cy={RING_SIZE / 2} r={RING_RADIUS_SVG}
-          stroke="url(#ringGrad2)" strokeWidth={RING_STROKE} fill="transparent"
+          cx={RING_SIZE / 2}
+          cy={RING_SIZE / 2}
+          r={RING_RADIUS_SVG}
+          stroke="url(#ringGrad2)"
+          strokeWidth={RING_STROKE}
+          fill="transparent"
           strokeLinecap="round"
           strokeDasharray={`${RING_CIRCUMFERENCE} ${RING_CIRCUMFERENCE}`}
           strokeDashoffset={dashOffset}
@@ -117,8 +119,19 @@ const ringStyles = StyleSheet.create({
     justifyContent: "center",
   },
   label: { position: "absolute", alignItems: "center" },
-  percent: { fontSize: 19, lineHeight: 23, color: "#111827", fontWeight: "900" },
-  matchText: { fontSize: 9, lineHeight: 12, color: "#6D5DF6", fontWeight: "900", letterSpacing: 0.4 },
+  percent: {
+    fontSize: 19,
+    lineHeight: 23,
+    color: "#111827",
+    fontWeight: "900",
+  },
+  matchText: {
+    fontSize: 9,
+    lineHeight: 12,
+    color: "#6D5DF6",
+    fontWeight: "900",
+    letterSpacing: 0.4,
+  },
 });
 
 // ── Info row ──────────────────────────────────────────────────────────────────
@@ -140,7 +153,9 @@ function InfoRow({ row }: { row: InfoRowData }) {
       <View style={infoStyles.pills}>
         {row.values.map((v) => (
           <View key={v} style={[infoStyles.pill, { backgroundColor: row.bg }]}>
-            <Text style={[infoStyles.pillText, { color: row.textColor }]}>{v}</Text>
+            <Text style={[infoStyles.pillText, { color: row.textColor }]}>
+              {v}
+            </Text>
           </View>
         ))}
       </View>
@@ -206,13 +221,19 @@ function PartnerCard({
         <View style={cardStyles.profileRow}>
           {/* Avatar */}
           <View style={cardStyles.avatarWrap}>
-            <Image source={PROFILE_IMAGE} style={cardStyles.avatar} contentFit="cover" />
+            <Image
+              source={PROFILE_IMAGE}
+              style={cardStyles.avatar}
+              contentFit="cover"
+            />
             <View style={cardStyles.onlineBadge} />
           </View>
 
           {/* Name / dept */}
           <View style={cardStyles.profileInfo}>
-            <Text numberOfLines={1} style={cardStyles.name}>{partner.name}</Text>
+            <Text numberOfLines={1} style={cardStyles.name}>
+              {partner.name}
+            </Text>
             <View style={cardStyles.deptPill}>
               <Text numberOfLines={1} style={cardStyles.deptText}>
                 {partner.department} · {partner.studentId}
@@ -327,10 +348,25 @@ const cardStyles = StyleSheet.create({
     borderRadius: 10,
     backgroundColor: "rgba(255,255,255,0.5)",
   },
-  deptText: { fontSize: 11, lineHeight: 15, color: "#374151", fontWeight: "600" },
+  deptText: {
+    fontSize: 11,
+    lineHeight: 15,
+    color: "#374151",
+    fontWeight: "600",
+  },
   activeRow: { flexDirection: "row", alignItems: "center", gap: 5 },
-  activeDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: "#22C55E" },
-  activeText: { fontSize: 12, lineHeight: 16, color: "#16A34A", fontWeight: "700" },
+  activeDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "#22C55E",
+  },
+  activeText: {
+    fontSize: 12,
+    lineHeight: 16,
+    color: "#16A34A",
+    fontWeight: "700",
+  },
 
   // body
   body: {
@@ -340,7 +376,12 @@ const cardStyles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
   },
   infoList: { gap: 8 },
-  divider: { height: 1, backgroundColor: "#F3F4F6", marginTop: 20, marginBottom: 16 },
+  divider: {
+    height: 1,
+    backgroundColor: "#F3F4F6",
+    marginTop: 20,
+    marginBottom: 16,
+  },
 
   // buttons
   buttonRow: { flexDirection: "row", gap: 10 },
@@ -354,14 +395,24 @@ const cardStyles = StyleSheet.create({
     justifyContent: "center",
     gap: 6,
   },
-  passLabel: { fontSize: 14, lineHeight: 18, color: "#374151", fontWeight: "700" },
+  passLabel: {
+    fontSize: 14,
+    lineHeight: 18,
+    color: "#374151",
+    fontWeight: "700",
+  },
   costBadge: {
     paddingHorizontal: 7,
     paddingVertical: 2,
     borderRadius: 8,
     backgroundColor: "#FEF3C7",
   },
-  costText: { fontSize: 11, lineHeight: 14, color: "#C8960C", fontWeight: "800" },
+  costText: {
+    fontSize: 11,
+    lineHeight: 14,
+    color: "#C8960C",
+    fontWeight: "800",
+  },
   matchButton: {
     flex: 1,
     height: 58,
@@ -372,7 +423,12 @@ const cardStyles = StyleSheet.create({
     justifyContent: "center",
     gap: 6,
   },
-  matchLabel: { fontSize: 15, lineHeight: 20, color: "#FFFFFF", fontWeight: "800" },
+  matchLabel: {
+    fontSize: 15,
+    lineHeight: 20,
+    color: "#FFFFFF",
+    fontWeight: "800",
+  },
 });
 
 // ── Screen ────────────────────────────────────────────────────────────────────
@@ -393,7 +449,7 @@ export default function PartnerMatchingScreen() {
   const handleRequest = () => {
     Alert.alert(
       "파트너 신청 완료",
-      `${currentPartner.name}님에게 파트너 신청을 보냈어요.`
+      `${currentPartner.name}님에게 파트너 신청을 보냈어요.`,
     );
   };
 
@@ -411,7 +467,15 @@ export default function PartnerMatchingScreen() {
             <Ionicons name="chevron-back" size={28} color="#111111" />
           </Pressable>
           <Text style={screenStyles.headerTitle}>파트너 매칭</Text>
-          <View style={screenStyles.headerSpacer} />
+          <Pressable
+            accessibilityLabel="Open profile"
+            accessibilityRole="button"
+            hitSlop={8}
+            onPress={() => router.push("/mypage" as any)}
+            style={screenStyles.myButton}
+          >
+            <Text style={screenStyles.myButtonText}>MY</Text>
+          </Pressable>
         </View>
       </View>
 
@@ -420,21 +484,25 @@ export default function PartnerMatchingScreen() {
         contentContainerStyle={screenStyles.screenContent}
         showsVerticalScrollIndicator={false}
       >
-      <View style={screenStyles.matchPanel}>
-        <View style={screenStyles.panelHeader}>
-          <View style={screenStyles.panelTitleRow}>
-            <Ionicons name="sparkles" size={34} color="#F59E0B" />
-            <Text style={screenStyles.panelTitle}>성향 일치 파트너 발견!</Text>
+        <View style={screenStyles.matchPanel}>
+          <View style={screenStyles.panelHeader}>
+            <View style={screenStyles.panelTitleRow}>
+              <Ionicons name="sparkles" size={34} color="#F59E0B" />
+              <Text style={screenStyles.panelTitle}>
+                성향 일치 파트너 발견!
+              </Text>
+            </View>
+            <Text style={screenStyles.panelSubtitle}>
+              지금 바로 연결해보세요.
+            </Text>
           </View>
-          <Text style={screenStyles.panelSubtitle}>지금 바로 연결해보세요.</Text>
-        </View>
 
-        <PartnerCard
-          partner={currentPartner}
-          onRefresh={handleRefresh}
-          onRequest={handleRequest}
-        />
-      </View>
+          <PartnerCard
+            partner={currentPartner}
+            onRefresh={handleRefresh}
+            onRequest={handleRequest}
+          />
+        </View>
       </ScrollView>
     </>
   );
@@ -467,8 +535,17 @@ const screenStyles = StyleSheet.create({
     fontWeight: "700",
     textAlign: "center",
   },
-  headerSpacer: {
+  myButton: {
     width: 40,
+    height: 40,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  myButtonText: {
+    fontSize: 16,
+    lineHeight: 16,
+    color: "#111111",
+    fontWeight: "900",
   },
   matchPanel: {
     alignItems: "center",

@@ -1,6 +1,6 @@
-import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { Color, FontSize, LineHeight } from "../GlobalStyles";
 
@@ -37,11 +37,7 @@ export default function ChatHeader({
             onPress={handleBackPress}
             style={styles.backButton}
           >
-            <Ionicons
-              name="chevron-back"
-              size={28}
-              color="#111111"
-            />
+            <Ionicons name="chevron-back" size={28} color="#111111" />
           </Pressable>
         ) : (
           <View style={styles.backButtonPlaceholder} />
@@ -49,6 +45,15 @@ export default function ChatHeader({
         <Text numberOfLines={1} style={styles.title}>
           {title}
         </Text>
+        <Pressable
+          accessibilityLabel="Open profile"
+          accessibilityRole="button"
+          hitSlop={8}
+          onPress={() => router.push("/mypage" as any)}
+          style={styles.myButton}
+        >
+          <Text style={styles.myButtonText}>MY</Text>
+        </Pressable>
       </View>
     </View>
   );
@@ -77,11 +82,22 @@ const styles = StyleSheet.create({
   },
   title: {
     flex: 1,
-    marginRight: 40,
     fontSize: FontSize.fs_17,
     lineHeight: LineHeight.lh_22,
     fontWeight: "700",
     color: Color.labelsPrimary,
     textAlign: "center",
+  },
+  myButton: {
+    width: 40,
+    height: 40,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  myButtonText: {
+    fontSize: 16,
+    lineHeight: 16,
+    color: "#111111",
+    fontWeight: "900",
   },
 });

@@ -24,64 +24,93 @@ const MANNER_TEMPERATURE_COLOR = "#F59E0B";
 const MANNER_TEMPERATURE_TRACK = "#FEF3C7";
 const DEFAULT_PROFILE_IMAGE = require("../../assets/match/Ellipse-12.png");
 
+type MannerTemperatureIcon =
+  | {
+      family: "ion";
+      name: React.ComponentProps<typeof Ionicons>["name"];
+    }
+  | {
+      family: "material";
+      name: React.ComponentProps<typeof MaterialCommunityIcons>["name"];
+    };
+
+function getMannerTemperatureIcon(temperature: number): MannerTemperatureIcon {
+  if (temperature < 30) {
+    return { family: "material", name: "emoticon-cry-outline" };
+  }
+  if (temperature < 36) {
+    return { family: "material", name: "emoticon-confused-outline" };
+  }
+  if (temperature < 39) {
+    return { family: "ion", name: "happy-outline" };
+  }
+  if (temperature <= 45) {
+    return { family: "material", name: "emoticon-excited-outline" };
+  }
+  return { family: "ion", name: "sparkles-outline" };
+}
+
 const PARTNER_STYLE_LABEL: Record<string, string> = {
-  "각자": "조용한 파트너",
-  "같이": "활발한 파트너",
+  각자: "조용한 파트너",
+  같이: "활발한 파트너",
 };
 const INTENSITY_LABEL: Record<string, string> = {
-  "가볍게": "가볍게",
-  "적당히": "적당히",
-  "제대로": "제대로",
-  "한계까지": "한계까지",
+  가볍게: "가볍게",
+  적당히: "적당히",
+  제대로: "제대로",
+  한계까지: "한계까지",
 };
 const REASON_LABEL: Record<string, string> = {
-  "스트레스": "스트레스 해소",
-  "친해지려고": "친목",
-  "경쟁": "실력 향상",
-  "체력": "체력 관리",
+  스트레스: "스트레스 해소",
+  친해지려고: "친목",
+  경쟁: "실력 향상",
+  체력: "체력 관리",
 };
 const STYLE_SUMMARY: Record<string, { title: string; description: string }> = {
-  "각자": {
+  각자: {
     title: "독립형",
     description: "각자의 페이스를 존중해요",
   },
-  "같이": {
+  같이: {
     title: "외향형",
     description: "사교적이고 활동적인 편이에요",
   },
 };
-const INTENSITY_SUMMARY: Record<string, { title: string; description: string }> = {
-  "가볍게": {
+const INTENSITY_SUMMARY: Record<
+  string,
+  { title: string; description: string }
+> = {
+  가볍게: {
     title: "가볍게",
     description: "즐기면서 운동하는 스타일",
   },
-  "적당히": {
+  적당히: {
     title: "균형형",
     description: "무리 없이 꾸준히 해요",
   },
-  "제대로": {
+  제대로: {
     title: "집중형",
     description: "운동할 때 몰입하는 편",
   },
-  "한계까지": {
+  한계까지: {
     title: "도전형",
     description: "강도 높은 운동을 좋아해요",
   },
 };
 const REASON_SUMMARY: Record<string, { title: string; description: string }> = {
-  "스트레스": {
+  스트레스: {
     title: "스트레스 해소",
     description: "기분 전환이 중요한 목표",
   },
-  "친해지려고": {
+  친해지려고: {
     title: "친목",
     description: "함께 어울리는 시간이 좋아요",
   },
-  "경쟁": {
+  경쟁: {
     title: "실력 향상",
     description: "더 잘하고 싶은 마음이 커요",
   },
-  "체력": {
+  체력: {
     title: "체력 관리",
     description: "건강한 습관과 체력 향상이 목표",
   },
@@ -141,7 +170,9 @@ export default function MyPageScreen() {
   }, [isMannerDescriptionVisible, mannerDescriptionProgress]);
 
   React.useEffect(() => {
-    getSurvey().then(setSurvey).catch(() => {});
+    getSurvey()
+      .then(setSurvey)
+      .catch(() => {});
   }, []);
 
   const handleLogout = async () => {
@@ -161,23 +192,25 @@ export default function MyPageScreen() {
   const mannerTemperature = profile?.mannerTemperature ?? 36.5;
   const mannerTemperatureWidth =
     `${Math.min(mannerTemperature, 100)}%` as DimensionValue;
+  const mannerTemperatureIcon = getMannerTemperatureIcon(mannerTemperature);
   const styleSummary = survey
-    ? STYLE_SUMMARY[survey.partnerStyle] ?? {
+    ? (STYLE_SUMMARY[survey.partnerStyle] ?? {
         title: PARTNER_STYLE_LABEL[survey.partnerStyle] ?? survey.partnerStyle,
         description: "선호하는 파트너 스타일이에요",
-      }
+      })
     : null;
   const intensitySummary = survey
-    ? INTENSITY_SUMMARY[survey.exerciseIntensity] ?? {
-        title: INTENSITY_LABEL[survey.exerciseIntensity] ?? survey.exerciseIntensity,
+    ? (INTENSITY_SUMMARY[survey.exerciseIntensity] ?? {
+        title:
+          INTENSITY_LABEL[survey.exerciseIntensity] ?? survey.exerciseIntensity,
         description: "선호하는 운동 강도예요",
-      }
+      })
     : null;
   const reasonSummary = survey
-    ? REASON_SUMMARY[survey.exerciseReason] ?? {
+    ? (REASON_SUMMARY[survey.exerciseReason] ?? {
         title: REASON_LABEL[survey.exerciseReason] ?? survey.exerciseReason,
         description: "운동을 시작하는 이유예요",
-      }
+      })
     : null;
   const exerciseTypeSummary = survey?.exerciseTypes?.length
     ? survey.exerciseTypes.slice(0, 2).join(", ")
@@ -195,10 +228,7 @@ export default function MyPageScreen() {
     return (
       <View style={styles.centered}>
         <Text style={styles.errorText}>{errorMessage}</Text>
-        <Pressable
-          style={styles.retryButton}
-          onPress={loadProfile}
-        >
+        <Pressable style={styles.retryButton} onPress={loadProfile}>
           <Text style={styles.retryText}>다시 시도</Text>
         </Pressable>
       </View>
@@ -248,7 +278,9 @@ export default function MyPageScreen() {
 
           <View style={styles.statGroup}>
             <View style={styles.statItem}>
-              <Text style={styles.statValue}>{profile?.pointBalance ?? 0}P</Text>
+              <Text style={styles.statValue}>
+                {profile?.pointBalance ?? 0}P
+              </Text>
               <Text style={styles.statLabel}>포인트</Text>
             </View>
           </View>
@@ -268,9 +300,7 @@ export default function MyPageScreen() {
           <View style={styles.mannerHeaderRow}>
             <Pressable
               accessibilityRole="button"
-              onPress={() =>
-                setIsMannerDescriptionVisible((v) => !v)
-              }
+              onPress={() => setIsMannerDescriptionVisible((v) => !v)}
               style={styles.cardHeader}
             >
               <Text style={styles.cardTitle}>매너온도</Text>
@@ -286,25 +316,26 @@ export default function MyPageScreen() {
             </Pressable>
 
             {isMannerDescriptionVisible ? (
-              <Animated.Text
-                numberOfLines={2}
+              <Animated.View
                 style={[
-                  styles.mannerInlineDescription,
+                  styles.mannerPopover,
                   {
                     opacity: mannerDescriptionProgress,
                     transform: [
                       {
-                        translateX: mannerDescriptionProgress.interpolate({
+                        translateY: mannerDescriptionProgress.interpolate({
                           inputRange: [0, 1],
-                          outputRange: [-10, 0],
+                          outputRange: [-6, 0],
                         }),
                       },
                     ],
                   },
                 ]}
               >
-                매칭 참여, 노쇼, 후기를 바탕으로 한 신뢰 지표예요.
-              </Animated.Text>
+                <Text style={styles.mannerPopoverText}>
+                  매칭 참여, 노쇼, 후기를 바탕으로 한 신뢰 지표예요.
+                </Text>
+              </Animated.View>
             ) : null}
           </View>
 
@@ -312,7 +343,19 @@ export default function MyPageScreen() {
             <Text style={styles.temperature}>
               {mannerTemperature.toFixed(1)}°C
             </Text>
-            <Ionicons name="happy-outline" size={30} color={MANNER_TEMPERATURE_COLOR} />
+            {mannerTemperatureIcon.family === "ion" ? (
+              <Ionicons
+                name={mannerTemperatureIcon.name}
+                size={30}
+                color={MANNER_TEMPERATURE_COLOR}
+              />
+            ) : (
+              <MaterialCommunityIcons
+                name={mannerTemperatureIcon.name}
+                size={32}
+                color={MANNER_TEMPERATURE_COLOR}
+              />
+            )}
           </View>
 
           <View style={styles.temperatureTrack}>
@@ -341,9 +384,6 @@ export default function MyPageScreen() {
                 노쇼 {profile?.noShowCount ?? 0}회
               </Text>
             </View>
-            <Pressable accessibilityRole="button">
-              <Text style={styles.linkText}>코멘트 보기 &gt;</Text>
-            </Pressable>
           </View>
         </View>
 
@@ -405,13 +445,7 @@ export default function MyPageScreen() {
                 label="관심 종목"
                 title={exerciseTypeSummary}
                 description="주로 이 종목에 관심이 있어요"
-                icon={
-                  <Ionicons
-                    name="football"
-                    size={24}
-                    color="#2563EB"
-                  />
-                }
+                icon={<Ionicons name="football" size={24} color="#2563EB" />}
                 tone="blue"
               />
             </View>
@@ -422,12 +456,16 @@ export default function MyPageScreen() {
           <Text style={styles.cardTitle}>빠른 이동</Text>
           <View style={styles.quickActionRow}>
             <QuickAction
-              icon={<Ionicons name="calendar-outline" size={28} color="#4C5BE2" />}
+              icon={
+                <Ionicons name="calendar-outline" size={28} color="#4C5BE2" />
+              }
               label="출석체크"
               onPress={() => router.push("/attendance" as any)}
             />
             <QuickAction
-              icon={<Ionicons name="chatbubble-outline" size={28} color="#4C5BE2" />}
+              icon={
+                <Ionicons name="chatbubble-outline" size={28} color="#4C5BE2" />
+              }
               label="채팅"
               onPress={() => router.push("/(tabs)/chat")}
             />
@@ -437,7 +475,9 @@ export default function MyPageScreen() {
               onPress={() => router.push("/matches/history")}
             />
             <QuickAction
-              icon={<Ionicons name="wallet-outline" size={28} color="#4C5BE2" />}
+              icon={
+                <Ionicons name="wallet-outline" size={28} color="#4C5BE2" />
+              }
               label="포인트 내역"
             />
           </View>
@@ -478,10 +518,16 @@ function PreferenceBadge({
       ]}
     >
       <Text style={styles.preferenceItemLabel}>{label}</Text>
-      <View style={[styles.preferenceIconWrap, styles[`preferenceIcon_${tone}`]]}>
+      <View
+        style={[styles.preferenceIconWrap, styles[`preferenceIcon_${tone}`]]}
+      >
         {icon}
       </View>
-      <Text numberOfLines={1} adjustsFontSizeToFit style={styles.preferenceItemTitle}>
+      <Text
+        numberOfLines={1}
+        adjustsFontSizeToFit
+        style={styles.preferenceItemTitle}
+      >
         {title}
       </Text>
       <Text style={styles.preferenceItemDescription}>{description}</Text>
@@ -656,6 +702,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 16,
     gap: 14,
+    position: "relative",
     shadowColor: "#000000",
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.08,
@@ -667,18 +714,34 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
+    position: "relative",
+    zIndex: 2,
   },
   cardHeader: {
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
   },
-  mannerInlineDescription: {
-    flex: 1,
-    minWidth: 0,
+  mannerPopover: {
+    position: "absolute",
+    left: 0,
+    top: 28,
+    maxWidth: 260,
+    borderRadius: 10,
+    backgroundColor: "#111827",
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+    shadowColor: "#000000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.16,
+    shadowRadius: 10,
+    elevation: 6,
+    zIndex: 10,
+  },
+  mannerPopoverText: {
     fontSize: 12,
-    lineHeight: 16,
-    color: "#92400E",
+    lineHeight: 17,
+    color: "#FFFFFF",
     fontWeight: "700",
   },
   cardTitle: {
@@ -712,8 +775,8 @@ const styles = StyleSheet.create({
   mannerMetaRow: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-    gap: 8,
+    justifyContent: "flex-start",
+    gap: 16,
   },
   mannerMeta: {
     flexDirection: "row",

@@ -186,7 +186,15 @@ export default function MatchStatusScreen({
             <Ionicons name="chevron-back" size={28} color="#111111" />
           </Pressable>
           <Text style={styles.headerTitle}>매칭 현황</Text>
-          <View style={styles.headerSpacer} />
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Open profile"
+            hitSlop={8}
+            onPress={() => router.push("/mypage" as any)}
+            style={styles.myButton}
+          >
+            <Text style={styles.myButtonText}>MY</Text>
+          </Pressable>
         </View>
       </View>
 
@@ -334,8 +342,17 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     textAlign: "center",
   },
-  headerSpacer: {
+  myButton: {
     width: 40,
+    height: 40,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  myButtonText: {
+    fontSize: 16,
+    lineHeight: 16,
+    color: "#111111",
+    fontWeight: "900",
   },
 
   /* 필터 */

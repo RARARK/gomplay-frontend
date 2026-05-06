@@ -24,21 +24,60 @@ export async function getMyProfile(): Promise<UserProfile> {
   }
 }
 
-export async function uploadProfileImage(uri: string): Promise<string> {
+type UploadProfileImageResponse = {
+  profileImageUrl: string;
+};
+
+type UploadProfileImageOptions = {
+  fileName?: string | null;
+  mimeType?: string | null;
+};
+
+const getProfileImageFileName = (
+  uri: string,
+  fileName?: string | null,
+): string => {
+  if (fileName) return fileName;
+
+  const uriFileName = uri.split("/").pop();
+  if (uriFileName?.includes(".")) return uriFileName;
+
+  return "profile.jpg";
+};
+
+const getProfileImageMimeType = (
+  fileName: string,
+  mimeType?: string | null,
+): string => {
+  if (mimeType) return mimeType;
+
+  const extension = fileName.split(".").pop()?.toLowerCase();
+  if (extension === "png") return "image/png";
+  if (extension === "webp") return "image/webp";
+
+  return "image/jpeg";
+};
+
+export async function uploadProfileImage(
+  uri: string,
+  options: UploadProfileImageOptions = {},
+): Promise<string> {
+  const name = getProfileImageFileName(uri, options.fileName);
+  const type = getProfileImageMimeType(name, options.mimeType);
   const formData = new FormData();
   formData.append("file", {
     uri,
-    type: "image/jpeg",
-    name: "profile.jpg",
+    type,
+    name,
   } as unknown as Blob);
 
   try {
-    const res = await apiClient.post<{ imageUrl: string }>(
+    const res = await apiClient.post<UploadProfileImageResponse>(
       "/api/user/me/profile-image",
       formData,
       { headers: { "Content-Type": "multipart/form-data" } }
     );
-    return res.data.imageUrl;
+    return res.data.profileImageUrl;
   } catch (error) {
     if (error instanceof ApiError) throw error;
     if (isAxiosError(error) && error.response?.status === 400) {

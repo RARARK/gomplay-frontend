@@ -1,5 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
+import * as ImageManipulator from "expo-image-manipulator";
 import * as ImagePicker from "expo-image-picker";
 import { router } from "expo-router";
 import React from "react";
@@ -21,6 +22,8 @@ import {
 import { useUserStore } from "@/stores/user/userStore";
 
 const DEFAULT_AVATAR = require("../../assets/match/Ellipse-12.png");
+const PROFILE_IMAGE_MAX_WIDTH = 1024;
+const PROFILE_IMAGE_COMPRESS_QUALITY = 0.8;
 
 function SectionLabel({ label }: { label: string }) {
   return <Text style={styles.sectionLabel}>{label}</Text>;
@@ -71,13 +74,28 @@ export default function ProfileEditRoute() {
     });
     if (result.canceled) return;
 
-    const uri = result.assets[0].uri;
+    const asset = result.assets[0];
+    const uri = asset.uri;
     setPhotoUri(uri);
     setIsUploadingPhoto(true);
 
     try {
-      const imageUrl = await uploadProfileImage(uri);
-      await updateMyProfile({ profileImageUrl: imageUrl });
+      const shouldResize =
+        typeof asset.width === "number" && asset.width > PROFILE_IMAGE_MAX_WIDTH;
+      const normalizedImage = await ImageManipulator.manipulateAsync(
+        uri,
+        shouldResize ? [{ resize: { width: PROFILE_IMAGE_MAX_WIDTH } }] : [],
+        {
+          compress: PROFILE_IMAGE_COMPRESS_QUALITY,
+          format: ImageManipulator.SaveFormat.JPEG,
+        },
+      );
+      const profileImageUrl = await uploadProfileImage(normalizedImage.uri, {
+        fileName: "profile.jpg",
+        mimeType: "image/jpeg",
+      });
+      await updateMyProfile({ profileImageUrl });
+      setPhotoUri(profileImageUrl);
       clearProfile();
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "이미지 업로드 실패";
@@ -130,9 +148,16 @@ export default function ProfileEditRoute() {
               )}
             </Pressable>
           </View>
-          <Text style={styles.photoHint}>
-            {isUploadingPhoto ? "업로드 중..." : "프로필 사진 변경"}
-          </Text>
+          <Pressable
+            accessibilityRole="button"
+            onPress={handlePickImage}
+            disabled={isUploadingPhoto}
+            hitSlop={8}
+          >
+            <Text style={styles.photoHint}>
+              {isUploadingPhoto ? "업로드 중..." : "프로필 사진 변경"}
+            </Text>
+          </Pressable>
         </View>
 
         {/* 계정 */}

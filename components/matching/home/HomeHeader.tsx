@@ -1,12 +1,10 @@
-import * as React from "react";
+import Frame110 from "@/assets/home/Frame-110.svg";
+import Frame91 from "@/assets/home/Frame-91.svg";
+import { Height, Width } from "@/constants/locofyHomeStyles";
 import { Image } from "expo-image";
 import { router } from "expo-router";
-import { StyleSheet, Pressable, View } from "react-native";
-import Frame91 from "@/assets/home/Frame-91.svg";
-import Frame921 from "@/assets/home/Frame-92.svg";
-import Frame110 from "@/assets/home/Frame-110.svg";
-import { Height, Width } from "@/constants/locofyHomeStyles";
-
+import * as React from "react";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 
 const HomeHeader = () => {
   return (
@@ -43,14 +41,10 @@ const HomeHeader = () => {
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Open profile"
-          style={styles.iconButton}
+          style={styles.myButton}
           onPress={() => router.push("/mypage" as any)}
         >
-          <Frame921
-            style={styles.svgIcon}
-            width={Width.width_48}
-            height={Height.height_48}
-          />
+          <Text style={styles.myButtonText}>MY</Text>
         </Pressable>
 
         <Pressable
@@ -90,6 +84,18 @@ const styles = StyleSheet.create({
     height: Height.height_48,
     justifyContent: "center",
     alignItems: "center",
+  },
+  myButton: {
+    width: Width.width_48,
+    height: Height.height_48,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  myButtonText: {
+    fontSize: 16,
+    lineHeight: 18,
+    color: "#111111",
+    fontWeight: "900",
   },
   imageIcon: {
     width: Width.width_48,
