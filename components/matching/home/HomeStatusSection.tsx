@@ -1,6 +1,7 @@
 import * as React from "react";
 import { StyleSheet, View } from "react-native";
 import QuickMatchToggleNew from "./QuickMatchToggleNew";
+import { HomeLayout } from "@/constants/locofyHomeStyles";
 import type { HomeStatusVariant } from "@/types/ui/homeStatus";
 import DefaultMatchContent from "./DefaultMatchContent";
 import MatchedContent from "./MatchedContent";
@@ -54,6 +55,8 @@ const styles = StyleSheet.create({
   },
   contentViewport: {
     width: "100%",
+    minHeight:
+      HomeLayout.statusIllustrationSize + HomeLayout.statusContentMinHeight,
     justifyContent: "flex-start",
     alignItems: "center",
   },
