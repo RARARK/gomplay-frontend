@@ -14,13 +14,78 @@ import {
 } from "react-native";
 
 import { logout } from "@/services/auth/authService";
+import { getSurvey } from "@/services/survey/surveyService";
 import { getMyProfile } from "@/services/user/userService";
 import { useAuthStore } from "@/stores/auth/authStore";
 import { useUserStore } from "@/stores/user/userStore";
+import type { Survey } from "@/types/domain/survey";
 
 const MANNER_TEMPERATURE_COLOR = "#F59E0B";
 const MANNER_TEMPERATURE_TRACK = "#FEF3C7";
 const DEFAULT_PROFILE_IMAGE = require("../../assets/match/Ellipse-12.png");
+
+const PARTNER_STYLE_LABEL: Record<string, string> = {
+  "각자": "조용한 파트너",
+  "같이": "활발한 파트너",
+};
+const INTENSITY_LABEL: Record<string, string> = {
+  "가볍게": "가볍게",
+  "적당히": "적당히",
+  "제대로": "제대로",
+  "한계까지": "한계까지",
+};
+const REASON_LABEL: Record<string, string> = {
+  "스트레스": "스트레스 해소",
+  "친해지려고": "친목",
+  "경쟁": "실력 향상",
+  "체력": "체력 관리",
+};
+const STYLE_SUMMARY: Record<string, { title: string; description: string }> = {
+  "각자": {
+    title: "독립형",
+    description: "각자의 페이스를 존중해요",
+  },
+  "같이": {
+    title: "외향형",
+    description: "사교적이고 활동적인 편이에요",
+  },
+};
+const INTENSITY_SUMMARY: Record<string, { title: string; description: string }> = {
+  "가볍게": {
+    title: "가볍게",
+    description: "즐기면서 운동하는 스타일",
+  },
+  "적당히": {
+    title: "균형형",
+    description: "무리 없이 꾸준히 해요",
+  },
+  "제대로": {
+    title: "집중형",
+    description: "운동할 때 몰입하는 편",
+  },
+  "한계까지": {
+    title: "도전형",
+    description: "강도 높은 운동을 좋아해요",
+  },
+};
+const REASON_SUMMARY: Record<string, { title: string; description: string }> = {
+  "스트레스": {
+    title: "스트레스 해소",
+    description: "기분 전환이 중요한 목표",
+  },
+  "친해지려고": {
+    title: "친목",
+    description: "함께 어울리는 시간이 좋아요",
+  },
+  "경쟁": {
+    title: "실력 향상",
+    description: "더 잘하고 싶은 마음이 커요",
+  },
+  "체력": {
+    title: "체력 관리",
+    description: "건강한 습관과 체력 향상이 목표",
+  },
+};
 
 export default function MyPageScreen() {
   const clearAuth = useAuthStore((state) => state.clearAuth);
@@ -31,6 +96,7 @@ export default function MyPageScreen() {
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
   const [isMannerDescriptionVisible, setIsMannerDescriptionVisible] =
     React.useState(false);
+  const [survey, setSurvey] = React.useState<Survey | null>(null);
   const mannerDescriptionProgress = React.useRef(new Animated.Value(0)).current;
 
   const loadProfile = React.useCallback(() => {
@@ -74,20 +140,15 @@ export default function MyPageScreen() {
     }).start();
   }, [isMannerDescriptionVisible, mannerDescriptionProgress]);
 
+  React.useEffect(() => {
+    getSurvey().then(setSurvey).catch(() => {});
+  }, []);
+
   const handleLogout = async () => {
     await logout();
     clearAuth();
     router.replace("/login");
   };
-
-  const exerciseTags = React.useMemo(
-    () =>
-      (profile?.exerciseTypes ?? "")
-        .split(",")
-        .map((t) => t.trim())
-        .filter(Boolean),
-    [profile?.exerciseTypes],
-  );
 
   const profileImageSource = React.useMemo(
     () =>
@@ -100,6 +161,27 @@ export default function MyPageScreen() {
   const mannerTemperature = profile?.mannerTemperature ?? 36.5;
   const mannerTemperatureWidth =
     `${Math.min(mannerTemperature, 100)}%` as DimensionValue;
+  const styleSummary = survey
+    ? STYLE_SUMMARY[survey.partnerStyle] ?? {
+        title: PARTNER_STYLE_LABEL[survey.partnerStyle] ?? survey.partnerStyle,
+        description: "선호하는 파트너 스타일이에요",
+      }
+    : null;
+  const intensitySummary = survey
+    ? INTENSITY_SUMMARY[survey.exerciseIntensity] ?? {
+        title: INTENSITY_LABEL[survey.exerciseIntensity] ?? survey.exerciseIntensity,
+        description: "선호하는 운동 강도예요",
+      }
+    : null;
+  const reasonSummary = survey
+    ? REASON_SUMMARY[survey.exerciseReason] ?? {
+        title: REASON_LABEL[survey.exerciseReason] ?? survey.exerciseReason,
+        description: "운동을 시작하는 이유예요",
+      }
+    : null;
+  const exerciseTypeSummary = survey?.exerciseTypes?.length
+    ? survey.exerciseTypes.slice(0, 2).join(", ")
+    : "아직 없음";
 
   if (isLoading) {
     return (
@@ -265,15 +347,73 @@ export default function MyPageScreen() {
           </View>
         </View>
 
-        {exerciseTags.length > 0 ? (
-          <View style={styles.card}>
-            <Text style={styles.cardTitle}>나의 운동 종목</Text>
-            <View style={styles.tagRow}>
-              {exerciseTags.map((tag) => (
-                <View key={tag} style={styles.tagChip}>
-                  <Text style={styles.tagText}>{tag}</Text>
+        {survey && styleSummary && intensitySummary && reasonSummary ? (
+          <View style={styles.preferenceCard}>
+            <View style={styles.preferenceHeader}>
+              <View style={styles.preferenceTitleRow}>
+                <Text style={styles.preferenceTitle}>나의 성향</Text>
+                <View style={styles.betaBadge}>
+                  <Text style={styles.betaBadgeText}>Beta</Text>
                 </View>
-              ))}
+              </View>
+              <Text style={styles.preferenceSubtitle}>
+                설문을 바탕으로 분석된 나의 운동 성향이에요
+              </Text>
+            </View>
+
+            <View style={styles.preferenceGrid}>
+              <PreferenceBadge
+                label="성격"
+                title={styleSummary.title}
+                description={styleSummary.description}
+                icon={
+                  <Ionicons
+                    name={survey.partnerStyle === "같이" ? "people" : "person"}
+                    size={24}
+                    color="#22C55E"
+                  />
+                }
+                tone="green"
+              />
+              <PreferenceBadge
+                label="운동 스타일"
+                title={intensitySummary.title}
+                description={intensitySummary.description}
+                icon={
+                  <MaterialCommunityIcons
+                    name="dumbbell"
+                    size={24}
+                    color="#A855F7"
+                  />
+                }
+                tone="purple"
+              />
+              <PreferenceBadge
+                label="운동 목적"
+                title={reasonSummary.title}
+                description={reasonSummary.description}
+                icon={
+                  <MaterialCommunityIcons
+                    name="bullseye-arrow"
+                    size={24}
+                    color="#F97316"
+                  />
+                }
+                tone="orange"
+              />
+              <PreferenceBadge
+                label="관심 종목"
+                title={exerciseTypeSummary}
+                description="주로 이 종목에 관심이 있어요"
+                icon={
+                  <Ionicons
+                    name="football"
+                    size={24}
+                    color="#2563EB"
+                  />
+                }
+                tone="blue"
+              />
             </View>
           </View>
         ) : null}
@@ -312,6 +452,40 @@ export default function MyPageScreen() {
         </Pressable>
       </View>
     </ScrollView>
+  );
+}
+
+type PreferenceBadgeProps = {
+  label: string;
+  title: string;
+  description: string;
+  icon: React.ReactNode;
+  tone: "green" | "purple" | "orange" | "blue";
+};
+
+function PreferenceBadge({
+  label,
+  title,
+  description,
+  icon,
+  tone,
+}: PreferenceBadgeProps) {
+  return (
+    <View
+      style={[
+        styles.preferenceItem,
+        tone === "blue" && styles.preferenceItemLast,
+      ]}
+    >
+      <Text style={styles.preferenceItemLabel}>{label}</Text>
+      <View style={[styles.preferenceIconWrap, styles[`preferenceIcon_${tone}`]]}>
+        {icon}
+      </View>
+      <Text numberOfLines={1} adjustsFontSizeToFit style={styles.preferenceItemTitle}>
+        {title}
+      </Text>
+      <Text style={styles.preferenceItemDescription}>{description}</Text>
+    </View>
   );
 }
 
@@ -377,7 +551,7 @@ const styles = StyleSheet.create({
   bodySection: {
     paddingHorizontal: 16,
     paddingTop: 32,
-    paddingBottom: 32,
+    paddingBottom: 72,
     gap: 16,
   },
   headerRow: {
@@ -557,6 +731,108 @@ const styles = StyleSheet.create({
     lineHeight: 18,
     color: "#6B7280",
     fontWeight: "700",
+  },
+  preferenceCard: {
+    borderRadius: 16,
+    backgroundColor: "#FFFFFF",
+    paddingHorizontal: 16,
+    paddingVertical: 18,
+    gap: 18,
+    shadowColor: "#000000",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  preferenceHeader: {
+    gap: 8,
+  },
+  preferenceTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  preferenceTitle: {
+    fontSize: 18,
+    lineHeight: 24,
+    color: "#111827",
+    fontWeight: "900",
+  },
+  betaBadge: {
+    borderRadius: 999,
+    backgroundColor: "#EDE9FE",
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+  },
+  betaBadgeText: {
+    fontSize: 12,
+    lineHeight: 16,
+    color: "#5B5CE2",
+    fontWeight: "900",
+  },
+  preferenceSubtitle: {
+    fontSize: 13,
+    lineHeight: 18,
+    color: "#6B7280",
+    fontWeight: "600",
+  },
+  preferenceGrid: {
+    flexDirection: "row",
+  },
+  preferenceItem: {
+    flex: 1,
+    minHeight: 160,
+    alignItems: "center",
+    paddingHorizontal: 8,
+    borderRightWidth: StyleSheet.hairlineWidth,
+    borderRightColor: "#D1D5DB",
+  },
+  preferenceItemLast: {
+    borderRightWidth: 0,
+  },
+  preferenceItemLabel: {
+    fontSize: 13,
+    lineHeight: 18,
+    color: "#111827",
+    fontWeight: "800",
+    textAlign: "center",
+    marginBottom: 16,
+  },
+  preferenceIconWrap: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 12,
+  },
+  preferenceIcon_green: {
+    backgroundColor: "#DCFCE7",
+  },
+  preferenceIcon_purple: {
+    backgroundColor: "#F3E8FF",
+  },
+  preferenceIcon_orange: {
+    backgroundColor: "#FFEDD5",
+  },
+  preferenceIcon_blue: {
+    backgroundColor: "#DBEAFE",
+  },
+  preferenceItemTitle: {
+    alignSelf: "stretch",
+    fontSize: 16,
+    lineHeight: 22,
+    color: "#111827",
+    fontWeight: "900",
+    textAlign: "center",
+    marginBottom: 8,
+  },
+  preferenceItemDescription: {
+    fontSize: 12,
+    lineHeight: 18,
+    color: "#374151",
+    fontWeight: "600",
+    textAlign: "center",
   },
   tagRow: {
     flexDirection: "row",

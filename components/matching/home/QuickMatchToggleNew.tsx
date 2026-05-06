@@ -2,6 +2,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import * as React from "react";
 import {
+  Modal,
+  Pressable,
   TouchableOpacity,
   StyleSheet,
   Text,
@@ -50,6 +52,37 @@ const track = StyleSheet.create({
 
 export default function QuickMatchToggleNew({ state, onChange }: Props) {
   const isOn = state === "Matching";
+  const [isPointNoticeVisible, setIsPointNoticeVisible] = React.useState(false);
+  const [skipPointNotice, setSkipPointNotice] = React.useState(false);
+  const [draftSkipPointNotice, setDraftSkipPointNotice] = React.useState(false);
+
+  const handleTogglePress = () => {
+    if (isOn) {
+      onChange?.(false);
+      return;
+    }
+
+    if (skipPointNotice) {
+      onChange?.(true);
+      return;
+    }
+
+    setDraftSkipPointNotice(false);
+    setIsPointNoticeVisible(true);
+  };
+
+  const handleConfirmQuickMatch = () => {
+    if (draftSkipPointNotice) {
+      setSkipPointNotice(true);
+    }
+    setIsPointNoticeVisible(false);
+    onChange?.(true);
+  };
+
+  const handleDismissPointNotice = () => {
+    setDraftSkipPointNotice(false);
+    setIsPointNoticeVisible(false);
+  };
 
   const content = (
     <>
@@ -92,7 +125,7 @@ export default function QuickMatchToggleNew({ state, onChange }: Props) {
       accessibilityRole="switch"
       accessibilityState={{ checked: isOn }}
       activeOpacity={0.88}
-      onPress={() => onChange?.(!isOn)}
+      onPress={handleTogglePress}
       style={[styles.cardOuter, isOn ? styles.cardOuterOn : styles.cardOuterOff]}
     >
       {isOn ? (
@@ -109,6 +142,56 @@ export default function QuickMatchToggleNew({ state, onChange }: Props) {
           {content}
         </View>
       )}
+
+      <Modal
+        transparent
+        animationType="fade"
+        visible={isPointNoticeVisible}
+        onRequestClose={handleDismissPointNotice}
+      >
+        <View style={styles.modalBackdrop}>
+          <View style={styles.noticeCard}>
+            <View style={styles.noticeIconWrap}>
+              <Ionicons name="flash" size={24} color="#4C5BE2" />
+            </View>
+            <Text style={styles.noticeTitle}>퀵매치를 시작할까요?</Text>
+            <Text style={styles.noticeDescription}>
+              퀵매치를 시작하면 50포인트가 차감돼요.
+            </Text>
+
+            <Pressable
+              accessibilityRole="checkbox"
+              accessibilityState={{ checked: draftSkipPointNotice }}
+              onPress={() => setDraftSkipPointNotice((v) => !v)}
+              style={styles.skipNoticeRow}
+            >
+              <Ionicons
+                name={draftSkipPointNotice ? "checkbox" : "square-outline"}
+                size={20}
+                color={draftSkipPointNotice ? "#4C5BE2" : "#9CA3AF"}
+              />
+              <Text style={styles.skipNoticeText}>다시 보지 않기</Text>
+            </Pressable>
+
+            <View style={styles.noticeButtonRow}>
+              <Pressable
+                accessibilityRole="button"
+                onPress={handleDismissPointNotice}
+                style={styles.noticeCancelButton}
+              >
+                <Text style={styles.noticeCancelText}>취소</Text>
+              </Pressable>
+              <Pressable
+                accessibilityRole="button"
+                onPress={handleConfirmQuickMatch}
+                style={styles.noticeConfirmButton}
+              >
+                <Text style={styles.noticeConfirmText}>확인</Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </TouchableOpacity>
   );
 }
@@ -203,4 +286,102 @@ const styles = StyleSheet.create({
   },
   helperTextOn: { color: "rgba(255,255,255,0.85)" },
   helperTextOff: { color: "#9CA3AF" },
+  modalBackdrop: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(17, 24, 39, 0.42)",
+    paddingHorizontal: 24,
+  },
+  noticeCard: {
+    width: "100%",
+    maxWidth: 340,
+    borderRadius: 20,
+    backgroundColor: "#FFFFFF",
+    paddingHorizontal: 22,
+    paddingVertical: 24,
+    alignItems: "center",
+    shadowColor: "#000000",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.18,
+    shadowRadius: 18,
+    elevation: 10,
+  },
+  noticeIconWrap: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: "#EEF2FF",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 14,
+  },
+  noticeTitle: {
+    fontSize: 18,
+    lineHeight: 24,
+    color: "#111827",
+    fontWeight: "900",
+    textAlign: "center",
+  },
+  noticeDescription: {
+    marginTop: 8,
+    fontSize: 14,
+    lineHeight: 20,
+    color: "#4B5563",
+    fontWeight: "600",
+    textAlign: "center",
+  },
+  skipNoticeRow: {
+    alignSelf: "stretch",
+    minHeight: 44,
+    marginTop: 18,
+    borderRadius: 12,
+    backgroundColor: "#F8FAFC",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    paddingHorizontal: 12,
+  },
+  skipNoticeText: {
+    fontSize: 14,
+    lineHeight: 20,
+    color: "#374151",
+    fontWeight: "700",
+  },
+  noticeButtonRow: {
+    alignSelf: "stretch",
+    flexDirection: "row",
+    gap: 10,
+    marginTop: 18,
+  },
+  noticeCancelButton: {
+    flex: 1,
+    height: 46,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    backgroundColor: "#FFFFFF",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  noticeConfirmButton: {
+    flex: 1,
+    height: 46,
+    borderRadius: 12,
+    backgroundColor: "#4C5BE2",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  noticeCancelText: {
+    fontSize: 15,
+    lineHeight: 20,
+    color: "#6B7280",
+    fontWeight: "800",
+  },
+  noticeConfirmText: {
+    fontSize: 15,
+    lineHeight: 20,
+    color: "#FFFFFF",
+    fontWeight: "900",
+  },
 });

@@ -2,7 +2,7 @@ import { Image } from "expo-image";
 import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
-import MatchLocationIcon from "@/assets/match/mdi-location.svg";
+import { Ionicons } from "@expo/vector-icons";
 import MatchMapPreview from "@/assets/match/icon.png";
 import type { Coords } from "@/services/location/locationService";
 import { getStaticMapUrl } from "@/services/location/locationService";
@@ -43,14 +43,14 @@ export default function CreatePostLocationCard({
         />
         {!locationCoords ? (
           <View style={styles.mapPin}>
-            <MatchLocationIcon width={22} height={22} />
+            <Ionicons name="location" size={22} color="#EF4444" />
           </View>
         ) : null}
       </Pressable>
 
       <View style={styles.footer}>
         <View style={styles.locationRow}>
-          <MatchLocationIcon width={18} height={18} />
+          <Ionicons name="location" size={18} color="#EF4444" />
           <Text style={styles.locationText}>{location}</Text>
         </View>
 

@@ -5,7 +5,6 @@ import React from "react";
 import {
   Alert,
   KeyboardAvoidingView,
-  PanResponder,
   Platform,
   Pressable,
   ScrollView,
@@ -15,46 +14,45 @@ import {
   View,
 } from "react-native";
 
-import DifficultyIcon from "@/assets/match/heroicons-chart-bar-16-solid.svg";
-import LocationIcon from "@/assets/match/mdi-location.svg";
-import ExerciseIcon from "@/assets/match/fluent-run-16-filled.svg";
 
-const RATING_TRAITS = [
-  { id: "punctual", label: "시간 약속을 잘 지켰어요" },
-  { id: "manner", label: "운동 매너가 좋았어요" },
-  { id: "kind", label: "친절하고 배려가 깊었어요" },
-  { id: "again", label: "다음에도 같이 하고 싶어요" },
+const POSITIVE_TRAITS = [
+  { id: "punctual",  label: "시간 약속을 잘 지켰어요" },
+  { id: "manner",   label: "운동 매너가 좋았어요" },
+  { id: "kind",     label: "친절하고 배려가 깊었어요" },
+  { id: "again",    label: "다음에도 같이 하고 싶어요" },
 ] as const;
+
+const NEGATIVE_TRAITS = [
+  { id: "late",     label: "시간 약속을 지키지 않았어요" },
+  { id: "badmanner", label: "운동 매너가 좋지 않았어요" },
+  { id: "unkind",   label: "불친절하고 배려가 부족했어요" },
+  { id: "noagain",  label: "다음엔 같이 하고 싶지 않아요" },
+] as const;
+
+const REPORT_REASONS = [
+  "허위 학교 인증",
+  "욕설/괴롭힘",
+  "불쾌한 행동",
+  "위험한 행동",
+  "금전 요구 / 사기",
+  "기타",
+] as const;
+
+const FIXED_TEMPERATURE = 36.5;
 
 // Mock — replace with API response keyed by matchId
 const MOCK_PARTNER = {
   name: "김단국",
   department: "컴퓨터공학과",
-  mannerTemperature: 36.5,
+  studentId: "23학번",
   location: "체육관",
-  scheduledTime: "19:00~21:00",
+  scheduledTime: "오늘 19:00 ~ 21:00",
   difficulty: "초보자",
   exerciseType: "풋살",
 };
 
 type Props = { matchId: string };
 
-function DetailChip({
-  icon,
-  label,
-}: {
-  icon: React.ReactNode;
-  label: string;
-}) {
-  return (
-    <View style={styles.detailChip}>
-      {icon}
-      <Text style={styles.detailChipText} numberOfLines={1}>
-        {label}
-      </Text>
-    </View>
-  );
-}
 
 function TraitCheckbox({
   label,
@@ -91,24 +89,12 @@ export default function PartnerReviewScreen({ matchId: _matchId }: Props) {
     new Set(),
   );
   const [isNoShow, setIsNoShow] = React.useState(false);
+  const [isReportExpanded, setIsReportExpanded] = React.useState(false);
+  const [selectedReportReason, setSelectedReportReason] = React.useState<
+    (typeof REPORT_REASONS)[number] | null
+  >(null);
+  const [reportDescription, setReportDescription] = React.useState("");
   const [comment, setComment] = React.useState("");
-  const [temperature, setTemperature] = React.useState(36);
-  const trackWidthRef = React.useRef(0);
-
-  const panResponder = React.useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
-      onMoveShouldSetPanResponder: () => true,
-      onPanResponderGrant: (evt) => {
-        const ratio = Math.max(0, Math.min(1, evt.nativeEvent.locationX / trackWidthRef.current));
-        setTemperature(Math.round(ratio * 100));
-      },
-      onPanResponderMove: (evt) => {
-        const ratio = Math.max(0, Math.min(1, evt.nativeEvent.locationX / trackWidthRef.current));
-        setTemperature(Math.round(ratio * 100));
-      },
-    }),
-  ).current;
 
   const toggleTrait = (id: string) => {
     setSelectedTraits((prev) => {
@@ -125,8 +111,6 @@ export default function PartnerReviewScreen({ matchId: _matchId }: Props) {
       { text: "확인", onPress: () => router.back() },
     ]);
   };
-
-  const tempEmoji = temperature >= 70 ? "happy-outline" : temperature >= 40 ? "happy-outline" : temperature >= 20 ? "remove-circle-outline" : "sad-outline";
 
   return (
     <KeyboardAvoidingView
@@ -153,36 +137,46 @@ export default function PartnerReviewScreen({ matchId: _matchId }: Props) {
         </View>
 
         {/* 파트너 정보 */}
-        <View style={styles.card}>
-          <View style={styles.partnerRow}>
+        <View style={styles.partnerCard}>
+          {/* 상단: 아바타 + 이름/학과/뱃지 */}
+          <View style={styles.partnerTop}>
             <Image
               source={require("../../assets/match/Ellipse-12.png")}
               style={styles.avatar}
               contentFit="cover"
             />
-            <View style={styles.partnerInfo}>
-              <View style={styles.nameRow}>
+            <View style={styles.partnerMeta}>
+              <View style={styles.nameRowNew}>
                 <Text style={styles.partnerName}>{MOCK_PARTNER.name}</Text>
-                <Text style={styles.partnerDept}>{MOCK_PARTNER.department}</Text>
+                <View style={styles.completedBadge}>
+                  <Ionicons name="checkmark" size={12} color="#16A34A" />
+                  <Text style={styles.completedBadgeText}>운동 완료</Text>
+                </View>
               </View>
-              <View style={styles.detailGrid}>
-                <DetailChip
-                  icon={<LocationIcon width={13} height={13} />}
-                  label={MOCK_PARTNER.location}
-                />
-                <DetailChip
-                  icon={<Ionicons name="time-outline" size={13} color="#413F46" />}
-                  label={MOCK_PARTNER.scheduledTime}
-                />
-                <DetailChip
-                  icon={<DifficultyIcon width={13} height={13} />}
-                  label={MOCK_PARTNER.difficulty}
-                />
-                <DetailChip
-                  icon={<ExerciseIcon width={13} height={13} />}
-                  label={MOCK_PARTNER.exerciseType}
-                />
+              <Text style={styles.partnerDept}>
+                {MOCK_PARTNER.department} · {MOCK_PARTNER.studentId}
+              </Text>
+              <View style={styles.chipRow}>
+                <View style={styles.infoChip}>
+                  <Text style={styles.infoChipText}>⚽ {MOCK_PARTNER.exerciseType}</Text>
+                </View>
+                <View style={styles.infoChip}>
+                  <View style={styles.difficultyDot} />
+                  <Text style={styles.infoChipText}>{MOCK_PARTNER.difficulty}</Text>
+                </View>
               </View>
+            </View>
+          </View>
+
+          {/* 하단: 장소 · 시간 */}
+          <View style={styles.partnerDetailCol}>
+            <View style={styles.partnerDetailRow}>
+              <Ionicons name="location" size={15} color="#EF4444" />
+              <Text style={styles.partnerDetailText}>{MOCK_PARTNER.location}</Text>
+            </View>
+            <View style={styles.partnerDetailRow}>
+              <Ionicons name="time-outline" size={15} color="#6B7280" />
+              <Text style={styles.partnerDetailText}>{MOCK_PARTNER.scheduledTime}</Text>
             </View>
           </View>
         </View>
@@ -194,35 +188,58 @@ export default function PartnerReviewScreen({ matchId: _matchId }: Props) {
               <Text style={styles.sectionTitle}>매너온도</Text>
               <Text style={styles.sectionSub}>함께 운동하기 좋았나요?</Text>
             </View>
-          </View>
+            </View>
 
           <View style={styles.tempRow}>
-            <Text style={styles.tempValue}>{temperature}°C</Text>
-            <Ionicons name={tempEmoji} size={30} color="#F59E0B" />
+            <Text style={styles.tempValue}>{FIXED_TEMPERATURE.toFixed(1)}°C</Text>
+            <Ionicons name="happy-outline" size={30} color="#F59E0B" />
           </View>
 
-          <View
-            style={styles.tempTrack}
-            onLayout={(e) => { trackWidthRef.current = e.nativeEvent.layout.width; }}
-            {...panResponder.panHandlers}
-          >
-            <View style={[styles.tempFill, { width: `${temperature}%` }]} />
-            <View style={[styles.tempThumb, { left: `${temperature}%` }]} />
+          <View style={styles.tempTrack} pointerEvents="none">
+            <View style={[styles.tempFill, { width: `${FIXED_TEMPERATURE}%` }]} />
+            <View style={[styles.tempThumb, { left: `${FIXED_TEMPERATURE}%` }]} />
           </View>
           <View style={styles.tempLabels}>
             <Text style={styles.tempLabelText}>0°C</Text>
             <Text style={styles.tempLabelText}>100°C</Text>
           </View>
 
-          <View style={styles.traitList}>
-            {RATING_TRAITS.map((trait) => (
-              <TraitCheckbox
-                key={trait.id}
-                label={trait.label}
-                checked={selectedTraits.has(trait.id)}
-                onToggle={() => toggleTrait(trait.id)}
-              />
-            ))}
+          {/* 호평 */}
+          <View style={styles.traitGroup}>
+            <View style={styles.traitGroupHeader}>
+              <Ionicons name="thumbs-up" size={14} color="#4C5BE2" />
+              <Text style={styles.traitGroupLabelPos}>좋았어요</Text>
+            </View>
+            <View style={styles.traitList}>
+              {POSITIVE_TRAITS.map((trait) => (
+                <TraitCheckbox
+                  key={trait.id}
+                  label={trait.label}
+                  checked={selectedTraits.has(trait.id)}
+                  onToggle={() => toggleTrait(trait.id)}
+                  color="#4C5BE2"
+                />
+              ))}
+            </View>
+          </View>
+
+          {/* 악평 */}
+          <View style={styles.traitGroup}>
+            <View style={styles.traitGroupHeader}>
+              <Ionicons name="thumbs-down" size={14} color="#EF4444" />
+              <Text style={styles.traitGroupLabelNeg}>아쉬웠어요</Text>
+            </View>
+            <View style={styles.traitList}>
+              {NEGATIVE_TRAITS.map((trait) => (
+                <TraitCheckbox
+                  key={trait.id}
+                  label={trait.label}
+                  checked={selectedTraits.has(trait.id)}
+                  onToggle={() => toggleTrait(trait.id)}
+                  color="#EF4444"
+                />
+              ))}
+            </View>
           </View>
         </View>
 
@@ -247,6 +264,80 @@ export default function PartnerReviewScreen({ matchId: _matchId }: Props) {
             </Text>
           </View>
         </Pressable>
+
+        {/* 신고 */}
+        <View
+          style={[
+            styles.reportCard,
+            isReportExpanded && styles.reportCardExpanded,
+          ]}
+        >
+          <Pressable
+            accessibilityRole="button"
+            accessibilityState={{ expanded: isReportExpanded }}
+            style={styles.reportHeader}
+            onPress={() => setIsReportExpanded((v) => !v)}
+          >
+            <View style={styles.reportIconWrap}>
+              <Ionicons name="warning-outline" size={20} color="#B45309" />
+            </View>
+            <View style={styles.reportHeaderText}>
+              <Text style={styles.reportTitle}>문제가 있었나요?</Text>
+              <Text style={styles.reportSubtitle}>
+                부적절한 행동이나 허위 인증 등을 신고할 수 있어요.
+              </Text>
+            </View>
+            <View style={styles.reportToggleButton}>
+              <Ionicons
+                name={isReportExpanded ? "chevron-up" : "chevron-down"}
+                size={18}
+                color="#6B7280"
+              />
+            </View>
+          </Pressable>
+
+          {isReportExpanded ? (
+            <View style={styles.reportContent}>
+              <View style={styles.reportDivider} />
+              <View style={styles.reportReasonWrap}>
+                {REPORT_REASONS.map((reason) => {
+                  const selected = selectedReportReason === reason;
+
+                  return (
+                    <Pressable
+                      key={reason}
+                      accessibilityRole="radio"
+                      accessibilityState={{ checked: selected }}
+                      onPress={() => setSelectedReportReason(reason)}
+                      style={[
+                        styles.reportReasonChip,
+                        selected && styles.reportReasonChipSelected,
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.reportReasonText,
+                          selected && styles.reportReasonTextSelected,
+                        ]}
+                      >
+                        {reason}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+              <TextInput
+                style={styles.reportInput}
+                placeholder="상황을 자세히 설명해주세요."
+                placeholderTextColor="#9CA3AF"
+                value={reportDescription}
+                onChangeText={setReportDescription}
+                multiline
+                textAlignVertical="top"
+              />
+            </View>
+          ) : null}
+        </View>
 
         {/* 한 줄 후기 */}
         <View style={styles.card}>
@@ -333,45 +424,105 @@ const styles = StyleSheet.create({
   },
 
   /* 파트너 정보 */
-  partnerRow: {
+  partnerCard: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 20,
+    paddingHorizontal: 20,
+    paddingVertical: 20,
+    gap: 16,
+    elevation: 4,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.08,
+    shadowRadius: 10,
+  },
+  partnerTop: {
     flexDirection: "row",
     alignItems: "flex-start",
-    gap: 12,
+    gap: 14,
   },
   avatar: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: 80,
+    height: 80,
+    borderRadius: 40,
     backgroundColor: "#EEF2FF",
   },
-  partnerInfo: { flex: 1, gap: 8 },
-  nameRow: {
+  partnerMeta: {
+    flex: 1,
+    gap: 6,
+    minWidth: 0,
+  },
+  nameRowNew: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
+    justifyContent: "space-between",
+    gap: 8,
   },
-  partnerName: { fontSize: 16, fontWeight: "800", color: "#111827" },
-  partnerDept: { fontSize: 12, fontWeight: "600", color: "#6B7280" },
-  detailGrid: {
+  partnerName: {
+    fontSize: 22,
+    lineHeight: 28,
+    fontWeight: "800",
+    color: "#111827",
+  },
+  completedBadge: {
     flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 6,
+    alignItems: "center",
+    gap: 3,
+    backgroundColor: "#DCFCE7",
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
   },
-  detailChip: {
-    width: "48%",
-    minHeight: 30,
+  completedBadgeText: {
+    fontSize: 11,
+    fontWeight: "700",
+    color: "#16A34A",
+  },
+  partnerDept: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: "#6B7280",
+  },
+  chipRow: {
+    flexDirection: "row",
+    gap: 6,
+    marginTop: 2,
+  },
+  infoChip: {
     flexDirection: "row",
     alignItems: "center",
     gap: 5,
-    borderRadius: 8,
-    backgroundColor: "#F8FAFC",
-    paddingHorizontal: 8,
+    backgroundColor: "#F3F4F6",
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
   },
-  detailChipText: {
-    flex: 1,
+  difficultyDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "#22C55E",
+  },
+  infoChipText: {
     fontSize: 12,
-    color: "#413F46",
+    fontWeight: "700",
+    color: "#374151",
+  },
+  partnerDetailCol: {
+    gap: 6,
+    paddingTop: 4,
+    borderTopWidth: 1,
+    borderTopColor: "#F3F4F6",
+  },
+  partnerDetailRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 7,
+  },
+  partnerDetailText: {
+    fontSize: 14,
     fontWeight: "600",
+    color: "#374151",
   },
 
   /* 매너온도 */
@@ -438,12 +589,31 @@ const styles = StyleSheet.create({
     color: "#9CA3AF",
     fontWeight: "500",
   },
+  traitGroup: {
+    gap: 4,
+  },
+  traitGroupHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    paddingBottom: 2,
+  },
+  traitGroupLabelPos: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: "#4C5BE2",
+  },
+  traitGroupLabelNeg: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: "#EF4444",
+  },
   traitList: { gap: 2 },
   traitRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
-    paddingVertical: 8,
+    paddingVertical: 7,
   },
   traitLabel: {
     fontSize: 14,
@@ -481,6 +651,109 @@ const styles = StyleSheet.create({
     fontWeight: "500",
     color: "#D1D5DB",
     lineHeight: 16,
+  },
+
+  /* 신고 */
+  reportCard: {
+    backgroundColor: "#FFFCF7",
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: "#FDE8C7",
+    padding: 14,
+    elevation: 2,
+    shadowColor: "#92400E",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.08,
+    shadowRadius: 10,
+  },
+  reportCardExpanded: {
+    borderColor: "#F6D7A8",
+  },
+  reportHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  reportIconWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "#FEF3C7",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  reportHeaderText: {
+    flex: 1,
+    gap: 3,
+  },
+  reportTitle: {
+    fontSize: 14,
+    fontWeight: "800",
+    color: "#78350F",
+  },
+  reportSubtitle: {
+    fontSize: 12,
+    fontWeight: "500",
+    color: "#78716C",
+    lineHeight: 17,
+  },
+  reportToggleButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: "#FFFFFF",
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: "#F3E4D0",
+  },
+  reportContent: {
+    gap: 12,
+    paddingTop: 12,
+  },
+  reportDivider: {
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: "#F1DFC4",
+  },
+  reportReasonWrap: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  reportReasonChip: {
+    minHeight: 34,
+    borderRadius: 17,
+    borderWidth: 1,
+    borderColor: "#E7D8C5",
+    backgroundColor: "#FFFFFF",
+    paddingHorizontal: 12,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  reportReasonChipSelected: {
+    borderColor: "#B45309",
+    backgroundColor: "#FFF7ED",
+  },
+  reportReasonText: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: "#57534E",
+  },
+  reportReasonTextSelected: {
+    color: "#92400E",
+  },
+  reportInput: {
+    minHeight: 88,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#E7D8C5",
+    backgroundColor: "#FFFFFF",
+    paddingHorizontal: 12,
+    paddingTop: 10,
+    paddingBottom: 10,
+    fontSize: 14,
+    color: "#111827",
+    lineHeight: 20,
   },
 
   /* 한 줄 후기 */

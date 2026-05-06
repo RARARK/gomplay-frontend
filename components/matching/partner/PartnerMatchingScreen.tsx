@@ -1,5 +1,6 @@
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { Image } from "expo-image";
+import { router } from "expo-router";
 import React from "react";
 import {
   Alert,
@@ -379,6 +380,12 @@ export default function PartnerMatchingScreen() {
   const [partnerIndex, setPartnerIndex] = React.useState(0);
   const currentPartner = RECOMMENDED_PARTNERS[partnerIndex];
 
+  const handleBackPress = () => {
+    if (router.canGoBack()) {
+      router.back();
+    }
+  };
+
   const handleRefresh = () => {
     setPartnerIndex((i) => (i + 1) % RECOMMENDED_PARTNERS.length);
   };
@@ -391,18 +398,28 @@ export default function PartnerMatchingScreen() {
   };
 
   return (
-    <ScrollView
-      style={screenStyles.screen}
-      contentContainerStyle={screenStyles.screenContent}
-      showsVerticalScrollIndicator={false}
-    >
-      <View style={screenStyles.header}>
-        <View style={screenStyles.headerIcon}>
-          <Ionicons name="people-outline" size={26} color="#111827" />
+    <>
+      <View style={screenStyles.headerContainer}>
+        <View style={screenStyles.header}>
+          <Pressable
+            accessibilityLabel="Go back"
+            accessibilityRole="button"
+            hitSlop={8}
+            onPress={handleBackPress}
+            style={screenStyles.backButton}
+          >
+            <Ionicons name="chevron-back" size={28} color="#111111" />
+          </Pressable>
+          <Text style={screenStyles.headerTitle}>파트너 매칭</Text>
+          <View style={screenStyles.headerSpacer} />
         </View>
-        <Text style={screenStyles.headerTitle}>파트너 매칭</Text>
       </View>
 
+      <ScrollView
+        style={screenStyles.screen}
+        contentContainerStyle={screenStyles.screenContent}
+        showsVerticalScrollIndicator={false}
+      >
       <View style={screenStyles.matchPanel}>
         <View style={screenStyles.panelHeader}>
           <View style={screenStyles.panelTitleRow}>
@@ -418,35 +435,40 @@ export default function PartnerMatchingScreen() {
           onRequest={handleRequest}
         />
       </View>
-    </ScrollView>
+      </ScrollView>
+    </>
   );
 }
 
 const screenStyles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: "#FFFFFF" },
-  screenContent: { flexGrow: 1, paddingTop: 18 },
+  screenContent: { flexGrow: 1, paddingTop: 16 },
+  headerContainer: {
+    backgroundColor: "#FFFFFF",
+  },
   header: {
     height: 48,
+    paddingHorizontal: 16,
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 12,
   },
-  headerIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 999,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#F8FAFC",
   },
   headerTitle: {
     flex: 1,
-    marginRight: 48,
     fontSize: 17,
     lineHeight: 22,
     color: "#111827",
     fontWeight: "700",
     textAlign: "center",
+  },
+  headerSpacer: {
+    width: 40,
   },
   matchPanel: {
     alignItems: "center",

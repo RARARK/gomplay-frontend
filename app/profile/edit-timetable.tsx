@@ -53,7 +53,7 @@ export default function EditTimetableRoute() {
   };
 
   return (
-    <SafeAreaView edges={["top"]} style={styles.safe}>
+    <SafeAreaView edges={["top", "bottom"]} style={styles.safe}>
       <View style={styles.header}>
         <Pressable
           accessibilityRole="button"

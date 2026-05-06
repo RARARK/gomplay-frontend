@@ -1,4 +1,5 @@
-import { Image, StyleSheet, Text, View } from "react-native";
+import { useState } from "react";
+import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
 import { Border, Color, FontFamily, FontSize } from "../GlobalStyles";
@@ -23,6 +24,8 @@ export default function MatchInfoCard({
   levelLabel = "Beginner",
   playerCountLabel = "2 players",
 }: MatchInfoCardProps) {
+  const [collapsed, setCollapsed] = useState(false);
+
   const detailItems: DetailItem[] = [
     { icon: "walk", label: surfaceLabel },
     { icon: "stats-chart", label: levelLabel },
@@ -32,7 +35,10 @@ export default function MatchInfoCard({
   return (
     <View style={styles.wrapper}>
       <View style={styles.card}>
-        <View style={styles.locationRow}>
+        <Pressable
+          onPress={() => setCollapsed((prev) => !prev)}
+          style={styles.locationRow}
+        >
           <Image
             source={require("../../assets/chat/Locationpin.png")}
             style={styles.locationIcon}
@@ -40,32 +46,39 @@ export default function MatchInfoCard({
           <Text numberOfLines={1} style={styles.locationText}>
             {locationName}
           </Text>
-        </View>
+          <Ionicons
+            name={collapsed ? "chevron-down" : "chevron-up"}
+            size={16}
+            color={Color.neutral700}
+          />
+        </Pressable>
 
-        <View style={styles.infoPanel}>
-          <View style={styles.timeRow}>
-            <Ionicons name="time-outline" size={16} color={Color.neutral700} />
-            <Text style={styles.timeText}>{timeLabel}</Text>
+        {!collapsed && (
+          <View style={styles.infoPanel}>
+            <View style={styles.timeRow}>
+              <Ionicons name="time-outline" size={16} color={Color.neutral700} />
+              <Text style={styles.timeText}>{timeLabel}</Text>
+            </View>
+
+            <View style={styles.divider} />
+
+            <View style={styles.detailRow}>
+              {detailItems.map((item) => (
+                <View
+                  key={`${item.icon}-${item.label}`}
+                  style={styles.detailItem}
+                >
+                  <Ionicons
+                    name={item.icon}
+                    size={16}
+                    color={Color.labelsPrimary}
+                  />
+                  <Text style={styles.detailText}>{item.label}</Text>
+                </View>
+              ))}
+            </View>
           </View>
-
-          <View style={styles.divider} />
-
-          <View style={styles.detailRow}>
-            {detailItems.map((item) => (
-              <View
-                key={`${item.icon}-${item.label}`}
-                style={styles.detailItem}
-              >
-                <Ionicons
-                  name={item.icon}
-                  size={16}
-                  color={Color.labelsPrimary}
-                />
-                <Text style={styles.detailText}>{item.label}</Text>
-              </View>
-            ))}
-          </View>
-        </View>
+        )}
       </View>
     </View>
   );

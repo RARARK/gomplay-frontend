@@ -2,13 +2,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 
-import {
-  Color,
-  FontSize,
-  LetterSpacing,
-  LineHeight,
-  FontFamily,
-} from "../GlobalStyles";
+import { Color, FontSize, LineHeight } from "../GlobalStyles";
 
 type ChatHeaderProps = {
   title?: string;
@@ -45,8 +39,8 @@ export default function ChatHeader({
           >
             <Ionicons
               name="chevron-back"
-              size={24}
-              color={Color.labelsPrimary}
+              size={28}
+              color="#111111"
             />
           </Pressable>
         ) : (
@@ -56,7 +50,6 @@ export default function ChatHeader({
           {title}
         </Text>
       </View>
-      <View style={styles.divider} />
     </View>
   );
 }
@@ -66,14 +59,15 @@ const styles = StyleSheet.create({
     backgroundColor: Color.colorWhite,
   },
   headerRow: {
-    minHeight: 56,
-    paddingHorizontal: 12,
+    height: 48,
+    paddingHorizontal: 16,
     flexDirection: "row",
     alignItems: "center",
   },
   backButton: {
     width: 40,
     height: 40,
+    borderRadius: 999,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -83,17 +77,11 @@ const styles = StyleSheet.create({
   },
   title: {
     flex: 1,
-    marginLeft: 8,
+    marginRight: 40,
     fontSize: FontSize.fs_17,
-    letterSpacing: LetterSpacing.ls__0_41,
     lineHeight: LineHeight.lh_22,
-    fontWeight: "600",
-    fontFamily: FontFamily.inter,
+    fontWeight: "700",
     color: Color.labelsPrimary,
-    textAlign: "left",
-  },
-  divider: {
-    borderBottomWidth: 1,
-    borderColor: Color.colorSilver,
+    textAlign: "center",
   },
 });

@@ -8,7 +8,6 @@ import {
   View,
 } from "react-native";
 
-const FIND_ACCOUNT_LABEL = "아이디/비밀번호 찾기";
 const SIGNUP_PROMPT = "계정이 없으신가요?";
 const SIGNUP_LABEL = "가입하기";
 
@@ -19,7 +18,6 @@ type LoginFormProps = {
   onChangePassword: (value: string) => void;
   onLoginPress: () => void;
   onSignupPress: () => void;
-  onFindAccountPress?: () => void;
   isLoading?: boolean;
   errorMessage?: string | null;
 };
@@ -31,7 +29,6 @@ export default function LoginForm({
   onChangePassword,
   onLoginPress,
   onSignupPress,
-  onFindAccountPress,
   isLoading = false,
   errorMessage,
 }: LoginFormProps) {
@@ -76,14 +73,6 @@ export default function LoginForm({
           )}
         </Pressable>
 
-        <Pressable
-          accessibilityRole="button"
-          disabled={!onFindAccountPress || isLoading}
-          onPress={onFindAccountPress}
-          style={styles.findAccount}
-        >
-          <Text style={styles.findAccountText}>{FIND_ACCOUNT_LABEL}</Text>
-        </Pressable>
       </View>
 
       <View style={styles.createAccountArea}>
@@ -144,16 +133,6 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#FFFFFF",
     fontFamily: "System",
-  },
-  findAccount: {
-    alignItems: "center",
-  },
-  findAccountText: {
-    fontSize: 14,
-    fontWeight: "500",
-    color: "#111827",
-    fontFamily: "System",
-    textAlign: "center",
   },
   createAccountArea: {
     alignItems: "center",

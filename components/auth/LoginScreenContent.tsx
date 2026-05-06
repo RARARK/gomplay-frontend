@@ -12,7 +12,6 @@ type LoginScreenContentProps = {
   onChangePassword: (value: string) => void;
   onLoginPress: () => void;
   onSignupPress: () => void;
-  onFindAccountPress?: () => void;
   isLoading?: boolean;
   errorMessage?: string | null;
 };
@@ -24,7 +23,6 @@ export default function LoginScreenContent({
   onChangePassword,
   onLoginPress,
   onSignupPress,
-  onFindAccountPress,
   isLoading,
   errorMessage,
 }: LoginScreenContentProps) {
@@ -44,7 +42,6 @@ export default function LoginScreenContent({
           onChangePassword={onChangePassword}
           onLoginPress={onLoginPress}
           onSignupPress={onSignupPress}
-          onFindAccountPress={onFindAccountPress}
           isLoading={isLoading}
           errorMessage={errorMessage}
         />

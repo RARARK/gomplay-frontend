@@ -4,7 +4,6 @@ import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import DifficultyIcon from "@/assets/match/heroicons-chart-bar-16-solid.svg";
-import LocationIcon from "@/assets/match/mdi-location.svg";
 import ExerciseIcon from "@/assets/match/fluent-run-16-filled.svg";
 
 export type MatchHistoryItem = {
@@ -39,7 +38,7 @@ export default function MatchHistoryCard({
 
   const details = [
     item.location && {
-      icon: <LocationIcon width={13} height={13} />,
+      icon: <Ionicons name="location" size={13} color="#EF4444" />,
       label: item.location,
     },
     item.scheduledTime && {

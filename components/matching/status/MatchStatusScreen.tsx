@@ -176,12 +176,7 @@ export default function MatchStatusScreen({
 
   return (
     <>
-      <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={styles.content}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* 헤더 */}
+      <View style={styles.headerContainer}>
         <View style={styles.headerRow}>
           <Pressable
             accessibilityRole="button"
@@ -193,7 +188,13 @@ export default function MatchStatusScreen({
           <Text style={styles.headerTitle}>매칭 현황</Text>
           <View style={styles.headerSpacer} />
         </View>
+      </View>
 
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+      >
         {/* 필터 */}
         <ScrollView
           horizontal
@@ -303,16 +304,20 @@ const styles = StyleSheet.create({
   },
   content: {
     paddingHorizontal: 16,
-    paddingTop: 8,
+    paddingTop: 16,
     paddingBottom: 32,
     gap: 16,
   },
 
   /* 헤더 */
+  headerContainer: {
+    backgroundColor: "#FFFFFF",
+  },
   headerRow: {
+    height: 48,
+    paddingHorizontal: 16,
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
   },
   backButton: {
     width: 40,
@@ -322,10 +327,12 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   headerTitle: {
-    fontSize: 20,
-    lineHeight: 28,
+    flex: 1,
+    fontSize: 17,
+    lineHeight: 22,
     color: "#111827",
-    fontWeight: "800",
+    fontWeight: "700",
+    textAlign: "center",
   },
   headerSpacer: {
     width: 40,
