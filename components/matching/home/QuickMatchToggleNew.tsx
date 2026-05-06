@@ -98,7 +98,7 @@ export default function QuickMatchToggleNew({ state, onChange }: Props) {
         <View style={styles.statusRow}>
           <View style={[styles.dot, isOn ? styles.dotOn : styles.dotOff]} />
           <Text style={[styles.statusText, isOn ? styles.statusOn : styles.statusOff]}>
-            {isOn ? "공강 중 · 자동 매칭 활성화됨" : "공강 중 · 매칭 비활성화"}
+            {isOn ? "공강 중 · 자동 매칭 활성화" : "공강 중 · 매칭 비활성화"}
           </Text>
         </View>
 

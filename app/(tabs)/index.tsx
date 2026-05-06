@@ -1,4 +1,5 @@
 import * as React from "react";
+import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { ScrollView, StyleSheet, Pressable, Text, View } from "react-native";
 import {
@@ -11,9 +12,8 @@ import HeroBanner from "@/components/matching/home/HeroBanner";
 import { homeBanners } from "@/components/matching/home/homeMockData";
 import HomeStatusSection from "@/components/matching/home/HomeStatusSection";
 import MatchSection from "@/components/matching/home/MatchSection";
-import CreatePostButton from "@/assets/home/CreatePostButton.svg";
 
-import { Color, Width } from "@/constants/locofyHomeStyles";
+import { Color } from "@/constants/locofyHomeStyles";
 import type { Banner } from "@/types/ui/homeBanner";
 import type { HomeStatusVariant } from "@/types/ui/homeStatus";
 
@@ -108,7 +108,7 @@ export default function HomePage() {
           ]}
           hitSlop={10}
         >
-          <CreatePostButton width={Width.width_56} height={56} />
+          <Ionicons name="add" size={34} color="#FFFFFF" />
         </Pressable>
       </>
     </SafeAreaView>
@@ -165,7 +165,17 @@ const styles = StyleSheet.create({
     position: "absolute",
     right: 20,
     bottom: 24,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: "#4C5BE2",
+    alignItems: "center",
+    justifyContent: "center",
     zIndex: 999,
     elevation: 10,
+    shadowColor: "#4C5BE2",
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.28,
+    shadowRadius: 10,
   },
 });
