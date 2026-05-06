@@ -4,6 +4,18 @@ import apiClient, { ApiError } from "@/lib/api/client";
 import type { ApiResponse } from "@/types/auth/auth";
 import type { DayOfWeek, UserTimetableRange } from "@/types/domain/user";
 
+// Module-level cache so callers can read the last known value synchronously.
+// null = never fetched yet, boolean = last known result.
+let _hasSchedule: boolean | null = null;
+
+export function getHasScheduleCache(): boolean | null {
+  return _hasSchedule;
+}
+
+export function setHasScheduleCache(value: boolean): void {
+  _hasSchedule = value;
+}
+
 type ScheduleItem = {
   dayOfWeek: DayOfWeek;
   startTime: string;

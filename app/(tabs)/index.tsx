@@ -1,6 +1,6 @@
 import * as React from "react";
 import { Ionicons } from "@expo/vector-icons";
-import { router } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import { ScrollView, StyleSheet, Pressable, Text, View } from "react-native";
 import {
   SafeAreaView,
@@ -13,9 +13,12 @@ import { homeBanners } from "@/components/matching/home/homeMockData";
 import HomeStatusSection from "@/components/matching/home/HomeStatusSection";
 import MatchSection from "@/components/matching/home/MatchSection";
 
-import { useFocusEffect } from "expo-router";
 import { Color } from "@/constants/locofyHomeStyles";
-import { getSchedule } from "@/services/schedule/scheduleService";
+import {
+  getHasScheduleCache,
+  getSchedule,
+  setHasScheduleCache,
+} from "@/services/schedule/scheduleService";
 import type { Banner } from "@/types/ui/homeBanner";
 import type { HomeStatusVariant } from "@/types/ui/homeStatus";
 
@@ -27,14 +30,28 @@ export default function HomePage() {
   const [forceMatchedContentNew, setForceMatchedContentNew] = React.useState(false);
   const [banners] = React.useState<Banner[]>(homeBanners);
 
-  const [hasTimetable, setHasTimetable] = React.useState(false);
+  // null means the timetable state is still unknown.
+  // When a cache exists, use it immediately to avoid flicker on return.
+  const [hasTimetable, setHasTimetable] = React.useState<boolean | null>(
+    () => getHasScheduleCache(),
+  );
 
   useFocusEffect(
     React.useCallback(() => {
+      setHasTimetable(getHasScheduleCache());
+
       getSchedule()
-        .then((ranges) => setHasTimetable(ranges.length > 0))
-        .catch(() => {});
-    }, [])
+        .then((ranges) => {
+          const has = ranges.length > 0;
+          setHasScheduleCache(has);
+          setHasTimetable(has);
+        })
+        .catch(() => {
+          if (getHasScheduleCache() === null) {
+            setHasTimetable(false);
+          }
+        });
+    }, []),
   );
   const isMatched = forceMatchedContent;
   const isMatchedNew = forceMatchedContentNew;
@@ -49,6 +66,7 @@ export default function HomePage() {
     if (isMatchedNew) return "MatchedNew";
     if (isMatched) return "Matched";
     if (isQuickMatchOn) return "Matching";
+    if (hasTimetable === null) return "Loading";
     if (!hasTimetable) return "NoSchedule";
     return "Default";
   };

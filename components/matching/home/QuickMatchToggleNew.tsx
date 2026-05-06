@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LinearGradient } from "expo-linear-gradient";
 import * as React from "react";
 import {
@@ -9,6 +10,7 @@ import {
   Text,
   View,
 } from "react-native";
+import { useAuthStore } from "@/stores/auth/authStore";
 import type { HomeStatusVariant } from "@/types/ui/homeStatus";
 
 type Props = {
@@ -51,10 +53,41 @@ const track = StyleSheet.create({
 });
 
 export default function QuickMatchToggleNew({ state, onChange }: Props) {
+  const userId = useAuthStore((store) => store.userId);
   const isOn = state === "Matching";
   const [isPointNoticeVisible, setIsPointNoticeVisible] = React.useState(false);
   const [skipPointNotice, setSkipPointNotice] = React.useState(false);
   const [draftSkipPointNotice, setDraftSkipPointNotice] = React.useState(false);
+  const QUICK_MATCH_MODAL_KEY = React.useMemo(
+    () =>
+      userId === null ? null : `quickMatchStartModalHidden:${userId}`,
+    [userId],
+  );
+
+  React.useEffect(() => {
+    let isMounted = true;
+
+    setSkipPointNotice(false);
+    setDraftSkipPointNotice(false);
+
+    if (!QUICK_MATCH_MODAL_KEY) {
+      return () => {
+        isMounted = false;
+      };
+    }
+
+    AsyncStorage.getItem(QUICK_MATCH_MODAL_KEY)
+      .then((value) => {
+        if (isMounted) {
+          setSkipPointNotice(value === "true");
+        }
+      })
+      .catch(() => {});
+
+    return () => {
+      isMounted = false;
+    };
+  }, [QUICK_MATCH_MODAL_KEY]);
 
   const handleTogglePress = () => {
     if (isOn) {
@@ -71,9 +104,10 @@ export default function QuickMatchToggleNew({ state, onChange }: Props) {
     setIsPointNoticeVisible(true);
   };
 
-  const handleConfirmQuickMatch = () => {
-    if (draftSkipPointNotice) {
+  const handleConfirmQuickMatch = async () => {
+    if (draftSkipPointNotice && QUICK_MATCH_MODAL_KEY) {
       setSkipPointNotice(true);
+      await AsyncStorage.setItem(QUICK_MATCH_MODAL_KEY, "true").catch(() => {});
     }
     setIsPointNoticeVisible(false);
     onChange?.(true);

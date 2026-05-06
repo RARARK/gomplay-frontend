@@ -1,4 +1,5 @@
 export type HomeStatusVariant =
+  | "Loading"
   | "Default"
   | "NoSchedule"
   | "Matching"

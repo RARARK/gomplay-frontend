@@ -12,7 +12,11 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import TimetableSelector from "@/components/common/TimetableSelector";
-import { getSchedule, updateSchedule } from "@/services/schedule/scheduleService";
+import {
+  getSchedule,
+  setHasScheduleCache,
+  updateSchedule,
+} from "@/services/schedule/scheduleService";
 import type { UserTimetableRange, UserTimetableState } from "@/types/domain/user";
 import {
   compressTimetableState,
@@ -39,6 +43,9 @@ export default function EditTimetableRoute() {
     setIsSaving(true);
     try {
       await updateSchedule(toSubmit);
+      // Update cache before navigating back so the home screen reads the
+      // correct value instantly without waiting for another API call.
+      setHasScheduleCache(toSubmit.length > 0);
       Alert.alert("저장 완료", "시간표가 저장됐어요.", [
         { text: "확인", onPress: () => router.back() },
       ]);

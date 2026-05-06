@@ -4,6 +4,10 @@ import { router } from "expo-router";
 import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import TimetableSelector from "@/components/common/TimetableSelector";
+import {
+  setHasScheduleCache,
+  submitSchedule,
+} from "@/services/schedule/scheduleService";
 import type { UserTimetableRange } from "@/types/domain/user";
 import { createEmptyTimetableState, DAY_OF_WEEKS } from "@/utils/timetable";
 
@@ -21,9 +25,23 @@ export default function TimetableScreen() {
     [],
   );
 
-  const handleSave = (ranges: UserTimetableRange[]) => {
-    setSavedRanges(ranges);
-    Alert.alert("Saved", JSON.stringify(ranges, null, 2));
+  const [isSaving, setIsSaving] = React.useState(false);
+
+  const handleSave = async (ranges: UserTimetableRange[]) => {
+    setIsSaving(true);
+    try {
+      await submitSchedule(ranges);
+      setHasScheduleCache(ranges.length > 0);
+      setSavedRanges(ranges);
+      router.back();
+    } catch (err) {
+      Alert.alert(
+        "저장 실패",
+        err instanceof Error ? err.message : "저장 중 오류가 발생했습니다.",
+      );
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -41,9 +59,10 @@ export default function TimetableScreen() {
       <TimetableSelector
         value={timetable}
         onChange={setTimetable}
-        onSave={handleSave}
-        title="Timetable Selection"
-        subtitle="Drag or tap to mark the time blocks you are available."
+        onSave={isSaving ? () => {} : handleSave}
+        title="시간표 입력"
+        subtitle="강의가 있는 시간대를 선택하면 더 잘 맞는 파트너를 추천해드려요."
+        saveLabel={isSaving ? "저장 중..." : "저장하기"}
       />
 
       <View style={styles.preview}>

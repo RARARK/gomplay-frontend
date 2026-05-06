@@ -90,9 +90,9 @@ export default function PartnerReviewScreen({ matchId: _matchId }: Props) {
   );
   const [isNoShow, setIsNoShow] = React.useState(false);
   const [isReportExpanded, setIsReportExpanded] = React.useState(false);
-  const [selectedReportReason, setSelectedReportReason] = React.useState<
-    (typeof REPORT_REASONS)[number] | null
-  >(null);
+  const [selectedReportReasons, setSelectedReportReasons] = React.useState<
+    Set<(typeof REPORT_REASONS)[number]>
+  >(new Set());
   const [reportDescription, setReportDescription] = React.useState("");
   const [comment, setComment] = React.useState("");
 
@@ -105,8 +105,26 @@ export default function PartnerReviewScreen({ matchId: _matchId }: Props) {
     });
   };
 
+  const toggleReportReason = (reason: (typeof REPORT_REASONS)[number]) => {
+    setSelectedReportReasons((prev) => {
+      const next = new Set(prev);
+      if (next.has(reason)) next.delete(reason);
+      else next.add(reason);
+      return next;
+    });
+  };
+
   const handleSubmit = () => {
     // TODO: API 연동
+    if (isReportExpanded) {
+      Alert.alert(
+        "피드백 접수 완료",
+        "남겨주신 문제 내용을 확인하고 매칭 품질 개선에 반영할게요.",
+        [{ text: "확인", onPress: () => router.back() }],
+      );
+      return;
+    }
+
     Alert.alert("평가 완료", "파트너 평가가 제출됐어요.", [
       { text: "확인", onPress: () => router.back() },
     ]);
@@ -301,14 +319,14 @@ export default function PartnerReviewScreen({ matchId: _matchId }: Props) {
               <View style={styles.reportDivider} />
               <View style={styles.reportReasonWrap}>
                 {REPORT_REASONS.map((reason) => {
-                  const selected = selectedReportReason === reason;
+                  const selected = selectedReportReasons.has(reason);
 
                   return (
                     <Pressable
                       key={reason}
-                      accessibilityRole="radio"
+                      accessibilityRole="checkbox"
                       accessibilityState={{ checked: selected }}
-                      onPress={() => setSelectedReportReason(reason)}
+                      onPress={() => toggleReportReason(reason)}
                       style={[
                         styles.reportReasonChip,
                         selected && styles.reportReasonChipSelected,
