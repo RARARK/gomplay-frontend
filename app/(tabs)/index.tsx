@@ -13,7 +13,9 @@ import { homeBanners } from "@/components/matching/home/homeMockData";
 import HomeStatusSection from "@/components/matching/home/HomeStatusSection";
 import MatchSection from "@/components/matching/home/MatchSection";
 
+import { useFocusEffect } from "expo-router";
 import { Color } from "@/constants/locofyHomeStyles";
+import { getSchedule } from "@/services/schedule/scheduleService";
 import type { Banner } from "@/types/ui/homeBanner";
 import type { HomeStatusVariant } from "@/types/ui/homeStatus";
 
@@ -25,7 +27,15 @@ export default function HomePage() {
   const [forceMatchedContentNew, setForceMatchedContentNew] = React.useState(false);
   const [banners] = React.useState<Banner[]>(homeBanners);
 
-  const hasTimetable = false;
+  const [hasTimetable, setHasTimetable] = React.useState(false);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      getSchedule()
+        .then((ranges) => setHasTimetable(ranges.length > 0))
+        .catch(() => {});
+    }, [])
+  );
   const isMatched = forceMatchedContent;
   const isMatchedNew = forceMatchedContentNew;
 
