@@ -16,6 +16,11 @@ type LoginFormProps = {
   password: string;
   onChangeSchoolEmail: (value: string) => void;
   onChangePassword: (value: string) => void;
+  savedCredentials?: { schoolEmail: string; password: string }[];
+  onSelectSavedCredential?: (credential: {
+    schoolEmail: string;
+    password: string;
+  }) => void;
   onLoginPress: () => void;
   onSignupPress: () => void;
   isLoading?: boolean;
@@ -27,6 +32,8 @@ export default function LoginForm({
   password,
   onChangeSchoolEmail,
   onChangePassword,
+  savedCredentials = [],
+  onSelectSavedCredential,
   onLoginPress,
   onSignupPress,
   isLoading = false,
@@ -55,6 +62,27 @@ export default function LoginForm({
           editable={!isLoading}
         />
       </View>
+
+      {savedCredentials.length > 0 ? (
+        <View style={styles.savedAccountArea}>
+          <Text style={styles.savedAccountTitle}>Recent test accounts</Text>
+          <View style={styles.savedAccountList}>
+            {savedCredentials.map((credential) => (
+              <Pressable
+                key={credential.schoolEmail}
+                accessibilityRole="button"
+                disabled={isLoading}
+                onPress={() => onSelectSavedCredential?.(credential)}
+                style={styles.savedAccountButton}
+              >
+                <Text style={styles.savedAccountText} numberOfLines={1}>
+                  {credential.schoolEmail}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+        </View>
+      ) : null}
 
       {errorMessage ? (
         <Text style={styles.errorText}>{errorMessage}</Text>
@@ -106,6 +134,39 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "500",
     color: "#111827",
+    fontFamily: "System",
+  },
+  savedAccountArea: {
+    gap: 8,
+    marginTop: -8,
+  },
+  savedAccountTitle: {
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: "700",
+    color: "#6B7280",
+    fontFamily: "System",
+  },
+  savedAccountList: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  savedAccountButton: {
+    maxWidth: "100%",
+    minHeight: 34,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: "#D1D5DB",
+    backgroundColor: "#FFFFFF",
+    justifyContent: "center",
+    paddingHorizontal: 12,
+  },
+  savedAccountText: {
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: "600",
+    color: "#374151",
     fontFamily: "System",
   },
   errorText: {

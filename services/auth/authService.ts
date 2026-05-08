@@ -1,6 +1,8 @@
 import { isAxiosError } from "axios";
 
 import apiClient, { ApiError } from "@/lib/api/client";
+import { toggleMatching } from "@/services/matching/matchingService";
+import { useAuthStore } from "@/stores/auth/authStore";
 import type {
   ApiResponse,
   LoginResponseData,
@@ -35,6 +37,10 @@ export async function login(
 }
 
 export async function logout(): Promise<void> {
+  if (useAuthStore.getState().matching) {
+    await toggleMatching(false).catch(() => {});
+  }
+
   // Authorization header is injected automatically by the axios interceptor.
   // Always resolves — caller must clear local auth state regardless of result.
   await apiClient.post<ApiResponse<null>>("/api/auth/logout").catch(() => {});

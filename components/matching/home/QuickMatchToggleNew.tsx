@@ -15,6 +15,7 @@ import type { HomeStatusVariant } from "@/types/ui/homeStatus";
 
 type Props = {
   state?: HomeStatusVariant;
+  isOn?: boolean;
   onChange?: (value: boolean) => void;
 };
 
@@ -52,9 +53,9 @@ const track = StyleSheet.create({
   thumbRight: { alignSelf: "flex-end" },
 });
 
-export default function QuickMatchToggleNew({ state, onChange }: Props) {
+export default function QuickMatchToggleNew({ state, isOn: controlledIsOn, onChange }: Props) {
   const userId = useAuthStore((store) => store.userId);
-  const isOn = state === "Matching";
+  const isOn = controlledIsOn ?? state === "Matching";
   const [isPointNoticeVisible, setIsPointNoticeVisible] = React.useState(false);
   const [skipPointNotice, setSkipPointNotice] = React.useState(false);
   const [draftSkipPointNotice, setDraftSkipPointNotice] = React.useState(false);

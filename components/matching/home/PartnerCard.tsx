@@ -29,6 +29,19 @@ import DEFAULT_PROFILE_IMAGE from "../../../assets/home/PartnerProfileImage.png"
 export type { PartnerCardProps } from "@/types/ui/homeCards";
 
 const PHOTO_SIZE = 104;
+const PHOTO_STAGE_WIDTH = 164;
+const PHOTO_STAGE_HEIGHT = 126;
+
+const CONFETTI_PIECES = [
+  { top: 10, left: 18, width: 18, height: 6, borderRadius: 3, backgroundColor: "#F97316", transform: [{ rotate: "-24deg" }] },
+  { top: 34, left: 4, width: 8, height: 8, borderRadius: 4, backgroundColor: "#22C55E" },
+  { top: 70, left: 18, width: 12, height: 5, borderRadius: 3, backgroundColor: "#38BDF8", transform: [{ rotate: "28deg" }] },
+  { top: 95, left: 40, width: 7, height: 7, borderRadius: 4, backgroundColor: "#FACC15" },
+  { top: 8, right: 22, width: 7, height: 7, borderRadius: 4, backgroundColor: "#EC4899" },
+  { top: 32, right: 4, width: 17, height: 6, borderRadius: 3, backgroundColor: "#4F46E5", transform: [{ rotate: "22deg" }] },
+  { top: 74, right: 16, width: 9, height: 9, borderRadius: 5, backgroundColor: "#FACC15" },
+  { top: 96, right: 38, width: 14, height: 5, borderRadius: 3, backgroundColor: "#22C55E", transform: [{ rotate: "-18deg" }] },
+] as const;
 
 const toArr = (v?: string): string[] => (v ? [v] : []);
 
@@ -75,6 +88,22 @@ function MatchRing({ score }: { score: number }) {
       <View style={ringStyles.label}>
         <Text style={ringStyles.percent}>{normalized}%</Text>
         <Text style={ringStyles.matchText}>MATCH</Text>
+      </View>
+    </View>
+  );
+}
+
+function ConfettiBurst() {
+  return (
+    <View pointerEvents="none" style={S.confettiLayer}>
+      {CONFETTI_PIECES.map((piece, index) => (
+        <View key={index} style={[S.confettiPiece, piece]} />
+      ))}
+      <View style={[S.sparkle, S.sparkleLeft]}>
+        <Ionicons name="sparkles" size={18} color="#FACC15" />
+      </View>
+      <View style={[S.sparkle, S.sparkleRight]}>
+        <Ionicons name="sparkles" size={16} color="#FFFFFF" />
       </View>
     </View>
   );
@@ -258,8 +287,12 @@ const PartnerCard = ({
           </View>
         )}
 
-        <View style={S.photoRing}>
-          <Image source={profileImageSource} style={S.photo} resizeMode="cover" />
+        <View style={S.photoStage}>
+          <ConfettiBurst />
+          <View style={S.photoGlow} />
+          <View style={S.photoRing}>
+            <Image source={profileImageSource} style={S.photo} resizeMode="cover" />
+          </View>
         </View>
 
         {hasMeta && (
@@ -372,6 +405,46 @@ const S = StyleSheet.create({
     right: 14,
     zIndex: 1,
   },
+  photoStage: {
+    width: PHOTO_STAGE_WIDTH,
+    height: PHOTO_STAGE_HEIGHT,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 12,
+  },
+  confettiLayer: {
+    position: "absolute",
+    width: "100%",
+    height: "100%",
+    zIndex: 0,
+  },
+  confettiPiece: {
+    position: "absolute",
+  },
+  sparkle: {
+    position: "absolute",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  sparkleLeft: {
+    left: 36,
+    top: 22,
+    transform: [{ rotate: "-10deg" }],
+  },
+  sparkleRight: {
+    right: 28,
+    bottom: 22,
+    transform: [{ rotate: "16deg" }],
+    opacity: 0.9,
+  },
+  photoGlow: {
+    position: "absolute",
+    width: PHOTO_SIZE + 26,
+    height: PHOTO_SIZE + 26,
+    borderRadius: (PHOTO_SIZE + 26) / 2,
+    backgroundColor: "rgba(255, 255, 255, 0.34)",
+    zIndex: 1,
+  },
   photoRing: {
     width: PHOTO_SIZE + 6,
     height: PHOTO_SIZE + 6,
@@ -379,7 +452,7 @@ const S = StyleSheet.create({
     backgroundColor: "#FFFFFF",
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 12,
+    zIndex: 2,
     elevation: 4,
     shadowColor: "#7C6FF7",
     shadowOffset: { width: 0, height: 3 },

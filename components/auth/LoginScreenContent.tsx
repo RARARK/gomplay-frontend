@@ -10,6 +10,11 @@ type LoginScreenContentProps = {
   password: string;
   onChangeSchoolEmail: (value: string) => void;
   onChangePassword: (value: string) => void;
+  savedCredentials?: { schoolEmail: string; password: string }[];
+  onSelectSavedCredential?: (credential: {
+    schoolEmail: string;
+    password: string;
+  }) => void;
   onLoginPress: () => void;
   onSignupPress: () => void;
   isLoading?: boolean;
@@ -21,6 +26,8 @@ export default function LoginScreenContent({
   password,
   onChangeSchoolEmail,
   onChangePassword,
+  savedCredentials,
+  onSelectSavedCredential,
   onLoginPress,
   onSignupPress,
   isLoading,
@@ -40,6 +47,8 @@ export default function LoginScreenContent({
           password={password}
           onChangeSchoolEmail={onChangeSchoolEmail}
           onChangePassword={onChangePassword}
+          savedCredentials={savedCredentials}
+          onSelectSavedCredential={onSelectSavedCredential}
           onLoginPress={onLoginPress}
           onSignupPress={onSignupPress}
           isLoading={isLoading}

@@ -10,6 +10,7 @@ import {
   TIME_SLOTS,
   updateTimetableCell,
 } from "@/utils/timetable";
+import { Ionicons } from "@expo/vector-icons";
 import * as React from "react";
 import {
   type GestureResponderEvent,
@@ -453,7 +454,20 @@ const TimetableSelector = ({
     <View style={styles.screen}>
       <View style={styles.header}>
         <Text style={styles.title}>{title}</Text>
-        <Text style={styles.subtitle}>{subtitle}</Text>
+        {subtitle ? (
+          <Text style={styles.subtitle}>{subtitle}</Text>
+        ) : null}
+        <View style={styles.hintRow}>
+          <View style={styles.hintChip}>
+            <Ionicons name="hand-left-outline" size={14} color="#6D5DF6" />
+            <Text style={styles.hintChipText}>탭으로 선택</Text>
+          </View>
+          <View style={styles.hintSeparator} />
+          <View style={styles.hintChip}>
+            <Ionicons name="swap-vertical-outline" size={14} color="#6D5DF6" />
+            <Text style={styles.hintChipText}>드래그로 연속 선택</Text>
+          </View>
+        </View>
       </View>
 
       <View
@@ -599,7 +613,7 @@ const styles = StyleSheet.create({
     paddingBottom: 24,
   },
   header: {
-    gap: 10,
+    gap: 8,
     alignItems: "center",
     marginBottom: 20,
   },
@@ -611,10 +625,37 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   subtitle: {
-    fontSize: 14,
-    lineHeight: 20,
-    color: "#444444",
+    fontSize: 13,
+    lineHeight: 18,
+    color: "#6B7280",
     textAlign: "center",
+  },
+  hintRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    marginTop: 2,
+  },
+  hintChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    backgroundColor: "#EDE9FF",
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  hintChipText: {
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: "600",
+    color: "#6D5DF6",
+  },
+  hintSeparator: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: "#D1D5DB",
   },
   scrollFrame: {
     flex: 1,
@@ -634,45 +675,48 @@ const styles = StyleSheet.create({
     gap: GRID_GAP,
   },
   cornerCell: {
-    borderRadius: 12,
-    backgroundColor: "#d9d9d9",
+    borderRadius: 10,
+    backgroundColor: "#EDE9FF",
   },
   dayHeaderCell: {
-    borderRadius: 12,
-    backgroundColor: "#d9d9d9",
+    borderRadius: 10,
+    backgroundColor: "#EDE9FF",
     alignItems: "center",
     justifyContent: "center",
   },
   dayHeaderText: {
-    fontSize: 14,
+    fontSize: 13,
     lineHeight: 18,
     fontWeight: "700",
-    color: "#111111",
+    color: "#4C3FC4",
   },
   timeLabelCell: {
-    borderRadius: 12,
-    backgroundColor: "#d9d9d9",
+    borderRadius: 10,
+    backgroundColor: "#F5F6FF",
     alignItems: "center",
     justifyContent: "center",
   },
   timeLabelText: {
-    fontSize: 12,
-    lineHeight: 16,
-    color: "#222222",
+    fontSize: 11,
+    lineHeight: 15,
+    color: "#6B7280",
     fontWeight: "500",
   },
   slotCell: {
-    borderRadius: 12,
+    borderRadius: 10,
     overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "#E5E7FF",
   },
   slotPressable: {
     flex: 1,
   },
   slotCellIdle: {
-    backgroundColor: "#d9d9d9",
+    backgroundColor: "#F5F6FF",
   },
   slotCellSelected: {
-    backgroundColor: "#e4f84a",
+    backgroundColor: "#6D5DF6",
+    borderColor: "#5B4FF0",
   },
   saveButton: {
     marginTop: 16,

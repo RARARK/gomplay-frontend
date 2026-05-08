@@ -63,11 +63,8 @@ export default function HomePage() {
         if (candidateFetchCancelledRef.current) return;
         if (candidatesRes.data.length > 0) {
           setCandidates(candidatesRes.data.map(mapCandidateToCardRef.current));
-          setIsQuickMatchOn(false);
-          setMatching(false);
           setIsFetchingCandidates(false);
           isTogglingRef.current = false;
-          toggleMatching(false).catch(() => {});
         } else {
           setIsFetchingCandidates(false);
           setTimeout(searchOnce, 3000);
@@ -80,7 +77,7 @@ export default function HomePage() {
       }
     };
     searchOnce();
-  }, [setMatching]);
+  }, []);
 
   React.useEffect(() => {
     if (!storedMatching) return;
@@ -247,6 +244,7 @@ export default function HomePage() {
           {/* Render the status-specific content without changing the page layout. */}
           <HomeStatusSection
             state={currentState}
+            isQuickMatchOn={isQuickMatchOn}
             onToggleQuickMatch={handleToggleQuickMatch}
             candidates={candidates}
           />

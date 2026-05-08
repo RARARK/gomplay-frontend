@@ -12,6 +12,7 @@ import NoScheduleContent from "./NoScheduleContent";
 
 type Props = {
   state: HomeStatusVariant;
+  isQuickMatchOn?: boolean;
   onToggleQuickMatch?: (value: boolean) => void;
   candidates?: PartnerCardProps[];
 };
@@ -52,7 +53,12 @@ function renderContent(state: HomeStatusVariant, candidates: PartnerCardProps[])
   }
 }
 
-const HomeStatusSection = ({ state, onToggleQuickMatch, candidates = [] }: Props) => {
+const HomeStatusSection = ({
+  state,
+  isQuickMatchOn,
+  onToggleQuickMatch,
+  candidates = [],
+}: Props) => {
   const isFixedSlot = FIXED_HEIGHT_VARIANTS.has(state);
 
   return (
@@ -60,6 +66,7 @@ const HomeStatusSection = ({ state, onToggleQuickMatch, candidates = [] }: Props
       <View style={styles.toggleWrapper}>
         <QuickMatchToggleNew
           state={state}
+          isOn={isQuickMatchOn}
           onChange={onToggleQuickMatch}
         />
       </View>
