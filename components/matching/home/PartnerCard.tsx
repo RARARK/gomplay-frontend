@@ -1,25 +1,30 @@
-import { Ionicons } from "@expo/vector-icons";
-import * as React from "react";
-import DEFAULT_BACKGROUND_IMAGE from "../../../assets/home/PartnerCardBackground2.png";
-import DEFAULT_PROFILE_IMAGE from "../../../assets/home/PartnerProfileImage.png";
 import {
-  Image,
-  ImageBackground,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
-import Svg, { Circle, Defs, LinearGradient, Stop } from "react-native-svg";
-import {
-  Border,
-  Color,
   FontFamily,
   FontSize,
   HomeLayout,
   LineHeight,
 } from "@/constants/locofyHomeStyles";
 import type { PartnerCardProps } from "@/types/ui/homeCards";
+import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
+import * as React from "react";
+import {
+  Image,
+  ImageBackground,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
+import Svg, {
+  Circle,
+  Defs,
+  Stop,
+  LinearGradient as SvgLinearGradient,
+} from "react-native-svg";
+import DEFAULT_BACKGROUND_IMAGE from "../../../assets/home/PartnerCardBackground.png";
+import DEFAULT_PROFILE_IMAGE from "../../../assets/home/PartnerProfileImage.png";
 
 export type { PartnerCardProps } from "@/types/ui/homeCards";
 
@@ -37,18 +42,26 @@ function MatchRing({ score }: { score: number }) {
     <View style={ringStyles.wrap}>
       <Svg width={RING_SIZE} height={RING_SIZE}>
         <Defs>
-          <LinearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1">
+          <SvgLinearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1">
             <Stop offset="0" stopColor="#7C6FF7" />
             <Stop offset="1" stopColor="#4F46E5" />
-          </LinearGradient>
+          </SvgLinearGradient>
         </Defs>
         <Circle
-          cx={RING_SIZE / 2} cy={RING_SIZE / 2} r={RING_RADIUS}
-          stroke="#E7E9FF" strokeWidth={RING_STROKE} fill="#FFFFFF"
+          cx={RING_SIZE / 2}
+          cy={RING_SIZE / 2}
+          r={RING_RADIUS}
+          stroke="#E7E9FF"
+          strokeWidth={RING_STROKE}
+          fill="#FFFFFF"
         />
         <Circle
-          cx={RING_SIZE / 2} cy={RING_SIZE / 2} r={RING_RADIUS}
-          stroke="url(#ringGrad)" strokeWidth={RING_STROKE} fill="transparent"
+          cx={RING_SIZE / 2}
+          cy={RING_SIZE / 2}
+          r={RING_RADIUS}
+          stroke="url(#ringGrad)"
+          strokeWidth={RING_STROKE}
+          fill="transparent"
           strokeLinecap="round"
           strokeDasharray={`${RING_CIRCUMFERENCE} ${RING_CIRCUMFERENCE}`}
           strokeDashoffset={dashOffset}
@@ -93,68 +106,111 @@ const ringStyles = StyleSheet.create({
 type InfoRowProps = {
   icon: keyof typeof Ionicons.glyphMap;
   iconColor: string;
+  iconBg: string;
   label: string;
   values: string[];
   chipBg: string;
   chipTextColor: string;
+  isLast?: boolean;
+  scrollable?: boolean;
 };
 
-function InfoRow({ icon, iconColor, label, values, chipBg, chipTextColor }: InfoRowProps) {
+function InfoRow({
+  icon,
+  iconColor,
+  iconBg,
+  label,
+  values,
+  chipBg,
+  chipTextColor,
+  isLast,
+  scrollable,
+}: InfoRowProps) {
   if (values.length === 0) return null;
 
-  return (
-    <View style={rowStyles.row}>
-      <View style={rowStyles.left}>
-        <Ionicons name={icon} size={17} color={iconColor} />
-        <Text style={rowStyles.label}>{label}</Text>
-      </View>
-      <View style={rowStyles.chips}>
-        {values.map((v) => (
-          <View key={v} style={[rowStyles.chip, { backgroundColor: chipBg }]}>
-            <Text style={[rowStyles.chipText, { color: chipTextColor }]}>{v}</Text>
-          </View>
-        ))}
-      </View>
+  const chips = values.map((v) => (
+    <View key={v} style={[R.chip, { backgroundColor: chipBg }]}>
+      <Text style={[R.chipText, { color: chipTextColor }]}>{v}</Text>
     </View>
+  ));
+
+  return (
+    <>
+      <View style={R.row}>
+        <View style={R.left}>
+          <View style={[R.iconCircle, { backgroundColor: iconBg }]}>
+            <Ionicons name={icon} size={15} color={iconColor} />
+          </View>
+          <Text style={R.label}>{label}</Text>
+        </View>
+        {scrollable ? (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={R.scrollContent}
+            style={R.scrollArea}
+          >
+            {chips}
+          </ScrollView>
+        ) : (
+          <View style={R.valueArea}>{chips}</View>
+        )}
+      </View>
+      {!isLast && <View style={R.divider} />}
+    </>
   );
 }
 
-const rowStyles = StyleSheet.create({
+const R = StyleSheet.create({
   row: {
-    minHeight: 46,
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-    backgroundColor: "#F8FAFC",
-    borderRadius: 14,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    gap: 8,
+    paddingVertical: 11,
+    paddingHorizontal: 2,
+    gap: 10,
   },
   left: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 7,
+    gap: 10,
     flexShrink: 0,
+  },
+  iconCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: "center",
+    justifyContent: "center",
   },
   label: {
     fontFamily: FontFamily.inter,
     fontSize: 13,
-    lineHeight: 17,
-    fontWeight: "800",
-    color: "#374151",
+    lineHeight: 18,
+    fontWeight: "600",
+    color: "#1F2937",
+    width: 68,
   },
-  chips: {
+  valueArea: {
     flex: 1,
     flexDirection: "row",
-    flexWrap: "wrap",
     justifyContent: "flex-end",
-    gap: 6,
+    gap: 5,
+    overflow: "hidden",
+  },
+  scrollArea: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    gap: 5,
+    paddingRight: 2,
   },
   chip: {
     paddingHorizontal: 11,
     paddingVertical: 5,
-    borderRadius: 12,
+    borderRadius: 20,
+    alignItems: "center",
   },
   chipText: {
     fontFamily: FontFamily.inter,
@@ -162,12 +218,14 @@ const rowStyles = StyleSheet.create({
     lineHeight: 16,
     fontWeight: "700",
   },
+  divider: {
+    height: 1,
+    backgroundColor: "#F0F2FF",
+  },
 });
 
 // ── Card ──────────────────────────────────────────────────────────────────────
-
 const PartnerCard = ({
-  imageSource = DEFAULT_BACKGROUND_IMAGE,
   profileImageSource = DEFAULT_PROFILE_IMAGE,
   name = "파트너",
   department,
@@ -183,206 +241,275 @@ const PartnerCard = ({
   onReject,
   onAccept,
 }: PartnerCardProps) => {
-  return (
-    <View style={[styles.card, width != null && { width }]}>
+  const hasMeta = Boolean(department || studentId);
 
-      {/* ── Profile visual area ── */}
+  return (
+    <View style={[S.card, width != null && { width }]}>
+      {/* ── Visual header ── */}
       <ImageBackground
-        source={imageSource}
+        source={DEFAULT_BACKGROUND_IMAGE}
         resizeMode="cover"
-        imageStyle={styles.visualImage}
-        style={styles.visual}
+        style={S.visual}
       >
-        <View style={styles.visualTint}>
-          <Image
-            source={profileImageSource}
-            style={styles.profileImage}
-            resizeMode="contain"
-          />
-        </View>
         {matchScore != null && (
-          <View style={styles.ringOverlay}>
+          <View style={S.ringOverlay}>
             <MatchRing score={matchScore} />
           </View>
         )}
+
+        <View style={S.photoRing}>
+          <Image
+            source={profileImageSource}
+            style={S.photo}
+            resizeMode="cover"
+          />
+        </View>
+
+        {hasMeta && (
+          <View style={S.metaPill}>
+            <Ionicons name="school-outline" size={13} color="#7C6FF7" />
+            <Text style={S.metaText} numberOfLines={1}>
+              {[department, studentId].filter(Boolean).join("  ·  ")}
+            </Text>
+          </View>
+        )}
+
+        <Text style={S.name}>{name}</Text>
+        <View style={S.nameDivider} />
       </ImageBackground>
 
-      {/* ── Name / dept ── */}
-      <View style={styles.nameSection}>
-        <Text style={styles.name}>{name}</Text>
-        {(department || studentId) ? (
-          <Text style={styles.subInfo}>
-            {[department, studentId].filter(Boolean).join(" · ")}
-          </Text>
-        ) : null}
-      </View>
-
-      {/* ── 4-row profile info ── */}
-      <View style={styles.infoList}>
+      {/* ── Info section ── */}
+      <View style={S.infoCard}>
         <InfoRow
           icon="people-outline"
-          iconColor="#6D5DF6"
+          iconColor="#7C6FF7"
+          iconBg="#EDE9FF"
           label="파트너 성향"
-          values={partnerStyle ? [partnerStyle] : []}
-          chipBg="#F0ECFF"
-          chipTextColor="#6D5DF6"
+          values={partnerStyle ? [partnerStyle] : ([] as string[])}
+          chipBg="#EDE9FF"
+          chipTextColor="#7C6FF7"
         />
         <InfoRow
           icon="flame-outline"
           iconColor="#EA6F0A"
+          iconBg="#FEF3E2"
           label="운동 강도"
-          values={exerciseIntensity ? [exerciseIntensity] : []}
+          values={exerciseIntensity ? [exerciseIntensity] : ([] as string[])}
           chipBg="#FFF1E6"
           chipTextColor="#EA6F0A"
         />
         <InfoRow
           icon="trophy-outline"
-          iconColor="#1D4ED8"
+          iconColor="#2563EB"
+          iconBg="#EFF6FF"
           label="운동 이유"
-          values={exerciseReason ? [exerciseReason] : []}
-          chipBg="#EAF3FF"
-          chipTextColor="#1D4ED8"
+          values={exerciseReason ? [exerciseReason] : ([] as string[])}
+          chipBg="#EFF6FF"
+          chipTextColor="#2563EB"
         />
         <InfoRow
           icon="barbell-outline"
           iconColor="#059669"
+          iconBg="#ECFDF5"
           label="선호 운동"
           values={exerciseTypes}
           chipBg="#ECFDF5"
           chipTextColor="#059669"
+          isLast
+          scrollable
         />
       </View>
 
-      {/* ── Action buttons ── */}
-      <View style={styles.actionRow}>
+      {/* ── Buttons ── */}
+      <View style={S.buttonCard}>
         <Pressable
           accessibilityRole="button"
-          style={[styles.actionButton, styles.rejectButton]}
+          style={S.passButton}
           onPress={onReject}
         >
-          <Text style={[styles.actionLabel, styles.rejectLabel]}>
-            {rejectLabel}
-          </Text>
+          <Text style={S.passLabel}>{rejectLabel}</Text>
         </Pressable>
+
         <Pressable
           accessibilityRole="button"
-          style={[styles.actionButton, styles.acceptButton]}
+          style={S.acceptButton}
           onPress={onAccept}
         >
-          <Text style={[styles.actionLabel, styles.acceptLabel]}>
-            {acceptLabel}
-          </Text>
+          <LinearGradient
+            colors={["#8B7CF6", "#5B4FF0"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={S.acceptGradient}
+          >
+            <Text style={S.acceptLabel}>{acceptLabel}</Text>
+          </LinearGradient>
         </Pressable>
       </View>
-
     </View>
   );
 };
 
-const styles = StyleSheet.create({
+const PHOTO_SIZE = 104;
+
+const S = StyleSheet.create({
   card: {
-    minHeight: HomeLayout.partnerCardMinHeight,
-    borderRadius: Border.br_16,
-    backgroundColor: Color.colorWhite,
-    borderWidth: 1,
-    borderColor: Color.colorGray,
+    borderRadius: 24,
+    backgroundColor: "#FFFFFF",
     overflow: "hidden",
-    elevation: 8,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
+    elevation: 12,
+    shadowColor: "#4C5BE2",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.18,
+    shadowRadius: 16,
   },
 
+  // ── Visual header ──
   visual: {
-    height: HomeLayout.partnerCardVisualHeight,
-    backgroundColor: Color.colorLightsteelblue,
-  },
-  visualImage: {
-    borderTopLeftRadius: Border.br_16,
-    borderTopRightRadius: Border.br_16,
-  },
-  visualTint: {
-    flex: 1,
+    backgroundColor: "#c1cdff",
     alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "rgba(255,255,255,0.32)",
-  },
-  profileImage: {
-    width: HomeLayout.partnerProfileSize,
-    height: HomeLayout.partnerProfileSize,
-    borderRadius: HomeLayout.partnerProfileSize / 2,
+    paddingTop: 20,
+    paddingBottom: 18,
+    paddingHorizontal: 16,
+    overflow: "hidden",
   },
   ringOverlay: {
     position: "absolute",
     top: 14,
     right: 14,
+    zIndex: 1,
   },
-
-  nameSection: {
+  photoRing: {
+    width: PHOTO_SIZE + 6,
+    height: PHOTO_SIZE + 6,
+    borderRadius: (PHOTO_SIZE + 6) / 2,
+    backgroundColor: "#FFFFFF",
     alignItems: "center",
-    gap: 3,
-    paddingHorizontal: 18,
-    paddingTop: 14,
-    paddingBottom: 4,
+    justifyContent: "center",
+    marginBottom: 12,
+    elevation: 4,
+    shadowColor: "#7C6FF7",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    zIndex: 1,
+  },
+  photo: {
+    width: PHOTO_SIZE,
+    height: PHOTO_SIZE,
+    borderRadius: PHOTO_SIZE / 2,
+  },
+  metaPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 20,
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    marginBottom: 8,
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 3,
+    zIndex: 1,
+  },
+  metaText: {
+    fontFamily: FontFamily.inter,
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: "600",
+    color: "#4B4B6B",
   },
   name: {
-    color: Color.colorBlack,
     fontFamily: FontFamily.inter,
-    fontSize: FontSize.fs_22,
-    lineHeight: 28,
-    fontWeight: "700",
+    fontSize: 26,
+    lineHeight: 32,
+    fontWeight: "800",
+    color: "#111827",
     textAlign: "center",
+    zIndex: 1,
   },
-  subInfo: {
-    color: Color.neutral500,
-    fontFamily: FontFamily.inter,
-    fontSize: FontSize.fs_13,
-    lineHeight: LineHeight.lh_18,
-    fontWeight: "500",
-    textAlign: "center",
+  nameDivider: {
+    width: 32,
+    height: 3,
+    borderRadius: 2,
+    backgroundColor: "#C7CAFF",
+    marginTop: 8,
+    zIndex: 1,
   },
 
-  infoList: {
-    gap: 7,
+  // ── Info card ──
+  infoCard: {
+    marginHorizontal: 12,
+    marginTop: 12,
+    marginBottom: 4,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: "#EEEEFF",
     paddingHorizontal: 14,
-    paddingTop: 10,
-    paddingBottom: 4,
+    paddingVertical: 4,
+    elevation: 2,
+    shadowColor: "#4C5BE2",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.07,
+    shadowRadius: 6,
   },
 
-  actionRow: {
+  // ── Buttons ──
+  buttonCard: {
     flexDirection: "row",
-    gap: 12,
+    gap: 10,
+    marginHorizontal: 12,
+    marginTop: 10,
+    marginBottom: 16,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: "#EEEEFF",
     paddingHorizontal: 12,
-    paddingTop: 12,
-    paddingBottom: 20,
-    borderTopWidth: 1,
-    borderTopColor: "#F0F0F5",
+    paddingVertical: 12,
+    elevation: 2,
+    shadowColor: "#4C5BE2",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.07,
+    shadowRadius: 6,
   },
-  actionButton: {
+  passButton: {
     flex: 1,
     height: HomeLayout.actionButtonHeight,
-    borderRadius: Border.br_32_7,
+    borderRadius: 999,
+    borderWidth: 1.5,
+    borderColor: "#D1D5DB",
+    backgroundColor: "#FFFFFF",
     alignItems: "center",
     justifyContent: "center",
   },
-  rejectButton: {
-    backgroundColor: Color.colorGhostwhite,
-  },
-  acceptButton: {
-    backgroundColor: Color.colorRoyalblue,
-  },
-  actionLabel: {
+  passLabel: {
     fontFamily: FontFamily.inter,
     fontSize: FontSize.fs_15,
     lineHeight: LineHeight.lh_20,
     fontWeight: "600",
+    color: "#6B7280",
   },
-  rejectLabel: {
-    color: Color.colorBlack,
+  acceptButton: {
+    flex: 2,
+    height: HomeLayout.actionButtonHeight,
+    borderRadius: 999,
+    overflow: "hidden",
+  },
+  acceptGradient: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
   },
   acceptLabel: {
-    color: Color.neutral100,
+    fontFamily: FontFamily.inter,
+    fontSize: FontSize.fs_15,
+    lineHeight: LineHeight.lh_20,
+    fontWeight: "700",
+    color: "#FFFFFF",
   },
 });
 
