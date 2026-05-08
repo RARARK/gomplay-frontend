@@ -1,5 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import * as React from "react";
+import DEFAULT_BACKGROUND_IMAGE from "../../../assets/home/PartnerCardBackground2.png";
+import DEFAULT_PROFILE_IMAGE from "../../../assets/home/PartnerProfileImage.png";
 import {
   Image,
   ImageBackground,
@@ -20,116 +22,6 @@ import {
 import type { PartnerCardProps } from "@/types/ui/homeCards";
 
 export type { PartnerCardProps } from "@/types/ui/homeCards";
-
-// ── Tag categorisation ────────────────────────────────────────────────────────
-const SPORT_TAGS = new Set([
-  "테니스", "배드민턴", "농구", "러닝", "축구", "풋살", "헬스", "수영",
-  "Tennis", "Badminton", "Basketball", "Running", "Soccer",
-]);
-const STYLE_TAGS = new Set([
-  "같이", "각자", "Together", "Solo", "Fair Play",
-]);
-const INTENSITY_TAGS = new Set([
-  "가볍게", "적당히", "제대로", "한계까지",
-  "Light", "Moderate", "Intense", "Beginner", "Weekend AM",
-]);
-
-type TagRow = {
-  icon: keyof typeof Ionicons.glyphMap;
-  label: string;
-  tags: string[];
-  bg: string;
-  textColor: string;
-};
-
-function buildTagRows(tags: string[]): TagRow[] {
-  const sports = tags.filter((t) => SPORT_TAGS.has(t)).slice(0, 2);
-  const styles = tags.filter((t) => STYLE_TAGS.has(t)).slice(0, 2);
-  const intensities = tags.filter((t) => INTENSITY_TAGS.has(t)).slice(0, 2);
-
-  return [
-    {
-      icon: "barbell-outline",
-      label: "운동 종목",
-      tags: sports.length ? sports : ["테니스"],
-      bg: "#EAF3FF",
-      textColor: "#1D4ED8",
-    },
-    {
-      icon: "people-outline",
-      label: "운동 스타일",
-      tags: styles.length ? styles : ["같이"],
-      bg: "#F0ECFF",
-      textColor: "#6D5DF6",
-    },
-    {
-      icon: "flame-outline",
-      label: "운동 강도",
-      tags: intensities.length ? intensities : ["가볍게"],
-      bg: "#FFF1E6",
-      textColor: "#EA6F0A",
-    },
-  ];
-}
-
-function InfoRow({ row }: { row: TagRow }) {
-  return (
-    <View style={rowStyles.row}>
-      <View style={rowStyles.left}>
-        <Ionicons name={row.icon} size={17} color={row.textColor} />
-        <Text style={rowStyles.label}>{row.label}</Text>
-      </View>
-      <View style={rowStyles.pills}>
-        {row.tags.map((tag) => (
-          <View key={tag} style={[rowStyles.pill, { backgroundColor: row.bg }]}>
-            <Text style={[rowStyles.pillText, { color: row.textColor }]}>
-              {tag}
-            </Text>
-          </View>
-        ))}
-      </View>
-    </View>
-  );
-}
-
-const rowStyles = StyleSheet.create({
-  row: {
-    height: 46,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    backgroundColor: "#F8FAFC",
-    borderRadius: 14,
-    paddingHorizontal: 14,
-  },
-  left: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 7,
-  },
-  label: {
-    fontFamily: FontFamily.inter,
-    fontSize: 13,
-    lineHeight: 17,
-    fontWeight: "800",
-    color: "#374151",
-  },
-  pills: {
-    flexDirection: "row",
-    gap: 6,
-  },
-  pill: {
-    paddingHorizontal: 11,
-    paddingVertical: 5,
-    borderRadius: 12,
-  },
-  pillText: {
-    fontFamily: FontFamily.inter,
-    fontSize: 12,
-    lineHeight: 16,
-    fontWeight: "700",
-  },
-});
 
 // ── Match ring ────────────────────────────────────────────────────────────────
 const RING_SIZE = 84;
@@ -197,26 +89,100 @@ const ringStyles = StyleSheet.create({
   },
 });
 
+// ── Info row ──────────────────────────────────────────────────────────────────
+type InfoRowProps = {
+  icon: keyof typeof Ionicons.glyphMap;
+  iconColor: string;
+  label: string;
+  values: string[];
+  chipBg: string;
+  chipTextColor: string;
+};
+
+function InfoRow({ icon, iconColor, label, values, chipBg, chipTextColor }: InfoRowProps) {
+  if (values.length === 0) return null;
+
+  return (
+    <View style={rowStyles.row}>
+      <View style={rowStyles.left}>
+        <Ionicons name={icon} size={17} color={iconColor} />
+        <Text style={rowStyles.label}>{label}</Text>
+      </View>
+      <View style={rowStyles.chips}>
+        {values.map((v) => (
+          <View key={v} style={[rowStyles.chip, { backgroundColor: chipBg }]}>
+            <Text style={[rowStyles.chipText, { color: chipTextColor }]}>{v}</Text>
+          </View>
+        ))}
+      </View>
+    </View>
+  );
+}
+
+const rowStyles = StyleSheet.create({
+  row: {
+    minHeight: 46,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: "#F8FAFC",
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    gap: 8,
+  },
+  left: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 7,
+    flexShrink: 0,
+  },
+  label: {
+    fontFamily: FontFamily.inter,
+    fontSize: 13,
+    lineHeight: 17,
+    fontWeight: "800",
+    color: "#374151",
+  },
+  chips: {
+    flex: 1,
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "flex-end",
+    gap: 6,
+  },
+  chip: {
+    paddingHorizontal: 11,
+    paddingVertical: 5,
+    borderRadius: 12,
+  },
+  chipText: {
+    fontFamily: FontFamily.inter,
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: "700",
+  },
+});
+
 // ── Card ──────────────────────────────────────────────────────────────────────
-const DEFAULT_BACKGROUND_IMAGE = require("../../../assets/home/PartnerCardBackground2.png");
-const DEFAULT_PROFILE_IMAGE = require("../../../assets/home/PartnerProfileImage.png");
 
 const PartnerCard = ({
   imageSource = DEFAULT_BACKGROUND_IMAGE,
   profileImageSource = DEFAULT_PROFILE_IMAGE,
-  name = "Minjun Kim",
+  name = "파트너",
   department,
   studentId,
-  tags = ["Tennis", "Beginner", "Weekend AM", "Fair Play"],
-  matchScore = 87,
+  partnerStyle,
+  exerciseIntensity,
+  exerciseReason,
+  exerciseTypes = [],
+  matchScore,
   rejectLabel = "Pass",
   acceptLabel = "Accept",
   width,
   onReject,
   onAccept,
 }: PartnerCardProps) => {
-  const tagRows = buildTagRows(tags);
-
   return (
     <View style={[styles.card, width != null && { width }]}>
 
@@ -234,9 +200,11 @@ const PartnerCard = ({
             resizeMode="contain"
           />
         </View>
-        <View style={styles.ringOverlay}>
-          <MatchRing score={matchScore} />
-        </View>
+        {matchScore != null && (
+          <View style={styles.ringOverlay}>
+            <MatchRing score={matchScore} />
+          </View>
+        )}
       </ImageBackground>
 
       {/* ── Name / dept ── */}
@@ -249,11 +217,40 @@ const PartnerCard = ({
         ) : null}
       </View>
 
-      {/* ── 3-row tag info ── */}
+      {/* ── 4-row profile info ── */}
       <View style={styles.infoList}>
-        {tagRows.map((row) => (
-          <InfoRow key={row.label} row={row} />
-        ))}
+        <InfoRow
+          icon="people-outline"
+          iconColor="#6D5DF6"
+          label="파트너 성향"
+          values={partnerStyle ? [partnerStyle] : []}
+          chipBg="#F0ECFF"
+          chipTextColor="#6D5DF6"
+        />
+        <InfoRow
+          icon="flame-outline"
+          iconColor="#EA6F0A"
+          label="운동 강도"
+          values={exerciseIntensity ? [exerciseIntensity] : []}
+          chipBg="#FFF1E6"
+          chipTextColor="#EA6F0A"
+        />
+        <InfoRow
+          icon="trophy-outline"
+          iconColor="#1D4ED8"
+          label="운동 이유"
+          values={exerciseReason ? [exerciseReason] : []}
+          chipBg="#EAF3FF"
+          chipTextColor="#1D4ED8"
+        />
+        <InfoRow
+          icon="barbell-outline"
+          iconColor="#059669"
+          label="선호 운동"
+          values={exerciseTypes}
+          chipBg="#ECFDF5"
+          chipTextColor="#059669"
+        />
       </View>
 
       {/* ── Action buttons ── */}
@@ -297,7 +294,6 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
   },
 
-  // ── Profile area ──────────────────────────────────────────────────────────
   visual: {
     height: HomeLayout.partnerCardVisualHeight,
     backgroundColor: Color.colorLightsteelblue,
@@ -323,7 +319,6 @@ const styles = StyleSheet.create({
     right: 14,
   },
 
-  // ── Name section ──────────────────────────────────────────────────────────
   nameSection: {
     alignItems: "center",
     gap: 3,
@@ -348,7 +343,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
 
-  // ── Info rows ─────────────────────────────────────────────────────────────
   infoList: {
     gap: 7,
     paddingHorizontal: 14,
@@ -356,7 +350,6 @@ const styles = StyleSheet.create({
     paddingBottom: 4,
   },
 
-  // ── Action buttons ────────────────────────────────────────────────────────
   actionRow: {
     flexDirection: "row",
     gap: 12,

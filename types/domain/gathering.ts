@@ -108,6 +108,28 @@ export type JoinGatheringResponse = {
   createdAt: string;
 };
 
+export type ParticipantStatus = "PENDING" | "ACCEPTED" | "REJECTED";
+
+export type GatheringParticipant = {
+  id: number;
+  gatheringId: number;
+  userId: number;
+  userName: string;
+  userProfileImageUrl: string | null;
+  status: ParticipantStatus;
+  createdAt: string;
+};
+
+export type AcceptParticipantResponse = {
+  id: number;
+  gatheringId: number;
+  userId: number;
+  status: string;
+  updatedAt: string;
+};
+
+export type RejectParticipantResponse = AcceptParticipantResponse;
+
 export type CreateGatheringResponse = {
   id: number;
   title: string;

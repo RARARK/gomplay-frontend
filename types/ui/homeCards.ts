@@ -1,14 +1,16 @@
 import type { ImageSourcePropType } from "react-native";
 
 export type PartnerCardProps = {
+  userProfileId?: number;
   imageSource?: ImageSourcePropType;
   profileImageSource?: ImageSourcePropType;
   name?: string;
-  age?: number;
   department?: string;
   studentId?: string;
-  description?: string;
-  tags?: string[];
+  partnerStyle?: string;
+  exerciseIntensity?: string;
+  exerciseReason?: string;
+  exerciseTypes?: string[];
   matchScore?: number;
   rejectLabel?: string;
   acceptLabel?: string;

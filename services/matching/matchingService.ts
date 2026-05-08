@@ -1,11 +1,206 @@
+import { isAxiosError } from "axios";
+
+import apiClient, { ApiError } from "@/lib/api/client";
 import {
   MATCH_STATUS,
+  type AcceptMatchRequestResponse,
   type CompleteMatchContext,
   type CompleteMatchInput,
   type CompleteMatchResult,
   type Match,
+  type MatchCandidatesResponse,
+  type MatchRequestBody,
+  type MatchRequestResponse,
+  type RejectMatchRequestResponse,
+  type ToggleMatchingRequest,
+  type ToggleMatchingResponse,
 } from "@/types/domain/match";
 import { getCompleteMatchErrorMessage } from "@/utils/completeMatchPolicy";
+
+type BackendErrorBody = {
+  code?: number;
+  message?: string;
+};
+
+const getBackendErrorBody = (value: unknown): BackendErrorBody | null => {
+  if (!value || typeof value !== "object") return null;
+
+  const record = value as Record<string, unknown>;
+  return {
+    code: typeof record.code === "number" ? record.code : undefined,
+    message: typeof record.message === "string" ? record.message : undefined,
+  };
+};
+
+export async function toggleMatching(
+  isMatching: boolean,
+): Promise<ToggleMatchingResponse> {
+  const body: ToggleMatchingRequest = { isMatching };
+
+  try {
+    const res = await apiClient.patch<ToggleMatchingResponse>(
+      "/api/match/toggle",
+      body,
+    );
+    return res.data;
+  } catch (error) {
+    if (error instanceof ApiError) throw error;
+
+    if (isAxiosError(error)) {
+      const errorBody = getBackendErrorBody(error.response?.data);
+
+      if (errorBody?.code === 4000) {
+        throw new ApiError("데이터베이스 연결에 실패하였습니다.");
+      }
+
+      if (error.response?.status === 400) {
+        throw new ApiError(errorBody?.message ?? "잘못된 요청입니다.");
+      }
+
+      if (error.response?.status === 500) {
+        throw new ApiError("서버 내부 오류", "Internal server error");
+      }
+
+      if (errorBody?.message) {
+        throw new ApiError(errorBody.message);
+      }
+    }
+
+    throw new ApiError("매칭 상태 변경에 실패했습니다.");
+  }
+}
+
+export async function getMatchCandidates(): Promise<MatchCandidatesResponse> {
+  try {
+    const res = await apiClient.get<MatchCandidatesResponse>("/api/match/candidates");
+    return res.data;
+  } catch (error) {
+    if (error instanceof ApiError) throw error;
+
+    if (isAxiosError(error)) {
+      const errorBody = getBackendErrorBody(error.response?.data);
+
+      if (errorBody?.code === 4000) {
+        throw new ApiError("데이터베이스 연결에 실패하였습니다.");
+      }
+
+      if (error.response?.status === 500) {
+        throw new ApiError("서버 내부 오류", "Internal server error");
+      }
+
+      if (errorBody?.message) {
+        throw new ApiError(errorBody.message);
+      }
+    }
+
+    throw new ApiError("매칭 후보를 불러올 수 없습니다.");
+  }
+}
+
+export async function requestPartnerMatch(
+  opponentId: number,
+): Promise<MatchRequestResponse> {
+  const body: MatchRequestBody = { opponentId };
+
+  try {
+    const res = await apiClient.post<MatchRequestResponse>("/api/match/request", body);
+    return res.data;
+  } catch (error) {
+    if (error instanceof ApiError) throw error;
+
+    if (isAxiosError(error)) {
+      const errorBody = getBackendErrorBody(error.response?.data);
+
+      if (errorBody?.code === 4000) {
+        throw new ApiError("데이터베이스 연결에 실패하였습니다.");
+      }
+
+      if (error.response?.status === 400) {
+        throw new ApiError(errorBody?.message ?? "잘못된 요청입니다.");
+      }
+
+      if (error.response?.status === 500) {
+        throw new ApiError("서버 내부 오류", "Internal server error");
+      }
+
+      if (errorBody?.message) {
+        throw new ApiError(errorBody.message);
+      }
+    }
+
+    throw new ApiError("매칭 요청에 실패했습니다.");
+  }
+}
+
+export async function acceptMatchRequest(
+  matchRequestId: number,
+): Promise<AcceptMatchRequestResponse> {
+  try {
+    const res = await apiClient.patch<AcceptMatchRequestResponse>(
+      `/api/match/request/${matchRequestId}/accept`,
+    );
+    return res.data;
+  } catch (error) {
+    if (error instanceof ApiError) throw error;
+
+    if (isAxiosError(error)) {
+      const errorBody = getBackendErrorBody(error.response?.data);
+
+      if (errorBody?.code === 4000) {
+        throw new ApiError("데이터베이스 연결에 실패하였습니다.");
+      }
+
+      if (error.response?.status === 400) {
+        throw new ApiError(errorBody?.message ?? "잘못된 요청입니다.");
+      }
+
+      if (error.response?.status === 500) {
+        throw new ApiError("서버 내부 오류", "Internal server error");
+      }
+
+      if (errorBody?.message) {
+        throw new ApiError(errorBody.message);
+      }
+    }
+
+    throw new ApiError("매칭 수락에 실패했습니다.");
+  }
+}
+
+export async function rejectMatchRequest(
+  matchRequestId: number,
+): Promise<RejectMatchRequestResponse> {
+  try {
+    const res = await apiClient.patch<RejectMatchRequestResponse>(
+      `/api/match/request/${matchRequestId}/reject`,
+    );
+    return res.data;
+  } catch (error) {
+    if (error instanceof ApiError) throw error;
+
+    if (isAxiosError(error)) {
+      const errorBody = getBackendErrorBody(error.response?.data);
+
+      if (errorBody?.code === 4000) {
+        throw new ApiError("데이터베이스 연결에 실패하였습니다.");
+      }
+
+      if (error.response?.status === 400) {
+        throw new ApiError(errorBody?.message ?? "잘못된 요청입니다.");
+      }
+
+      if (error.response?.status === 500) {
+        throw new ApiError("서버 내부 오류", "Internal server error");
+      }
+
+      if (errorBody?.message) {
+        throw new ApiError(errorBody.message);
+      }
+    }
+
+    throw new ApiError("매칭 거절에 실패했습니다.");
+  }
+}
 
 export async function getActiveMatches(): Promise<Match[]> {
   return [

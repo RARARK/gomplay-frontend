@@ -74,3 +74,59 @@ export type CompleteMatchDoneResult = {
 export type CompleteMatchResult =
   | CompleteMatchPendingResult
   | CompleteMatchDoneResult;
+
+export type ToggleMatchingRequest = {
+  isMatching: boolean;
+};
+
+export type ToggleMatchingResponse = {
+  success: boolean;
+  message: string;
+  data: {
+    isMatching: boolean;
+  };
+};
+
+export type MatchCandidate = {
+  userProfileId: number;
+  name: string;
+  profileImageUrl: string;
+  department: string;
+  studentId: string;
+  partnerStyle: string;
+  exerciseIntensity: string;
+  exerciseReason: string;
+  exerciseTypes: string[];
+  compatibilityScore?: number;
+};
+
+export type MatchCandidatesResponse = {
+  success: boolean;
+  message: string;
+  data: MatchCandidate[];
+};
+
+export type MatchRequestStatus = "PENDING" | "TIMEOUT";
+
+export type MatchRequestBody = {
+  opponentId: number;
+};
+
+export type MatchRequestResponse = {
+  success: boolean;
+  message: string;
+  data: {
+    matchRequestId: number;
+    opponentId: number;
+    status: MatchRequestStatus;
+    expiresAt: string;
+  };
+};
+
+export type AcceptMatchRequestResponse = {
+  success: boolean;
+  message: string;
+  data: null;
+};
+
+export type RejectMatchRequestResponse = AcceptMatchRequestResponse;

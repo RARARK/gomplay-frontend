@@ -2,6 +2,7 @@ import { isAxiosError } from "axios";
 
 import apiClient, { ApiError } from "@/lib/api/client";
 import type {
+  AcceptParticipantResponse,
   CreateGatheringRequest,
   CreateGatheringResponse,
   DeleteGatheringRequest,
@@ -9,6 +10,7 @@ import type {
   GatheringListResponse,
   GatheringPostDetailResponse,
   JoinGatheringResponse,
+  RejectParticipantResponse,
   UpdateGatheringRequest,
   UpdateGatheringResponse,
 } from "@/types/domain/gathering";
@@ -231,6 +233,94 @@ export async function joinGathering(postId: number): Promise<JoinGatheringRespon
     }
 
     throw new ApiError("참여 신청에 실패했습니다.");
+  }
+}
+
+export async function acceptParticipant(
+  gatheringId: number,
+  participantId: number,
+): Promise<AcceptParticipantResponse> {
+  try {
+    const res = await apiClient.patch<AcceptParticipantResponse>(
+      `/api/gathering/${gatheringId}/participants/${participantId}/accept`,
+    );
+    return res.data;
+  } catch (error) {
+    if (error instanceof ApiError) throw error;
+
+    if (isAxiosError(error)) {
+      const errorBody = getBackendErrorBody(error.response?.data);
+
+      if (errorBody?.code === 4000) {
+        throw new ApiError("데이터베이스 연결에 실패하였습니다.");
+      }
+
+      if (error.response?.status === 400) {
+        throw new ApiError(
+          errorBody?.message ?? "이미 처리된 신청이거나 모집이 마감되었습니다.",
+        );
+      }
+
+      if (error.response?.status === 403) {
+        throw new ApiError(
+          errorBody?.message ?? "모집글 작성자만 신청을 수락할 수 있습니다.",
+        );
+      }
+
+      if (error.response?.status === 404) {
+        throw new ApiError(
+          errorBody?.message ?? "모집글 또는 신청 내역을 찾을 수 없습니다.",
+        );
+      }
+
+      if (error.response?.status === 500) {
+        throw new ApiError("서버 내부 오류", "Internal server error");
+      }
+
+      if (errorBody?.message) {
+        throw new ApiError(errorBody.message);
+      }
+    }
+
+    throw new ApiError("신청 수락에 실패했습니다.");
+  }
+}
+
+export async function rejectParticipant(
+  gatheringId: number,
+  participantId: number,
+): Promise<RejectParticipantResponse> {
+  try {
+    const res = await apiClient.patch<RejectParticipantResponse>(
+      `/api/gathering/${gatheringId}/participants/${participantId}/reject`,
+    );
+    return res.data;
+  } catch (error) {
+    if (error instanceof ApiError) throw error;
+
+    if (isAxiosError(error)) {
+      const errorBody = getBackendErrorBody(error.response?.data);
+
+      if (errorBody?.code === 4000) {
+        throw new ApiError("데이터베이스 연결에 실패하였습니다.");
+      }
+
+      if (error.response?.status === 400) {
+        throw new ApiError(
+          errorBody?.message ?? "모집글 작성자만 거절할 수 있습니다.",
+        );
+      }
+
+      if (error.response?.status === 500) {
+        throw new ApiError("서버 내부 오류", "Internal server error");
+      }
+
+      if (errorBody?.message) {
+        throw new ApiError(errorBody.message);
+      }
+    }
+
+    throw new ApiError("신청 거절에 실패했습니다.");
   }
 }
 

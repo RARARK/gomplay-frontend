@@ -1,7 +1,7 @@
 import * as React from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { router, useFocusEffect } from "expo-router";
-import { ScrollView, StyleSheet, Pressable, Text, View } from "react-native";
+import { Alert, ScrollView, StyleSheet, Pressable, Text, View } from "react-native";
 import {
   SafeAreaView,
   useSafeAreaInsets,
@@ -19,13 +19,24 @@ import {
   getSchedule,
   setHasScheduleCache,
 } from "@/services/schedule/scheduleService";
+import { getMatchCandidates, requestPartnerMatch, toggleMatching } from "@/services/matching/matchingService";
+import { useAuthStore } from "@/stores/auth/authStore";
+import type { MatchCandidate } from "@/types/domain/match";
 import type { Banner } from "@/types/ui/homeBanner";
+import type { PartnerCardProps } from "@/types/ui/homeCards";
 import type { HomeStatusVariant } from "@/types/ui/homeStatus";
 
 export default function HomePage() {
   const insets = useSafeAreaInsets();
 
-  const [isQuickMatchOn, setIsQuickMatchOn] = React.useState(false);
+  const storedMatching = useAuthStore((s) => s.matching);
+  const setMatching = useAuthStore((s) => s.setMatching);
+
+  const [isQuickMatchOn, setIsQuickMatchOn] = React.useState(storedMatching);
+  const [isFetchingCandidates, setIsFetchingCandidates] = React.useState(false);
+  const [candidates, setCandidates] = React.useState<PartnerCardProps[]>([]);
+  const candidateFetchCancelledRef = React.useRef(false);
+  const isTogglingRef = React.useRef(false);
   const [forceMatchedContent, setForceMatchedContent] = React.useState(false);
   const [forceMatchedContentNew, setForceMatchedContentNew] = React.useState(false);
   const [banners] = React.useState<Banner[]>(homeBanners);
@@ -35,6 +46,49 @@ export default function HomePage() {
   const [hasTimetable, setHasTimetable] = React.useState<boolean | null>(
     () => getHasScheduleCache(),
   );
+
+  const mapCandidateToCardRef = React.useRef<(c: MatchCandidate) => PartnerCardProps>(
+    () => ({}) as PartnerCardProps,
+  );
+
+  const startPolling = React.useCallback(() => {
+    const searchOnce = async (): Promise<void> => {
+      if (candidateFetchCancelledRef.current) return;
+      setIsFetchingCandidates(true);
+      try {
+        const [candidatesRes] = await Promise.all([
+          getMatchCandidates(),
+          new Promise<void>((resolve) => setTimeout(resolve, 2500)),
+        ]);
+        if (candidateFetchCancelledRef.current) return;
+        if (candidatesRes.data.length > 0) {
+          setCandidates(candidatesRes.data.map(mapCandidateToCardRef.current));
+          setIsQuickMatchOn(false);
+          setMatching(false);
+          setIsFetchingCandidates(false);
+          isTogglingRef.current = false;
+          toggleMatching(false).catch(() => {});
+        } else {
+          setIsFetchingCandidates(false);
+          setTimeout(searchOnce, 3000);
+        }
+      } catch {
+        if (!candidateFetchCancelledRef.current) {
+          setIsFetchingCandidates(false);
+          setTimeout(searchOnce, 5000);
+        }
+      }
+    };
+    searchOnce();
+  }, [setMatching]);
+
+  React.useEffect(() => {
+    if (!storedMatching) return;
+    candidateFetchCancelledRef.current = false;
+    isTogglingRef.current = true;
+    startPolling();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useFocusEffect(
     React.useCallback(() => {
@@ -65,13 +119,88 @@ export default function HomePage() {
   const getHomeStatusVariant = (): HomeStatusVariant => {
     if (isMatchedNew) return "MatchedNew";
     if (isMatched) return "Matched";
-    if (isQuickMatchOn) return "Matching";
+    if (candidates.length > 0) return "Matched";
+    if (isFetchingCandidates || isQuickMatchOn) return "Matching";
     if (hasTimetable === null) return "Loading";
     if (!hasTimetable) return "NoSchedule";
     return "Default";
   };
 
   const currentState = getHomeStatusVariant();
+
+  const handleMatchRequest = async (opponentId: number) => {
+    try {
+      const res = await requestPartnerMatch(opponentId);
+      const expiresAt = new Date(res.data.expiresAt);
+      const secondsLeft = Math.max(
+        0,
+        Math.round((expiresAt.getTime() - Date.now()) / 1000),
+      );
+      Alert.alert(
+        "매칭 요청 완료",
+        `매칭 요청을 보냈어요. ${secondsLeft}초 안에 상대방이 수락하면 매칭이 시작돼요.`,
+      );
+    } catch (err) {
+      Alert.alert(
+        "요청 실패",
+        err instanceof Error ? err.message : "다시 시도해주세요.",
+      );
+    }
+  };
+
+  const mapCandidateToCard = (c: MatchCandidate): PartnerCardProps => ({
+    userProfileId: c.userProfileId,
+    profileImageSource: { uri: c.profileImageUrl },
+    name: c.name,
+    department: c.department,
+    studentId: c.studentId,
+    partnerStyle: c.partnerStyle,
+    exerciseIntensity: c.exerciseIntensity,
+    exerciseReason: c.exerciseReason,
+    exerciseTypes: c.exerciseTypes,
+    matchScore: c.compatibilityScore,
+    onAccept: () => handleMatchRequest(c.userProfileId),
+    onReject: () =>
+      setCandidates((prev) =>
+        prev.filter((card) => card.userProfileId !== c.userProfileId),
+      ),
+  });
+  mapCandidateToCardRef.current = mapCandidateToCard;
+
+  const handleToggleQuickMatch = async (value: boolean) => {
+    if (!value) {
+      candidateFetchCancelledRef.current = true;
+      isTogglingRef.current = false;
+      setIsQuickMatchOn(false);
+      setMatching(false);
+      setIsFetchingCandidates(false);
+      setCandidates([]);
+      toggleMatching(false).catch(() => {});
+      return;
+    }
+
+    if (isTogglingRef.current) return;
+    isTogglingRef.current = true;
+
+    try {
+      const res = await toggleMatching(true);
+      if (!res.data.isMatching) {
+        isTogglingRef.current = false;
+        return;
+      }
+
+      setIsQuickMatchOn(true);
+      setMatching(true);
+      candidateFetchCancelledRef.current = false;
+      startPolling();
+    } catch (err) {
+      isTogglingRef.current = false;
+      Alert.alert(
+        "매칭 오류",
+        err instanceof Error ? err.message : "다시 시도해주세요.",
+      );
+    }
+  };
 
   const handleCreatePostPress = () => {
     router.push("/posts/create");
@@ -118,7 +247,8 @@ export default function HomePage() {
           {/* Render the status-specific content without changing the page layout. */}
           <HomeStatusSection
             state={currentState}
-            onToggleQuickMatch={setIsQuickMatchOn}
+            onToggleQuickMatch={handleToggleQuickMatch}
+            candidates={candidates}
           />
 
           <MatchSection />

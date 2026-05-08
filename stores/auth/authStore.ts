@@ -14,6 +14,7 @@ type AuthState = {
     refreshToken: string;
     matching: boolean;
   }) => void;
+  setMatching: (value: boolean) => void;
   clearAuth: () => void;
   getAuthorizationHeader: () => string | null;
   setPendingCredentials: (creds: { schoolEmail: string; password: string } | null) => void;
@@ -35,6 +36,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       refreshToken,
       matching,
     }),
+
+  setMatching: (value) => set({ matching: value }),
 
   clearAuth: () =>
     set({

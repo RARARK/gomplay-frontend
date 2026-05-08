@@ -3,6 +3,7 @@ import { StyleSheet, View } from "react-native";
 import QuickMatchToggleNew from "./QuickMatchToggleNew";
 import { HomeLayout } from "@/constants/locofyHomeStyles";
 import type { HomeStatusVariant } from "@/types/ui/homeStatus";
+import type { PartnerCardProps } from "@/types/ui/homeCards";
 import DefaultMatchContent from "./DefaultMatchContent";
 import MatchedContent from "./MatchedContent";
 import MatchedContentNew from "./MatchedContentNew";
@@ -12,15 +13,7 @@ import NoScheduleContent from "./NoScheduleContent";
 type Props = {
   state: HomeStatusVariant;
   onToggleQuickMatch?: (value: boolean) => void;
-};
-
-const CONTENT_BY_VARIANT: Record<HomeStatusVariant, () => React.JSX.Element> = {
-  Loading: () => <View style={styles.loadingPlaceholder} />,
-  Default: () => <DefaultMatchContent />,
-  NoSchedule: () => <NoScheduleContent />,
-  Matching: () => <MatchingContent nearbyCount={7} />,
-  Matched: () => <MatchedContent />,
-  MatchedNew: () => <MatchedContentNew />,
+  candidates?: PartnerCardProps[];
 };
 
 // States whose content fits within STATUS_SLOT_HEIGHT.
@@ -42,7 +35,24 @@ const STATUS_SLOT_HEIGHT =
   24 +                                 // textBlock marginTop in Matching
   HomeLayout.statusContentMinHeight;  // 180  →  total 396
 
-const HomeStatusSection = ({ state, onToggleQuickMatch }: Props) => {
+function renderContent(state: HomeStatusVariant, candidates: PartnerCardProps[]) {
+  switch (state) {
+    case "Matched":
+      return <MatchedContent partners={candidates.length > 0 ? candidates : undefined} />;
+    case "MatchedNew":
+      return <MatchedContentNew />;
+    case "Matching":
+      return <MatchingContent nearbyCount={7} />;
+    case "NoSchedule":
+      return <NoScheduleContent />;
+    case "Default":
+      return <DefaultMatchContent />;
+    default:
+      return <View style={styles.loadingPlaceholder} />;
+  }
+}
+
+const HomeStatusSection = ({ state, onToggleQuickMatch, candidates = [] }: Props) => {
   const isFixedSlot = FIXED_HEIGHT_VARIANTS.has(state);
 
   return (
@@ -63,7 +73,7 @@ const HomeStatusSection = ({ state, onToggleQuickMatch }: Props) => {
         ]}
       >
         <View style={styles.contentInner}>
-          {CONTENT_BY_VARIANT[state]()}
+          {renderContent(state, candidates)}
         </View>
       </View>
     </View>
