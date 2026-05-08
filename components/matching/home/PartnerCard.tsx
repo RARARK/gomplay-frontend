@@ -28,9 +28,13 @@ import DEFAULT_PROFILE_IMAGE from "../../../assets/home/PartnerProfileImage.png"
 
 export type { PartnerCardProps } from "@/types/ui/homeCards";
 
+const PHOTO_SIZE = 104;
+
+const toArr = (v?: string): string[] => (v ? [v] : []);
+
 // ── Match ring ────────────────────────────────────────────────────────────────
-const RING_SIZE = 84;
-const RING_STROKE = 8;
+const RING_SIZE = 62;
+const RING_STROKE = 6;
 const RING_RADIUS = (RING_SIZE - RING_STROKE) / 2;
 const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
 
@@ -88,14 +92,14 @@ const ringStyles = StyleSheet.create({
     alignItems: "center",
   },
   percent: {
-    fontSize: 19,
-    lineHeight: 23,
+    fontSize: 14,
+    lineHeight: 17,
     color: "#111827",
     fontWeight: "900",
   },
   matchText: {
-    fontSize: 9,
-    lineHeight: 12,
+    fontSize: 7,
+    lineHeight: 9,
     color: "#6D5DF6",
     fontWeight: "900",
     letterSpacing: 0.4,
@@ -226,6 +230,7 @@ const R = StyleSheet.create({
 
 // ── Card ──────────────────────────────────────────────────────────────────────
 const PartnerCard = ({
+  imageSource = DEFAULT_BACKGROUND_IMAGE,
   profileImageSource = DEFAULT_PROFILE_IMAGE,
   name = "파트너",
   department,
@@ -246,11 +251,7 @@ const PartnerCard = ({
   return (
     <View style={[S.card, width != null && { width }]}>
       {/* ── Visual header ── */}
-      <ImageBackground
-        source={DEFAULT_BACKGROUND_IMAGE}
-        resizeMode="cover"
-        style={S.visual}
-      >
+      <ImageBackground source={imageSource} resizeMode="cover" style={S.visual}>
         {matchScore != null && (
           <View style={S.ringOverlay}>
             <MatchRing score={matchScore} />
@@ -258,11 +259,7 @@ const PartnerCard = ({
         )}
 
         <View style={S.photoRing}>
-          <Image
-            source={profileImageSource}
-            style={S.photo}
-            resizeMode="cover"
-          />
+          <Image source={profileImageSource} style={S.photo} resizeMode="cover" />
         </View>
 
         {hasMeta && (
@@ -285,7 +282,7 @@ const PartnerCard = ({
           iconColor="#7C6FF7"
           iconBg="#EDE9FF"
           label="파트너 성향"
-          values={partnerStyle ? [partnerStyle] : ([] as string[])}
+          values={toArr(partnerStyle)}
           chipBg="#EDE9FF"
           chipTextColor="#7C6FF7"
         />
@@ -294,7 +291,7 @@ const PartnerCard = ({
           iconColor="#EA6F0A"
           iconBg="#FEF3E2"
           label="운동 강도"
-          values={exerciseIntensity ? [exerciseIntensity] : ([] as string[])}
+          values={toArr(exerciseIntensity)}
           chipBg="#FFF1E6"
           chipTextColor="#EA6F0A"
         />
@@ -303,7 +300,7 @@ const PartnerCard = ({
           iconColor="#2563EB"
           iconBg="#EFF6FF"
           label="운동 이유"
-          values={exerciseReason ? [exerciseReason] : ([] as string[])}
+          values={toArr(exerciseReason)}
           chipBg="#EFF6FF"
           chipTextColor="#2563EB"
         />
@@ -349,8 +346,6 @@ const PartnerCard = ({
   );
 };
 
-const PHOTO_SIZE = 104;
-
 const S = StyleSheet.create({
   card: {
     borderRadius: 24,
@@ -370,7 +365,6 @@ const S = StyleSheet.create({
     paddingTop: 20,
     paddingBottom: 18,
     paddingHorizontal: 16,
-    overflow: "hidden",
   },
   ringOverlay: {
     position: "absolute",
@@ -391,7 +385,6 @@ const S = StyleSheet.create({
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.2,
     shadowRadius: 8,
-    zIndex: 1,
   },
   photo: {
     width: PHOTO_SIZE,
@@ -412,7 +405,6 @@ const S = StyleSheet.create({
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.08,
     shadowRadius: 3,
-    zIndex: 1,
   },
   metaText: {
     fontFamily: FontFamily.inter,
@@ -428,7 +420,6 @@ const S = StyleSheet.create({
     fontWeight: "800",
     color: "#111827",
     textAlign: "center",
-    zIndex: 1,
   },
   nameDivider: {
     width: 32,
@@ -436,7 +427,6 @@ const S = StyleSheet.create({
     borderRadius: 2,
     backgroundColor: "#C7CAFF",
     marginTop: 8,
-    zIndex: 1,
   },
 
   // ── Info card ──
