@@ -1,17 +1,22 @@
 import { isAxiosError } from "axios";
 
 import apiClient, { ApiError } from "@/lib/api/client";
+import type { ApiResponse } from "@/types/auth/auth";
 import type {
   UpdateProfileRequest,
   UpdateProfileResponse,
   UserProfile,
 } from "@/types/domain/user";
 
+type ProfileApiResponse = ApiResponse<UserProfile> | UserProfile;
+
+const unwrapProfileResponse = (value: ProfileApiResponse): UserProfile =>
+  "data" in value ? (value as ApiResponse<UserProfile>).data : (value as UserProfile);
+
 export async function getMyProfile(): Promise<UserProfile> {
   try {
-    // Response is flat (not wrapped in ApiResponse) — fields are directly in res.data
-    const res = await apiClient.get<UserProfile>("/api/user/me/profile");
-    return res.data;
+    const res = await apiClient.get<ProfileApiResponse>("/api/user/me/profile");
+    return unwrapProfileResponse(res.data);
   } catch (error) {
     if (error instanceof ApiError) throw error;
     if (isAxiosError(error) && error.response?.status === 400) {

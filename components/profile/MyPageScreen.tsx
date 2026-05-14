@@ -1,6 +1,6 @@
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { Image } from "expo-image";
-import { router } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import React from "react";
 import {
   ActivityIndicator,
@@ -13,6 +13,7 @@ import {
   View,
 } from "react-native";
 
+import { normalizeImageUrl } from "@/lib/utils/imageUrl";
 import { logout } from "@/services/auth/authService";
 import { getSurvey } from "@/services/survey/surveyService";
 import { getMyProfile } from "@/services/user/userService";
@@ -155,11 +156,11 @@ export default function MyPageScreen() {
     };
   }, [setProfile]);
 
-  React.useEffect(() => {
-    if (profile) return;
-
-    return loadProfile();
-  }, [loadProfile, profile]);
+  useFocusEffect(
+    React.useCallback(() => {
+      return loadProfile();
+    }, [loadProfile]),
+  );
 
   React.useEffect(() => {
     Animated.timing(mannerDescriptionProgress, {
@@ -181,13 +182,10 @@ export default function MyPageScreen() {
     router.replace("/login");
   };
 
-  const profileImageSource = React.useMemo(
-    () =>
-      profile?.profileImageUrl
-        ? { uri: profile.profileImageUrl }
-        : DEFAULT_PROFILE_IMAGE,
-    [profile?.profileImageUrl],
-  );
+  const profileImageSource = React.useMemo(() => {
+    const url = normalizeImageUrl(profile?.profileImageUrl);
+    return url ? { uri: url } : DEFAULT_PROFILE_IMAGE;
+  }, [profile?.profileImageUrl]);
 
   const mannerTemperature = profile?.mannerTemperature ?? 36.5;
   const mannerTemperatureWidth =
@@ -262,6 +260,7 @@ export default function MyPageScreen() {
               source={profileImageSource}
               style={styles.profileImage}
               contentFit="cover"
+              cachePolicy="none"
               transition={120}
             />
             <View style={styles.onlineDot} />

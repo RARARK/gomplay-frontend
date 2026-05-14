@@ -4,34 +4,55 @@ import { router } from "expo-router";
 import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import TimetableSelector from "@/components/common/TimetableSelector";
+import { toggleMatching } from "@/services/matching/matchingService";
 import {
+  getSchedule,
   setHasScheduleCache,
   submitSchedule,
+  updateSchedule,
 } from "@/services/schedule/scheduleService";
+import { useAuthStore } from "@/stores/auth/authStore";
 import type { UserTimetableRange } from "@/types/domain/user";
-import { createEmptyTimetableState, DAY_OF_WEEKS } from "@/utils/timetable";
+import {
+  createEmptyTimetableState,
+  DAY_OF_WEEKS,
+  expandTimetableRanges,
+} from "@/utils/timetable";
 
 export default function TimetableScreen() {
-  const [timetable, setTimetable] = React.useState(() => {
-    const initialState = createEmptyTimetableState();
-
-    initialState.MON[0] = true;
-    initialState.MON[1] = true;
-    initialState.MON[2] = true;
-
-    return initialState;
-  });
-  const [savedRanges, setSavedRanges] = React.useState<UserTimetableRange[]>(
-    [],
-  );
-
+  const [timetable, setTimetable] = React.useState(createEmptyTimetableState);
+  const [savedRanges, setSavedRanges] = React.useState<UserTimetableRange[]>([]);
+  const [hasExistingSchedule, setHasExistingSchedule] = React.useState(false);
   const [isSaving, setIsSaving] = React.useState(false);
+  const isMatching = useAuthStore((s) => s.matching);
+  const setMatching = useAuthStore((s) => s.setMatching);
+
+  React.useEffect(() => {
+    getSchedule()
+      .then((ranges) => {
+        if (ranges.length > 0) {
+          setTimetable(expandTimetableRanges(ranges));
+          setHasExistingSchedule(true);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const handleSave = async (ranges: UserTimetableRange[]) => {
     setIsSaving(true);
     try {
-      await submitSchedule(ranges);
+      if (isMatching) {
+        await toggleMatching(false);
+        setMatching(false);
+      }
+
+      if (hasExistingSchedule) {
+        await updateSchedule(ranges);
+      } else {
+        await submitSchedule(ranges);
+      }
       setHasScheduleCache(ranges.length > 0);
+      setHasExistingSchedule(ranges.length > 0);
       setSavedRanges(ranges);
       router.back();
     } catch (err) {

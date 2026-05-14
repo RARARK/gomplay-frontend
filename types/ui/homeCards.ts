@@ -5,12 +5,15 @@ export type PartnerCardProps = {
   imageSource?: ImageSourcePropType;
   profileImageSource?: ImageSourcePropType;
   name?: string;
+  age?: number;
+  description?: string;
   department?: string;
   studentId?: string;
   partnerStyle?: string;
   exerciseIntensity?: string;
   exerciseReason?: string;
   exerciseTypes?: string[];
+  tags?: string[];
   matchScore?: number;
   rejectLabel?: string;
   acceptLabel?: string;

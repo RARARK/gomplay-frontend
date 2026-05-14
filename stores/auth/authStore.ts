@@ -1,5 +1,7 @@
 import { create } from "zustand";
 
+import { useUserStore } from "@/stores/user/userStore";
+
 type AuthState = {
   userId: number | null;
   isLoggedIn: boolean;
@@ -39,14 +41,16 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   setMatching: (value) => set({ matching: value }),
 
-  clearAuth: () =>
+  clearAuth: () => {
+    useUserStore.getState().clearProfile();
     set({
       userId: null,
       isLoggedIn: false,
       accessToken: null,
       refreshToken: null,
       matching: false,
-    }),
+    });
+  },
 
   getAuthorizationHeader: () => {
     const token = get().accessToken;

@@ -22,6 +22,7 @@ type RecommendedPartner = {
   department: string;
   activityStyle: string;
   tags: [string, string, string];
+  profileImageUrl?: string | null;
 };
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
@@ -222,7 +223,7 @@ function PartnerCard({
           {/* Avatar */}
           <View style={cardStyles.avatarWrap}>
             <Image
-              source={PROFILE_IMAGE}
+              source={partner.profileImageUrl ? { uri: partner.profileImageUrl } : PROFILE_IMAGE}
               style={cardStyles.avatar}
               contentFit="cover"
             />

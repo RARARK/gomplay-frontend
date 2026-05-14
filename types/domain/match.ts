@@ -100,12 +100,6 @@ export type MatchCandidate = {
   compatibilityScore?: number;
 };
 
-export type MatchCandidatesResponse = {
-  success: boolean;
-  message: string;
-  data: MatchCandidate[];
-};
-
 export type MatchRequestStatus = "PENDING" | "TIMEOUT";
 
 export type MatchRequestBody = {

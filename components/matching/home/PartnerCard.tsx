@@ -7,9 +7,9 @@ import {
 import type { PartnerCardProps } from "@/types/ui/homeCards";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
+import { Image } from "expo-image";
 import * as React from "react";
 import {
-  Image,
   ImageBackground,
   Pressable,
   ScrollView,
@@ -291,7 +291,12 @@ const PartnerCard = ({
           <ConfettiBurst />
           <View style={S.photoGlow} />
           <View style={S.photoRing}>
-            <Image source={profileImageSource} style={S.photo} resizeMode="cover" />
+            <Image
+              source={profileImageSource}
+              style={S.photo}
+              contentFit="cover"
+              placeholder={DEFAULT_PROFILE_IMAGE}
+            />
           </View>
         </View>
 

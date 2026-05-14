@@ -8,7 +8,6 @@ import {
   type CompleteMatchInput,
   type CompleteMatchResult,
   type Match,
-  type MatchCandidatesResponse,
   type MatchRequestBody,
   type MatchRequestResponse,
   type RejectMatchRequestResponse,
@@ -67,33 +66,6 @@ export async function toggleMatching(
     }
 
     throw new ApiError("매칭 상태 변경에 실패했습니다.");
-  }
-}
-
-export async function getMatchCandidates(): Promise<MatchCandidatesResponse> {
-  try {
-    const res = await apiClient.get<MatchCandidatesResponse>("/api/match/candidates");
-    return res.data;
-  } catch (error) {
-    if (error instanceof ApiError) throw error;
-
-    if (isAxiosError(error)) {
-      const errorBody = getBackendErrorBody(error.response?.data);
-
-      if (errorBody?.code === 4000) {
-        throw new ApiError("데이터베이스 연결에 실패하였습니다.");
-      }
-
-      if (error.response?.status === 500) {
-        throw new ApiError("서버 내부 오류", "Internal server error");
-      }
-
-      if (errorBody?.message) {
-        throw new ApiError(errorBody.message);
-      }
-    }
-
-    throw new ApiError("매칭 후보를 불러올 수 없습니다.");
   }
 }
 

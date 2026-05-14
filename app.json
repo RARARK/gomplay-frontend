@@ -15,6 +15,7 @@
       }
     },
     "android": {
+      "usesCleartextTraffic": true,
       "config": {
         "googleMaps": {
           "apiKey": "AIzaSyD6Kr-1Dq-JbNUyjdw971x0kSanrMI_XTg"
@@ -27,7 +28,8 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.anonymous.gomplayfrontend"
     },
     "web": {
       "output": "static",

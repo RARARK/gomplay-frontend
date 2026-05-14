@@ -134,6 +134,7 @@ export default function ProfileEditRoute() {
               source={photoUri ? { uri: photoUri } : DEFAULT_AVATAR}
               style={styles.avatar}
               contentFit="cover"
+              cachePolicy="none"
             />
             <Pressable
               accessibilityRole="button"

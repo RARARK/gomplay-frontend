@@ -12,11 +12,14 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import TimetableSelector from "@/components/common/TimetableSelector";
+import { toggleMatching } from "@/services/matching/matchingService";
 import {
   getSchedule,
   setHasScheduleCache,
+  submitSchedule,
   updateSchedule,
 } from "@/services/schedule/scheduleService";
+import { useAuthStore } from "@/stores/auth/authStore";
 import type { UserTimetableRange, UserTimetableState } from "@/types/domain/user";
 import {
   compressTimetableState,
@@ -27,13 +30,21 @@ import {
 export default function EditTimetableRoute() {
   const [isLoading, setIsLoading] = React.useState(true);
   const [isSaving, setIsSaving] = React.useState(false);
+  const isMatching = useAuthStore((s) => s.matching);
+  const setMatching = useAuthStore((s) => s.setMatching);
   const [timetable, setTimetable] = React.useState<UserTimetableState>(() =>
     createEmptyTimetableState(),
   );
+  const [hasExistingSchedule, setHasExistingSchedule] = React.useState(false);
 
   React.useEffect(() => {
     getSchedule()
-      .then((ranges) => setTimetable(expandTimetableRanges(ranges)))
+      .then((ranges) => {
+        if (ranges.length > 0) {
+          setTimetable(expandTimetableRanges(ranges));
+          setHasExistingSchedule(true);
+        }
+      })
       .catch(() => {})
       .finally(() => setIsLoading(false));
   }, []);
@@ -42,7 +53,17 @@ export default function EditTimetableRoute() {
     const toSubmit = ranges.length > 0 ? ranges : compressTimetableState(timetable);
     setIsSaving(true);
     try {
-      await updateSchedule(toSubmit);
+      if (isMatching) {
+        await toggleMatching(false);
+        setMatching(false);
+      }
+
+      if (hasExistingSchedule) {
+        await updateSchedule(toSubmit);
+      } else {
+        await submitSchedule(toSubmit);
+      }
+      setHasExistingSchedule(toSubmit.length > 0);
       // Update cache before navigating back so the home screen reads the
       // correct value instantly without waiting for another API call.
       setHasScheduleCache(toSubmit.length > 0);

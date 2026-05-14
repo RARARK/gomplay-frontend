@@ -36,9 +36,9 @@ type OnboardingSlide = {
 const SLIDES: OnboardingSlide[] = [
   {
     id: "insight",
-    title: "Find the perfect workout partner for you!",
-    description: "Stay consistent more easily—and enjoy working out together.",
-    buttonLabel: "Next",
+    title: "나에게 딱 맞는\n운동 파트너를 찾아보세요!",
+    description: "함께 운동하면 꾸준함이 달라져요.",
+    buttonLabel: "다음",
     heroAccent: "rgba(255, 211, 116, 0.38)",
     heroAccentSecondary: "rgba(68, 110, 255, 0.88)",
     leftImage: HomePartnerProfileImage,
@@ -47,10 +47,9 @@ const SLIDES: OnboardingSlide[] = [
   },
   {
     id: "quick match",
-    title: "Get matched instantly",
-    description:
-      "Find a partner and start working out right away.\nNo more waiting, no more hassle.",
-    buttonLabel: "Next",
+    title: "지금 바로 매칭해보세요!",
+    description: "기다림 없이 파트너를 찾고\n바로 운동을 시작해보세요.",
+    buttonLabel: "다음",
     heroAccent: "rgba(164, 244, 214, 0.42)",
     heroAccentSecondary: "rgba(109, 90, 255, 0.82)",
     leftImage: HomePartnerCardBackground2,
@@ -59,10 +58,9 @@ const SLIDES: OnboardingSlide[] = [
   },
   {
     id: "normal match",
-    title: "Match with partners on a set schedule",
-    description:
-      "Work out at a fixed time that fits you.\nConsistency is the key to success.",
-    buttonLabel: "Next",
+    title: "정해진 일정으로\n함께 운동해요",
+    description: "나에게 맞는 시간에 고정 파트너와\n꾸준히 운동할 수 있어요.",
+    buttonLabel: "다음",
     heroAccent: "rgba(255, 194, 228, 0.34)",
     heroAccentSecondary: "rgba(65, 114, 255, 0.82)",
     leftImage: HomeMatchingBear,
@@ -71,10 +69,10 @@ const SLIDES: OnboardingSlide[] = [
   },
   {
     id: "partner match",
-    title: "Find partners who match your style",
+    title: "운동 스타일이 맞는\n파트너와 매칭해보세요!",
     description:
-      "Get matched with partners who have similar workout styles and preferences.\nEnjoy a more personalized workout experience.",
-    buttonLabel: "Get Started",
+      "비슷한 운동 성향과 취향을 가진 파트너와\n더 즐거운 운동을 경험해보세요.",
+    buttonLabel: "시작하기",
     heroAccent: "rgba(255, 225, 163, 0.36)",
     heroAccentSecondary: "rgba(44, 111, 255, 0.84)",
     leftImage: HomePartnerProfileImage,

@@ -19,8 +19,15 @@ import {
   getSchedule,
   setHasScheduleCache,
 } from "@/services/schedule/scheduleService";
-import { getMatchCandidates, requestPartnerMatch, toggleMatching } from "@/services/matching/matchingService";
+import {
+  acceptMatchRequest,
+  rejectMatchRequest,
+  requestPartnerMatch,
+  toggleMatching,
+} from "@/services/matching/matchingService";
+import { normalizeImageUrl } from "@/lib/utils/imageUrl";
 import { useAuthStore } from "@/stores/auth/authStore";
+import { useMatchingStore } from "@/stores/matching/matchingStore";
 import type { MatchCandidate } from "@/types/domain/match";
 import type { Banner } from "@/types/ui/homeBanner";
 import type { PartnerCardProps } from "@/types/ui/homeCards";
@@ -32,60 +39,75 @@ export default function HomePage() {
   const storedMatching = useAuthStore((s) => s.matching);
   const setMatching = useAuthStore((s) => s.setMatching);
 
+  const candidates = useMatchingStore((s) => s.candidates);
+  const setCandidates = useMatchingStore((s) => s.setCandidates);
+  const removeCandidate = useMatchingStore((s) => s.removeCandidate);
+  const pendingMatchRequest = useMatchingStore((s) => s.pendingMatchRequest);
+  const setPendingMatchRequest = useMatchingStore((s) => s.setPendingMatchRequest);
+  const lastResolvedMatchRequest = useMatchingStore((s) => s.lastResolvedMatchRequest);
+  const clearLastResolvedMatchRequest = useMatchingStore((s) => s.clearLastResolvedMatchRequest);
+  const wsConnected = useMatchingStore((s) => s.wsConnected);
+
   const [isQuickMatchOn, setIsQuickMatchOn] = React.useState(storedMatching);
-  const [isFetchingCandidates, setIsFetchingCandidates] = React.useState(false);
-  const [candidates, setCandidates] = React.useState<PartnerCardProps[]>([]);
-  const candidateFetchCancelledRef = React.useRef(false);
-  const isTogglingRef = React.useRef(false);
   const [forceMatchedContent, setForceMatchedContent] = React.useState(false);
   const [forceMatchedContentNew, setForceMatchedContentNew] = React.useState(false);
   const [banners] = React.useState<Banner[]>(homeBanners);
+  const isTogglingRef = React.useRef(false);
 
-  // null means the timetable state is still unknown.
-  // When a cache exists, use it immediately to avoid flicker on return.
   const [hasTimetable, setHasTimetable] = React.useState<boolean | null>(
     () => getHasScheduleCache(),
   );
 
-  const mapCandidateToCardRef = React.useRef<(c: MatchCandidate) => PartnerCardProps>(
-    () => ({}) as PartnerCardProps,
-  );
-
-  const startPolling = React.useCallback(() => {
-    const searchOnce = async (): Promise<void> => {
-      if (candidateFetchCancelledRef.current) return;
-      setIsFetchingCandidates(true);
-      try {
-        const [candidatesRes] = await Promise.all([
-          getMatchCandidates(),
-          new Promise<void>((resolve) => setTimeout(resolve, 2500)),
-        ]);
-        if (candidateFetchCancelledRef.current) return;
-        if (candidatesRes.data.length > 0) {
-          setCandidates(candidatesRes.data.map(mapCandidateToCardRef.current));
-          setIsFetchingCandidates(false);
-          isTogglingRef.current = false;
-        } else {
-          setIsFetchingCandidates(false);
-          setTimeout(searchOnce, 3000);
-        }
-      } catch {
-        if (!candidateFetchCancelledRef.current) {
-          setIsFetchingCandidates(false);
-          setTimeout(searchOnce, 5000);
-        }
-      }
-    };
-    searchOnce();
-  }, []);
-
+  // Re-send toggle when WS connects if matching was already ON (e.g. app cold-start)
   React.useEffect(() => {
-    if (!storedMatching) return;
-    candidateFetchCancelledRef.current = false;
-    isTogglingRef.current = true;
-    startPolling();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    if (!wsConnected) return;
+    if (!useAuthStore.getState().matching) return;
+    toggleMatching(true).catch(() => {});
+  }, [wsConnected]);
+
+  // Show alert when another user sends us a match request via WS
+  React.useEffect(() => {
+    if (!pendingMatchRequest) return;
+    const { matchRequestId, expiresAt } = pendingMatchRequest;
+    const secondsLeft = Math.max(
+      0,
+      Math.round((new Date(expiresAt).getTime() - Date.now()) / 1000),
+    );
+    Alert.alert(
+      "매칭 요청",
+      `상대방이 매칭을 요청했어요. ${secondsLeft}초 안에 수락하시겠어요?`,
+      [
+        {
+          text: "거절",
+          style: "cancel",
+          onPress: () => {
+            rejectMatchRequest(matchRequestId).catch(() => {});
+            setPendingMatchRequest(null);
+          },
+        },
+        {
+          text: "수락",
+          onPress: () => {
+            acceptMatchRequest(matchRequestId).catch(() => {});
+            setPendingMatchRequest(null);
+          },
+        },
+      ],
+    );
+  }, [pendingMatchRequest, setPendingMatchRequest]);
+
+  // Show alert when the opponent accepts or rejects our match request via WS
+  React.useEffect(() => {
+    if (!lastResolvedMatchRequest) return;
+    const { accepted } = lastResolvedMatchRequest;
+    Alert.alert(
+      accepted ? "매칭 성사!" : "매칭 거절",
+      accepted
+        ? "상대방이 매칭을 수락했어요. 운동을 즐겨보세요!"
+        : "상대방이 매칭을 거절했어요.",
+    );
+    clearLastResolvedMatchRequest();
+  }, [lastResolvedMatchRequest, clearLastResolvedMatchRequest]);
 
   useFocusEffect(
     React.useCallback(() => {
@@ -104,20 +126,19 @@ export default function HomePage() {
         });
     }, []),
   );
+
   const isMatched = forceMatchedContent;
   const isMatchedNew = forceMatchedContentNew;
 
-  // Reserve extra scroll space so the last section is not hidden behind the FAB.
   const FAB_SIZE = 56;
   const FAB_OFFSET = 20;
   const FAB_EXTRA_SPACE = 12;
 
-  // Decide which home status content should be shown based on the current state.
   const getHomeStatusVariant = (): HomeStatusVariant => {
     if (isMatchedNew) return "MatchedNew";
     if (isMatched) return "Matched";
     if (candidates.length > 0) return "Matched";
-    if (isFetchingCandidates || isQuickMatchOn) return "Matching";
+    if (isQuickMatchOn) return "Matching";
     if (hasTimetable === null) return "Loading";
     if (!hasTimetable) return "NoSchedule";
     return "Default";
@@ -145,32 +166,29 @@ export default function HomePage() {
     }
   };
 
-  const mapCandidateToCard = (c: MatchCandidate): PartnerCardProps => ({
-    userProfileId: c.userProfileId,
-    profileImageSource: { uri: c.profileImageUrl },
-    name: c.name,
-    department: c.department,
-    studentId: c.studentId,
-    partnerStyle: c.partnerStyle,
-    exerciseIntensity: c.exerciseIntensity,
-    exerciseReason: c.exerciseReason,
-    exerciseTypes: c.exerciseTypes,
-    matchScore: c.compatibilityScore,
-    onAccept: () => handleMatchRequest(c.userProfileId),
-    onReject: () =>
-      setCandidates((prev) =>
-        prev.filter((card) => card.userProfileId !== c.userProfileId),
-      ),
-  });
-  mapCandidateToCardRef.current = mapCandidateToCard;
+  const mapCandidateToCard = (c: MatchCandidate): PartnerCardProps => {
+    const imageUrl = normalizeImageUrl(c.profileImageUrl);
+    return {
+      userProfileId: c.userProfileId,
+      profileImageSource: imageUrl ? { uri: imageUrl } : undefined,
+      name: c.name,
+      department: c.department,
+      studentId: c.studentId,
+      partnerStyle: c.partnerStyle,
+      exerciseIntensity: c.exerciseIntensity,
+      exerciseReason: c.exerciseReason,
+      exerciseTypes: c.exerciseTypes,
+      matchScore: c.compatibilityScore,
+      onAccept: () => handleMatchRequest(c.userProfileId),
+      onReject: () => removeCandidate(c.userProfileId),
+    };
+  };
 
   const handleToggleQuickMatch = async (value: boolean) => {
     if (!value) {
-      candidateFetchCancelledRef.current = true;
       isTogglingRef.current = false;
       setIsQuickMatchOn(false);
       setMatching(false);
-      setIsFetchingCandidates(false);
       setCandidates([]);
       toggleMatching(false).catch(() => {});
       return;
@@ -185,11 +203,9 @@ export default function HomePage() {
         isTogglingRef.current = false;
         return;
       }
-
       setIsQuickMatchOn(true);
       setMatching(true);
-      candidateFetchCancelledRef.current = false;
-      startPolling();
+      isTogglingRef.current = false;
     } catch (err) {
       isTogglingRef.current = false;
       Alert.alert(
@@ -204,7 +220,6 @@ export default function HomePage() {
   };
 
   return (
-    // Keep the home screen content inside the top safe area.
     <SafeAreaView edges={["top"]} style={styles.safeArea}>
       <>
         <ScrollView
@@ -241,18 +256,16 @@ export default function HomePage() {
           </View>
           <HeroBanner banners={banners} />
 
-          {/* Render the status-specific content without changing the page layout. */}
           <HomeStatusSection
             state={currentState}
             isQuickMatchOn={isQuickMatchOn}
             onToggleQuickMatch={handleToggleQuickMatch}
-            candidates={candidates}
+            candidates={candidates.map(mapCandidateToCard)}
           />
 
           <MatchSection />
         </ScrollView>
 
-        {/* Floating action button for creating a new recruitment post. */}
         <Pressable
           onPress={handleCreatePostPress}
           style={[
