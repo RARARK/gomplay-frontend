@@ -50,7 +50,6 @@ export default function HomePage() {
   const [isQuickMatchOn, setIsQuickMatchOn] = React.useState(storedMatching);
   const [forceMatchedContent, setForceMatchedContent] = React.useState(false);
   const [forceMatchedContentNew, setForceMatchedContentNew] = React.useState(false);
-  const [matchingFound, setMatchingFound] = React.useState(false);
   const [banners] = React.useState<Banner[]>(homeBanners);
   const isTogglingRef = React.useRef(false);
 
@@ -130,23 +129,6 @@ export default function HomePage() {
   const isMatched = forceMatchedContent;
   const isMatchedNew = forceMatchedContentNew;
 
-  // 퀵매칭 중 candidates가 처음 도착하면 MatchingFound 단계를 1.5초 보여준 뒤 Matched로 전환
-  const prevCandidatesLength = React.useRef(0);
-  React.useEffect(() => {
-    const prev = prevCandidatesLength.current;
-    prevCandidatesLength.current = candidates.length;
-
-    if (candidates.length > 0 && prev === 0 && isQuickMatchOn) {
-      setMatchingFound(true);
-      const timer = setTimeout(() => setMatchingFound(false), 1500);
-      return () => clearTimeout(timer);
-    }
-
-    if (candidates.length === 0) {
-      setMatchingFound(false);
-    }
-  }, [candidates.length, isQuickMatchOn]);
-
   const FAB_SIZE = 56;
   const FAB_OFFSET = 20;
   const FAB_EXTRA_SPACE = 12;
@@ -154,10 +136,6 @@ export default function HomePage() {
   const getHomeStatusVariant = (): HomeStatusVariant => {
     if (isMatchedNew) return "MatchedNew";
     if (isMatched) return "Matched";
-    // useEffect는 렌더 이후에 실행되므로 candidates가 처음 도착한 렌더에서는
-    // matchingFound가 아직 false다. ref가 아직 0인 것을 이용해 같은 렌더에서
-    // MatchingFound를 반환해 카드 flash 없이 스피너를 먼저 보여준다.
-    if (matchingFound || (isQuickMatchOn && candidates.length > 0 && prevCandidatesLength.current === 0)) return "MatchingFound";
     if (candidates.length > 0) return "Matched";
     if (isQuickMatchOn) return "Matching";
     if (hasTimetable === null) return "Loading";

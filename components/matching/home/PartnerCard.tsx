@@ -264,6 +264,8 @@ const PartnerCard = ({
   name = "파트너",
   department,
   studentId,
+  isActiveNow,
+  sharedInterests,
   partnerStyle,
   exerciseIntensity,
   exerciseReason,
@@ -310,11 +312,28 @@ const PartnerCard = ({
         )}
 
         <Text style={S.name}>{name}</Text>
+        {isActiveNow && (
+          <View style={S.activeRow}>
+            <View style={S.activeDot} />
+            <Text style={S.activeText}>Active now</Text>
+          </View>
+        )}
         <View style={S.nameDivider} />
       </ImageBackground>
 
       {/* ── Info section ── */}
       <View style={S.infoCard}>
+        {sharedInterests != null && (
+          <InfoRow
+            icon="heart-outline"
+            iconColor="#16A34A"
+            iconBg="#DCFCE7"
+            label="공통 관심사"
+            values={[`${sharedInterests}개`]}
+            chipBg="#DCFCE7"
+            chipTextColor="#16A34A"
+          />
+        )}
         <InfoRow
           icon="people-outline"
           iconColor="#7C6FF7"
@@ -498,6 +517,24 @@ const S = StyleSheet.create({
     fontWeight: "800",
     color: "#111827",
     textAlign: "center",
+  },
+  activeRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    marginTop: 6,
+  },
+  activeDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "#22C55E",
+  },
+  activeText: {
+    fontSize: 12,
+    lineHeight: 16,
+    color: "#16A34A",
+    fontWeight: "700",
   },
   nameDivider: {
     width: 32,

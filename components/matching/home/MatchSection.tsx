@@ -52,7 +52,7 @@ function mapRecommendToCard(
   };
 }
 
-const MatchSection = React.memo(() => {
+const MatchSection = React.memo(function MatchSection() {
   const [items, setItems] = React.useState<GatheringRecommendItem[]>([]);
   const [loading, setLoading] = React.useState(true);
 

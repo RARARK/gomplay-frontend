@@ -56,12 +56,12 @@ function renderContent(state: HomeStatusVariant, candidates: PartnerCardProps[])
   }
 }
 
-const HomeStatusSection = React.memo(({
+const HomeStatusSection = React.memo(function HomeStatusSection({
   state,
   isQuickMatchOn,
   onToggleQuickMatch,
   candidates = [],
-}: Props) => {
+}: Props) {
   const isFixedSlot = FIXED_HEIGHT_VARIANTS.has(state);
   const fadeAnim = React.useRef(new Animated.Value(1)).current;
   const prevState = React.useRef(state);

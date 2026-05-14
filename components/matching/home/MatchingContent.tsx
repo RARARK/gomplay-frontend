@@ -37,7 +37,7 @@ function FourPointStar() {
 }
 
 // Isolated so only this tiny node re-renders every 480ms
-const EllipsisText = React.memo(() => {
+const EllipsisText = React.memo(function EllipsisText() {
   const [ellipsis, setEllipsis] = React.useState("...");
   React.useEffect(() => {
     let count = 3;

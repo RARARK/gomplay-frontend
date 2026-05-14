@@ -9,6 +9,8 @@ export type PartnerCardProps = {
   description?: string;
   department?: string;
   studentId?: string;
+  isActiveNow?: boolean;
+  sharedInterests?: number;
   partnerStyle?: string;
   exerciseIntensity?: string;
   exerciseReason?: string;

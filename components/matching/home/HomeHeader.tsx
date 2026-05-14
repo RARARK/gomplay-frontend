@@ -1,4 +1,3 @@
-import Frame110 from "@/assets/home/Frame-110.svg";
 import Frame91 from "@/assets/home/Frame-91.svg";
 import { Height, Width } from "@/constants/locofyHomeStyles";
 import { Image } from "expo-image";
@@ -46,19 +45,6 @@ const HomeHeader = React.memo(() => {
         >
           <Text style={styles.myButtonText}>MY</Text>
         </Pressable>
-
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Open settings"
-          style={styles.iconButton}
-          onPress={() => {}}
-        >
-          <Frame110
-            style={styles.svgIcon}
-            width={Width.width_48}
-            height={Height.height_48}
-          />
-        </Pressable>
       </View>
     </View>
   );
@@ -74,7 +60,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   rightIcons: {
-    width: Width.width_144,
+    width: Width.width_48 * 2,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
