@@ -11,21 +11,21 @@ export type PartnerCarouselProps = {
   onIndexChange?: (index: number) => void;
 };
 
-const PartnerCarousel = ({
+const PartnerCarousel = React.memo(function PartnerCarousel({
   partners = [],
   initialIndex = 0,
   onIndexChange,
-}: PartnerCarouselProps) => {
+}: PartnerCarouselProps) {
   const [currentIndex, setCurrentIndex] = React.useState(initialIndex);
   const [containerWidth, setContainerWidth] = React.useState(0);
 
   const cardWidth = containerWidth > 0
-    ? containerWidth - HomeLayout.navButtonSize * 2 - 24
+    ? containerWidth - HomeLayout.navButtonSize * 2 - 16
     : undefined;
 
-  const handleLayout = (e: LayoutChangeEvent) => {
+  const handleLayout = React.useCallback((e: LayoutChangeEvent) => {
     setContainerWidth(e.nativeEvent.layout.width);
-  };
+  }, []);
 
   React.useEffect(() => {
     if (partners.length === 0) {
@@ -44,10 +44,10 @@ const PartnerCarousel = ({
     setCurrentIndex(initialIndex);
   }, [initialIndex]);
 
-  const moveTo = (nextIndex: number) => {
+  const moveTo = React.useCallback((nextIndex: number) => {
     setCurrentIndex(nextIndex);
     onIndexChange?.(nextIndex);
-  };
+  }, [onIndexChange]);
 
   const currentPartner = partners[currentIndex];
 
@@ -89,7 +89,7 @@ const PartnerCarousel = ({
       </Pressable>
     </View>
   );
-};
+});
 
 const styles = StyleSheet.create({
   container: {
@@ -97,7 +97,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: 12,
+    gap: 8,
   },
 
   navButton: {

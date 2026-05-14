@@ -163,7 +163,7 @@ function InfoRow({
 
   const chips = values.map((v) => (
     <View key={v} style={[R.chip, { backgroundColor: chipBg }]}>
-      <Text style={[R.chipText, { color: chipTextColor }]}>{v}</Text>
+      <Text style={[R.chipText, { color: chipTextColor }]} numberOfLines={1}>{v}</Text>
     </View>
   ));
 
@@ -553,7 +553,7 @@ const S = StyleSheet.create({
     borderRadius: 18,
     borderWidth: 1,
     borderColor: "#EEEEFF",
-    paddingHorizontal: 14,
+    paddingHorizontal: 10,
     paddingVertical: 4,
     elevation: 2,
     shadowColor: "#4C5BE2",

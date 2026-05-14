@@ -19,13 +19,13 @@ export type MatchedContentProps = {
   onPartnerIndexChange?: (index: number) => void;
 };
 
-const MatchedContent = ({
+const MatchedContent = React.memo(function MatchedContent({
   title = "Partner found!",
   description = "Your match is ready. Connect right away.",
   partners = matchedPartners,
   initialIndex = 0,
   onPartnerIndexChange,
-}: MatchedContentProps) => {
+}: MatchedContentProps) {
   return (
     <View style={styles.container}>
       <View style={styles.banner}>
@@ -45,7 +45,7 @@ const MatchedContent = ({
       />
     </View>
   );
-};
+});
 
 const styles = StyleSheet.create({
   container: {

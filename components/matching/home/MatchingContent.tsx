@@ -58,6 +58,9 @@ const MatchingContent = React.memo(function MatchingContent({
   const dotOpacities = React.useRef(
     DOT_POSITIONS.map(() => new Animated.Value(0.25))
   ).current;
+  const spin = React.useRef(
+    spinValue.interpolate({ inputRange: [0, 1], outputRange: ["0deg", "360deg"] })
+  ).current;
 
   // Loading-only animations
   React.useEffect(() => {
@@ -110,10 +113,7 @@ const MatchingContent = React.memo(function MatchingContent({
     };
   }, [isFound, spinValue, dotOpacities]);
 
-  const spin = spinValue.interpolate({
-    inputRange: [0, 1],
-    outputRange: ["0deg", "360deg"],
-  });
+
 
   return (
     <>

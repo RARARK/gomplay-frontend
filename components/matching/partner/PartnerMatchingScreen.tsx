@@ -1,5 +1,6 @@
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { Image } from "expo-image";
+import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import React from "react";
 import {
@@ -11,7 +12,7 @@ import {
   Text,
   View,
 } from "react-native";
-import Svg, { Circle, Defs, LinearGradient, Stop } from "react-native-svg";
+import Svg, { Circle, Defs, LinearGradient as SvgLinearGradient, Stop } from "react-native-svg";
 
 type RecommendedPartner = {
   id: string;
@@ -19,10 +20,23 @@ type RecommendedPartner = {
   sharedInterests: number;
   name: string;
   studentId: string;
+  studentNumber: string;
   department: string;
   activityStyle: string;
+  tendencyTitle: string;
+  tendencyDescription: string;
+  intensityLabel: string;
+  intensityDescription: string;
+  workoutReason: string;
+  workoutReasonDescription: string;
   tags: [string, string, string];
+  interests: [PartnerInterest, PartnerInterest, PartnerInterest];
   profileImageUrl?: string | null;
+};
+
+type PartnerInterest = {
+  label: string;
+  icon: keyof typeof MaterialCommunityIcons.glyphMap;
 };
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
@@ -43,9 +57,21 @@ const RECOMMENDED_PARTNERS: RecommendedPartner[] = [
     sharedInterests: 3,
     name: "김단국",
     studentId: "21학번",
+    studentNumber: "202112345",
     department: "소프트웨어학과",
     activityStyle: "꾸준히 열심히",
+    tendencyTitle: "서로 동기부여가 되는 파트너를 선호해요!",
+    tendencyDescription: "함께 목표를 세우고 꾸준히 운동하고 싶어요.",
+    intensityLabel: "중간~높음",
+    intensityDescription: "적당히 도전적인 강도로 함께 성장하고 싶어요.",
+    workoutReason: "체력 향상 & 스트레스 해소",
+    workoutReasonDescription: "체력을 키우고 스트레스를 날리고 싶어요!",
     tags: ["활동적", "초보", "아웃도어"],
+    interests: [
+      { label: "축구", icon: "soccer" },
+      { label: "헬스", icon: "dumbbell" },
+      { label: "러닝", icon: "shoe-sneaker" },
+    ],
   },
   {
     id: "partner-2",
@@ -53,9 +79,21 @@ const RECOMMENDED_PARTNERS: RecommendedPartner[] = [
     sharedInterests: 5,
     name: "이서윤",
     studentId: "23학번",
+    studentNumber: "202312120",
     department: "체육교육과",
     activityStyle: "가볍게 오래",
+    tendencyTitle: "편안하게 루틴을 맞춰가는 파트너를 좋아해요.",
+    tendencyDescription: "무리하지 않고 오래 지속하는 운동을 선호해요.",
+    intensityLabel: "낮음~중간",
+    intensityDescription: "꾸준히 땀이 나는 정도의 강도가 잘 맞아요.",
+    workoutReason: "건강한 생활 리듬 만들기",
+    workoutReasonDescription: "아침 운동으로 하루를 산뜻하게 시작하고 싶어요.",
     tags: ["아침형", "러닝", "친화적"],
+    interests: [
+      { label: "러닝", icon: "shoe-sneaker" },
+      { label: "요가", icon: "meditation" },
+      { label: "헬스", icon: "dumbbell" },
+    ],
   },
   {
     id: "partner-3",
@@ -63,9 +101,21 @@ const RECOMMENDED_PARTNERS: RecommendedPartner[] = [
     sharedInterests: 4,
     name: "박지훈",
     studentId: "22학번",
+    studentNumber: "202212287",
     department: "컴퓨터공학과",
     activityStyle: "루틴 중심",
+    tendencyTitle: "계획을 세우고 차근차근 실천하는 편이에요.",
+    tendencyDescription: "정해진 시간에 만나 서로 루틴을 지켜주면 좋아요.",
+    intensityLabel: "중간",
+    intensityDescription: "기록을 보며 조금씩 강도를 올리고 싶어요.",
+    workoutReason: "근력 향상과 자세 교정",
+    workoutReasonDescription: "오래 앉아 있는 생활을 운동으로 균형 잡고 싶어요.",
     tags: ["근력", "저녁형", "꾸준함"],
+    interests: [
+      { label: "헬스", icon: "dumbbell" },
+      { label: "농구", icon: "basketball" },
+      { label: "러닝", icon: "shoe-sneaker" },
+    ],
   },
 ];
 
@@ -78,10 +128,10 @@ function MatchRing({ score }: { score: number }) {
     <View style={ringStyles.wrap}>
       <Svg width={RING_SIZE} height={RING_SIZE}>
         <Defs>
-          <LinearGradient id="ringGrad2" x1="0" y1="0" x2="1" y2="1">
+          <SvgLinearGradient id="ringGrad2" x1="0" y1="0" x2="1" y2="1">
             <Stop offset="0" stopColor="#7C6FF7" />
             <Stop offset="1" stopColor="#4F46E5" />
-          </LinearGradient>
+          </SvgLinearGradient>
         </Defs>
         <Circle
           cx={RING_SIZE / 2}
@@ -432,6 +482,424 @@ const cardStyles = StyleSheet.create({
   },
 });
 
+function IntensityMeter() {
+  return (
+    <View style={premiumStyles.meter}>
+      {[0, 1, 2, 3, 4, 5].map((index) => (
+        <View
+          key={index}
+          style={[
+            premiumStyles.meterBar,
+            {
+              height: 14 + index * 4,
+              backgroundColor: index < 5 ? "#2FB786" : "#DDEFE8",
+            },
+          ]}
+        />
+      ))}
+    </View>
+  );
+}
+
+function PremiumPartnerCard({
+  partner,
+  onRefresh,
+  onRequest,
+}: {
+  partner: RecommendedPartner;
+  onRefresh: () => void;
+  onRequest: () => void;
+}) {
+  return (
+    <View style={premiumStyles.card}>
+      <View style={premiumStyles.profileArea}>
+        <View style={premiumStyles.avatarWrap}>
+          <Image
+            source={partner.profileImageUrl ? { uri: partner.profileImageUrl } : PROFILE_IMAGE}
+            style={premiumStyles.avatar}
+            contentFit="cover"
+          />
+          <View style={premiumStyles.avatarOnlineBadge} />
+        </View>
+
+        <View style={premiumStyles.profileText}>
+          <View style={premiumStyles.nameRow}>
+            <Text numberOfLines={1} style={premiumStyles.name}>
+              {partner.name}
+            </Text>
+            <Text style={premiumStyles.ageText}>{partner.studentId}</Text>
+          </View>
+          <Text numberOfLines={1} style={premiumStyles.department}>
+            {partner.department}
+          </Text>
+          <Text style={premiumStyles.studentNumber}>{partner.studentNumber}</Text>
+          <View style={premiumStyles.activeRow}>
+            <View style={premiumStyles.activeDot} />
+            <Text style={premiumStyles.activeText}>Active now</Text>
+          </View>
+        </View>
+
+        <MatchRing score={partner.matchPercentage} />
+      </View>
+
+      <View style={premiumStyles.divider} />
+
+      <View style={premiumStyles.sectionRow}>
+        <View style={premiumStyles.sectionLabel}>
+          <Ionicons name="heart" size={22} color="#6254E8" />
+          <View>
+            <Text style={premiumStyles.sectionTitle}>공통 관심사</Text>
+            <Text style={premiumStyles.sectionSub}>{partner.sharedInterests}개</Text>
+          </View>
+        </View>
+        <View style={premiumStyles.chipWrap}>
+          {partner.interests.map((interest) => (
+            <View key={interest.label} style={premiumStyles.interestChip}>
+              <MaterialCommunityIcons
+                name={interest.icon}
+                size={18}
+                color="#2B2D33"
+              />
+              <Text style={premiumStyles.interestText}>{interest.label}</Text>
+            </View>
+          ))}
+        </View>
+      </View>
+
+      <View style={premiumStyles.sectionRow}>
+        <View style={premiumStyles.sectionLabel}>
+          <Ionicons name="person" size={22} color="#6254E8" />
+          <Text style={premiumStyles.sectionTitle}>파트너 성향</Text>
+        </View>
+        <View style={[premiumStyles.detailCard, premiumStyles.tendencyCard]}>
+          <Text style={premiumStyles.detailTitle}>{partner.tendencyTitle}</Text>
+          <Text style={premiumStyles.detailText}>{partner.tendencyDescription}</Text>
+        </View>
+      </View>
+
+      <View style={premiumStyles.sectionRow}>
+        <View style={premiumStyles.sectionLabel}>
+          <Ionicons name="flash" size={22} color="#28B987" />
+          <Text style={premiumStyles.sectionTitle}>운동 강도</Text>
+        </View>
+        <View style={[premiumStyles.detailCard, premiumStyles.intensityCard]}>
+          <View style={premiumStyles.detailTopRow}>
+            <View style={premiumStyles.detailCopy}>
+              <Text style={premiumStyles.detailTitle}>{partner.intensityLabel}</Text>
+              <Text style={premiumStyles.detailText}>
+                {partner.intensityDescription}
+              </Text>
+            </View>
+            <IntensityMeter />
+          </View>
+        </View>
+      </View>
+
+      <View style={premiumStyles.sectionRow}>
+        <View style={premiumStyles.sectionLabel}>
+          <Ionicons name="radio-button-on" size={22} color="#FF9B38" />
+          <Text style={premiumStyles.sectionTitle}>운동 이유</Text>
+        </View>
+        <View style={[premiumStyles.detailCard, premiumStyles.reasonCard]}>
+          <View style={premiumStyles.detailTopRow}>
+            <View style={premiumStyles.detailCopy}>
+              <Text style={premiumStyles.detailTitle}>{partner.workoutReason}</Text>
+              <Text style={premiumStyles.detailText}>
+                {partner.workoutReasonDescription}
+              </Text>
+            </View>
+            <MaterialCommunityIcons name="run-fast" size={38} color="#FF9B38" />
+          </View>
+        </View>
+      </View>
+
+      <View style={premiumStyles.buttonRow}>
+        <Pressable
+          accessibilityRole="button"
+          onPress={onRefresh}
+          style={premiumStyles.nextButton}
+        >
+          <Ionicons name="shuffle" size={20} color="#6254E8" />
+          <Text style={premiumStyles.nextButtonText}>다음 파트너</Text>
+        </Pressable>
+
+        <Pressable
+          accessibilityRole="button"
+          onPress={onRequest}
+          style={premiumStyles.applyButton}
+        >
+          <LinearGradient
+            colors={["#7567F5", "#4F46E5"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={premiumStyles.applyGradient}
+          >
+            <Ionicons name="heart" size={20} color="#FFFFFF" />
+            <Text style={premiumStyles.applyButtonText}>파트너 신청</Text>
+          </LinearGradient>
+        </Pressable>
+      </View>
+
+      <View style={premiumStyles.safeNote}>
+        <Ionicons name="shield-checkmark-outline" size={16} color="#7B8190" />
+        <Text style={premiumStyles.safeNoteText}>
+          모든 정보는 검증된 사용자만 확인할 수 있어요.
+        </Text>
+      </View>
+    </View>
+  );
+}
+
+const premiumStyles = StyleSheet.create({
+  card: {
+    width: CARD_WIDTH,
+    borderRadius: 28,
+    backgroundColor: "#FFFFFF",
+    paddingHorizontal: 18,
+    paddingTop: 20,
+    paddingBottom: 18,
+    shadowColor: "#1F2937",
+    shadowOffset: { width: 0, height: 16 },
+    shadowOpacity: 0.12,
+    shadowRadius: 28,
+    elevation: 12,
+  },
+  profileArea: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  avatarWrap: {
+    width: 92,
+    height: 92,
+    borderRadius: 28,
+    backgroundColor: "#F5F6FB",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  avatar: {
+    width: 92,
+    height: 92,
+    borderRadius: 28,
+  },
+  avatarOnlineBadge: {
+    position: "absolute",
+    right: -2,
+    bottom: 8,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 4,
+    borderColor: "#FFFFFF",
+    backgroundColor: "#24C685",
+  },
+  profileText: {
+    flex: 1,
+    minWidth: 0,
+    gap: 4,
+  },
+  nameRow: {
+    flexDirection: "row",
+    alignItems: "flex-end",
+    gap: 8,
+  },
+  name: {
+    maxWidth: "70%",
+    fontSize: 25,
+    lineHeight: 31,
+    color: "#111217",
+    fontWeight: "900",
+  },
+  ageText: {
+    paddingBottom: 3,
+    fontSize: 15,
+    lineHeight: 20,
+    color: "#737783",
+    fontWeight: "700",
+  },
+  department: {
+    fontSize: 15,
+    lineHeight: 20,
+    color: "#606575",
+    fontWeight: "700",
+  },
+  studentNumber: {
+    fontSize: 15,
+    lineHeight: 20,
+    color: "#606575",
+    fontWeight: "600",
+  },
+  activeRow: {
+    marginTop: 2,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  activeDot: {
+    width: 9,
+    height: 9,
+    borderRadius: 5,
+    backgroundColor: "#24C685",
+  },
+  activeText: {
+    fontSize: 14,
+    lineHeight: 18,
+    color: "#20AE79",
+    fontWeight: "800",
+  },
+  divider: {
+    height: 1,
+    marginTop: 20,
+    marginBottom: 18,
+    backgroundColor: "#EEF0F5",
+  },
+  sectionRow: {
+    gap: 12,
+    marginBottom: 16,
+  },
+  sectionLabel: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    lineHeight: 21,
+    color: "#17191F",
+    fontWeight: "900",
+  },
+  sectionSub: {
+    fontSize: 13,
+    lineHeight: 17,
+    color: "#747986",
+    fontWeight: "700",
+  },
+  chipWrap: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  interestChip: {
+    minHeight: 44,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 7,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: "#ECEEF4",
+    backgroundColor: "#FBFCFF",
+    paddingHorizontal: 14,
+  },
+  interestText: {
+    fontSize: 14,
+    lineHeight: 18,
+    color: "#17191F",
+    fontWeight: "800",
+  },
+  detailCard: {
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 15,
+  },
+  tendencyCard: {
+    backgroundColor: "#F2F0FF",
+  },
+  intensityCard: {
+    backgroundColor: "#EEF9F4",
+  },
+  reasonCard: {
+    backgroundColor: "#FFF4E7",
+  },
+  detailTopRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  detailCopy: {
+    flex: 1,
+    minWidth: 0,
+    gap: 6,
+  },
+  detailTitle: {
+    fontSize: 16,
+    lineHeight: 21,
+    color: "#111217",
+    fontWeight: "900",
+  },
+  detailText: {
+    fontSize: 13,
+    lineHeight: 19,
+    color: "#3F4450",
+    fontWeight: "600",
+  },
+  meter: {
+    height: 44,
+    flexDirection: "row",
+    alignItems: "flex-end",
+    gap: 4,
+  },
+  meterBar: {
+    width: 8,
+    borderRadius: 999,
+  },
+  buttonRow: {
+    flexDirection: "row",
+    gap: 10,
+    marginTop: 2,
+  },
+  nextButton: {
+    flex: 1,
+    minHeight: 56,
+    borderRadius: 18,
+    borderWidth: 1.5,
+    borderColor: "#6254E8",
+    backgroundColor: "#FFFFFF",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 7,
+  },
+  nextButtonText: {
+    fontSize: 15,
+    lineHeight: 20,
+    color: "#6254E8",
+    fontWeight: "900",
+  },
+  applyButton: {
+    flex: 1,
+    minHeight: 56,
+    borderRadius: 18,
+    overflow: "hidden",
+  },
+  applyGradient: {
+    flex: 1,
+    minHeight: 56,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 7,
+  },
+  applyButtonText: {
+    fontSize: 15,
+    lineHeight: 20,
+    color: "#FFFFFF",
+    fontWeight: "900",
+  },
+  safeNote: {
+    marginTop: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+  },
+  safeNoteText: {
+    fontSize: 12,
+    lineHeight: 16,
+    color: "#747986",
+    fontWeight: "600",
+  },
+});
+
 // ── Screen ────────────────────────────────────────────────────────────────────
 export default function PartnerMatchingScreen() {
   const [partnerIndex, setPartnerIndex] = React.useState(0);
@@ -499,6 +967,12 @@ export default function PartnerMatchingScreen() {
           </View>
 
           <PartnerCard
+            partner={currentPartner}
+            onRefresh={handleRefresh}
+            onRequest={handleRequest}
+          />
+
+          <PremiumPartnerCard
             partner={currentPartner}
             onRefresh={handleRefresh}
             onRequest={handleRequest}

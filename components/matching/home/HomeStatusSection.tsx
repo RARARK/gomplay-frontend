@@ -25,7 +25,6 @@ const FIXED_HEIGHT_VARIANTS = new Set<HomeStatusVariant>([
   "Default",
   "NoSchedule",
   "Matching",
-  "MatchingFound",
 ]);
 
 // Tallest of the fixed variants is Matching:
@@ -45,8 +44,6 @@ function renderContent(state: HomeStatusVariant, candidates: PartnerCardProps[])
       return <MatchedContentNew />;
     case "Matching":
       return <MatchingContent nearbyCount={candidates.length || 7} />;
-    case "MatchingFound":
-      return <MatchingContent nearbyCount={candidates.length || 7} isFound />;
     case "NoSchedule":
       return <NoScheduleContent />;
     case "Default":
@@ -65,6 +62,7 @@ const HomeStatusSection = React.memo(function HomeStatusSection({
   const isFixedSlot = FIXED_HEIGHT_VARIANTS.has(state);
   const fadeAnim = React.useRef(new Animated.Value(1)).current;
   const prevState = React.useRef(state);
+  const content = React.useMemo(() => renderContent(state, candidates), [state, candidates]);
 
   React.useEffect(() => {
     if (prevState.current === state) return;
@@ -98,7 +96,7 @@ const HomeStatusSection = React.memo(function HomeStatusSection({
         ]}
       >
         <Animated.View style={[styles.contentInner, { opacity: fadeAnim }]}>
-          {renderContent(state, candidates)}
+          {content}
         </Animated.View>
       </View>
     </View>

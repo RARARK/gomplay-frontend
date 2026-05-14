@@ -53,7 +53,7 @@ const track = StyleSheet.create({
   thumbRight: { alignSelf: "flex-end" },
 });
 
-export default function QuickMatchToggleNew({ state, isOn: controlledIsOn, onChange }: Props) {
+const QuickMatchToggleNew = React.memo(function QuickMatchToggleNew({ state, isOn: controlledIsOn, onChange }: Props) {
   const userId = useAuthStore((store) => store.userId);
   const isOn = controlledIsOn ?? state === "Matching";
   const [isPointNoticeVisible, setIsPointNoticeVisible] = React.useState(false);
@@ -90,34 +90,32 @@ export default function QuickMatchToggleNew({ state, isOn: controlledIsOn, onCha
     };
   }, [QUICK_MATCH_MODAL_KEY]);
 
-  const handleTogglePress = () => {
+  const handleTogglePress = React.useCallback(() => {
     if (isOn) {
       onChange?.(false);
       return;
     }
-
     if (skipPointNotice) {
       onChange?.(true);
       return;
     }
-
     setDraftSkipPointNotice(false);
     setIsPointNoticeVisible(true);
-  };
+  }, [isOn, skipPointNotice, onChange]);
 
-  const handleConfirmQuickMatch = async () => {
+  const handleConfirmQuickMatch = React.useCallback(async () => {
     if (draftSkipPointNotice && QUICK_MATCH_MODAL_KEY) {
       setSkipPointNotice(true);
       await AsyncStorage.setItem(QUICK_MATCH_MODAL_KEY, "true").catch(() => {});
     }
     setIsPointNoticeVisible(false);
     onChange?.(true);
-  };
+  }, [draftSkipPointNotice, QUICK_MATCH_MODAL_KEY, onChange]);
 
-  const handleDismissPointNotice = () => {
+  const handleDismissPointNotice = React.useCallback(() => {
     setDraftSkipPointNotice(false);
     setIsPointNoticeVisible(false);
-  };
+  }, []);
 
   const content = (
     <>
@@ -229,7 +227,9 @@ export default function QuickMatchToggleNew({ state, isOn: controlledIsOn, onCha
       </Modal>
     </TouchableOpacity>
   );
-}
+});
+
+export default QuickMatchToggleNew;
 
 const styles = StyleSheet.create({
   cardOuter: {
