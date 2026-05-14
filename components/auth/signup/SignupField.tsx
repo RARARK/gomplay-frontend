@@ -9,6 +9,7 @@ type SignupFieldProps = {
   secureTextEntry?: boolean;
   keyboardType?: "default" | "email-address" | "number-pad";
   editable?: boolean;
+  errorMessage?: string;
 };
 
 export default function SignupField({
@@ -19,12 +20,17 @@ export default function SignupField({
   secureTextEntry = false,
   keyboardType = "default",
   editable = true,
+  errorMessage,
 }: SignupFieldProps) {
   return (
     <View style={styles.field}>
       <Text style={styles.label}>{label}</Text>
       <TextInput
-        style={[styles.input, !editable && styles.inputDisabled]}
+        style={[
+          styles.input,
+          !editable && styles.inputDisabled,
+          errorMessage ? styles.inputError : null,
+        ]}
         placeholder={placeholder}
         placeholderTextColor="#5C5A63"
         value={value}
@@ -34,6 +40,9 @@ export default function SignupField({
         autoCapitalize="none"
         editable={editable}
       />
+      {errorMessage ? (
+        <Text style={styles.errorText}>{errorMessage}</Text>
+      ) : null}
     </View>
   );
 }
@@ -64,5 +73,15 @@ const styles = StyleSheet.create({
   },
   inputDisabled: {
     opacity: 0.5,
+  },
+  inputError: {
+    borderColor: "#FF3B30",
+  },
+  errorText: {
+    fontSize: 11,
+    lineHeight: 15,
+    color: "#FF3B30",
+    fontFamily: "System",
+    marginTop: -4,
   },
 });

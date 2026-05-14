@@ -36,7 +36,21 @@ function FourPointStar() {
   );
 }
 
-export default function MatchingContent({
+// Isolated so only this tiny node re-renders every 480ms
+const EllipsisText = React.memo(() => {
+  const [ellipsis, setEllipsis] = React.useState("...");
+  React.useEffect(() => {
+    let count = 3;
+    const timer = setInterval(() => {
+      count = count >= 3 ? 1 : count + 1;
+      setEllipsis(".".repeat(count));
+    }, 480);
+    return () => clearInterval(timer);
+  }, []);
+  return <Text style={styles.title}>{ellipsis}</Text>;
+});
+
+const MatchingContent = React.memo(function MatchingContent({
   nearbyCount = 7,
   isFound = false,
 }: MatchingContentProps) {
@@ -44,7 +58,6 @@ export default function MatchingContent({
   const dotOpacities = React.useRef(
     DOT_POSITIONS.map(() => new Animated.Value(0.25))
   ).current;
-  const [ellipsis, setEllipsis] = React.useState("...");
 
   // Loading-only animations
   React.useEffect(() => {
@@ -90,17 +103,9 @@ export default function MatchingContent({
       timeouts.push(t);
     });
 
-    // Ellipsis cycling
-    let count = 3;
-    const ellipsisTimer = setInterval(() => {
-      count = count >= 3 ? 1 : count + 1;
-      setEllipsis(".".repeat(count));
-    }, 480);
-
     return () => {
       anims.forEach((a) => a.stop());
       timeouts.forEach((t) => clearTimeout(t));
-      clearInterval(ellipsisTimer);
       spinValue.setValue(0);
     };
   }, [isFound, spinValue, dotOpacities]);
@@ -159,7 +164,7 @@ export default function MatchingContent({
               <FourPointStar />
               <Text style={styles.title}>Finding your partner</Text>
               <View style={styles.ellipsisBox}>
-                <Text style={styles.title}>{ellipsis}</Text>
+                <EllipsisText />
               </View>
             </View>
             <Text style={styles.description}>
@@ -170,7 +175,9 @@ export default function MatchingContent({
       </View>
     </>
   );
-}
+});
+
+export default MatchingContent;
 
 const styles = StyleSheet.create({
   ringWrapper: {

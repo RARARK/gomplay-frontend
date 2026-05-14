@@ -3,9 +3,11 @@ import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { Ionicons } from "@expo/vector-icons";
-import MatchMapPreview from "@/assets/match/icon.png";
 import type { Coords } from "@/services/location/locationService";
 import { getStaticMapUrl } from "@/services/location/locationService";
+
+// 단국대학교 죽전캠퍼스 기본 좌표
+const DANKOOK_COORDS: Coords = { lat: 37.3219, lng: 127.1261 };
 
 type CreatePostLocationCardProps = {
   location: string;
@@ -25,9 +27,7 @@ export default function CreatePostLocationCard({
   onMapPress,
 }: CreatePostLocationCardProps) {
   const hasActions = Boolean(onUseCurrentLocation || onRecommendNearby);
-  const mapSource = locationCoords
-    ? { uri: getStaticMapUrl(locationCoords) }
-    : MatchMapPreview;
+  const mapSource = { uri: getStaticMapUrl(locationCoords ?? DANKOOK_COORDS) };
 
   return (
     <View style={styles.container}>

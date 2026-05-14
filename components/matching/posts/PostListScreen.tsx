@@ -4,6 +4,7 @@ import { router } from "expo-router";
 import React from "react";
 import {
   ActivityIndicator,
+  FlatList,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -380,19 +381,22 @@ export default function PostListScreen() {
             <Text style={styles.emptyText}>{errorMessage}</Text>
           </View>
         ) : filteredPosts.length > 0 ? (
-          <ScrollView
+          <FlatList
+            data={filteredPosts}
+            keyExtractor={(item) => String(item.id)}
+            renderItem={({ item }) => (
+              <PostCard
+                post={item}
+                onPress={() => router.push(`/posts/${item.id}`)}
+              />
+            )}
             style={styles.listScrollView}
             contentContainerStyle={[styles.listContent, { paddingBottom: 88 + insets.bottom }]}
             showsVerticalScrollIndicator={false}
-          >
-            {filteredPosts.map((post) => (
-              <PostCard
-                key={post.id}
-                post={post}
-                onPress={() => router.push(`/posts/${post.id}`)}
-              />
-            ))}
-          </ScrollView>
+            removeClippedSubviews
+            maxToRenderPerBatch={10}
+            windowSize={5}
+          />
         ) : (
           <View style={styles.stateBox}>
             <Text style={styles.emptyTitle}>조건에 맞는 모집글이 없어요</Text>

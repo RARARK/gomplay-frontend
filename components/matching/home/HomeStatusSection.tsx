@@ -1,5 +1,5 @@
 import * as React from "react";
-import { StyleSheet, View } from "react-native";
+import { Animated, Easing, StyleSheet, View } from "react-native";
 import QuickMatchToggleNew from "./QuickMatchToggleNew";
 import { HomeLayout } from "@/constants/locofyHomeStyles";
 import type { HomeStatusVariant } from "@/types/ui/homeStatus";
@@ -25,6 +25,7 @@ const FIXED_HEIGHT_VARIANTS = new Set<HomeStatusVariant>([
   "Default",
   "NoSchedule",
   "Matching",
+  "MatchingFound",
 ]);
 
 // Tallest of the fixed variants is Matching:
@@ -43,7 +44,9 @@ function renderContent(state: HomeStatusVariant, candidates: PartnerCardProps[])
     case "MatchedNew":
       return <MatchedContentNew />;
     case "Matching":
-      return <MatchingContent nearbyCount={7} />;
+      return <MatchingContent nearbyCount={candidates.length || 7} />;
+    case "MatchingFound":
+      return <MatchingContent nearbyCount={candidates.length || 7} isFound />;
     case "NoSchedule":
       return <NoScheduleContent />;
     case "Default":
@@ -53,13 +56,28 @@ function renderContent(state: HomeStatusVariant, candidates: PartnerCardProps[])
   }
 }
 
-const HomeStatusSection = ({
+const HomeStatusSection = React.memo(({
   state,
   isQuickMatchOn,
   onToggleQuickMatch,
   candidates = [],
 }: Props) => {
   const isFixedSlot = FIXED_HEIGHT_VARIANTS.has(state);
+  const fadeAnim = React.useRef(new Animated.Value(1)).current;
+  const prevState = React.useRef(state);
+
+  React.useEffect(() => {
+    if (prevState.current === state) return;
+    prevState.current = state;
+
+    fadeAnim.setValue(0);
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 350,
+      easing: Easing.out(Easing.ease),
+      useNativeDriver: true,
+    }).start();
+  }, [state, fadeAnim]);
 
   return (
     <View style={styles.homeStatusSection}>
@@ -79,13 +97,13 @@ const HomeStatusSection = ({
             : styles.contentViewportAuto,
         ]}
       >
-        <View style={styles.contentInner}>
+        <Animated.View style={[styles.contentInner, { opacity: fadeAnim }]}>
           {renderContent(state, candidates)}
-        </View>
+        </Animated.View>
       </View>
     </View>
   );
-};
+});
 
 const styles = StyleSheet.create({
   homeStatusSection: {

@@ -24,7 +24,7 @@ const TAG_COLORS = [
   { bg: "#FFF7ED", text: "#C2410C" },
 ];
 
-export default function ModernMatchCard({
+const ModernMatchCard = React.memo(function ModernMatchCard({
   imageSource,
   date,
   dayOfWeek,
@@ -90,19 +90,17 @@ export default function ModernMatchCard({
           </Text>
         </View>
 
-        {/* Tags */}
-        {tags.length > 0 && (
-          <View style={styles.tagRow}>
-            {tags.slice(0, 3).map((tag, i) => {
-              const c = TAG_COLORS[i % TAG_COLORS.length];
-              return (
-                <View key={tag} style={[styles.tag, { backgroundColor: c.bg }]}>
-                  <Text style={[styles.tagText, { color: c.text }]}>{tag}</Text>
-                </View>
-              );
-            })}
-          </View>
-        )}
+        {/* Tags — always rendered to keep card height consistent */}
+        <View style={styles.tagRow}>
+          {tags.slice(0, 2).map((tag, i) => {
+            const c = TAG_COLORS[i % TAG_COLORS.length];
+            return (
+              <View key={tag} style={[styles.tag, { backgroundColor: c.bg }]}>
+                <Text style={[styles.tagText, { color: c.text }]}>{tag}</Text>
+              </View>
+            );
+          })}
+        </View>
 
         {/* Footer: difficulty · participants */}
         {(difficulty != null || maxParticipants != null) && (
@@ -120,7 +118,7 @@ export default function ModernMatchCard({
               <View style={styles.footerItem}>
                 <Ionicons name="people-outline" size={11} color="#D1D5DB" />
                 <Text style={styles.footerText}>
-                  {currentParticipants} / {maxParticipants}
+                  {(currentParticipants ?? 1) - 1} / {maxParticipants}
                 </Text>
               </View>
             )}
@@ -129,7 +127,9 @@ export default function ModernMatchCard({
       </View>
     </Pressable>
   );
-}
+});
+
+export default ModernMatchCard;
 
 const styles = StyleSheet.create({
   card: {
@@ -225,6 +225,7 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
     gap: 5,
     marginTop: 1,
+    minHeight: 26,
   },
   tag: {
     paddingHorizontal: 9,

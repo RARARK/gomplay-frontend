@@ -6,7 +6,7 @@ import { router } from "expo-router";
 import * as React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
-const HomeHeader = () => {
+const HomeHeader = React.memo(() => {
   return (
     <View style={styles.header}>
       {/* Toggle the home mode from the leading action button. */}
@@ -62,7 +62,7 @@ const HomeHeader = () => {
       </View>
     </View>
   );
-};
+});
 
 const styles = StyleSheet.create({
   header: {
@@ -106,5 +106,7 @@ const styles = StyleSheet.create({
     height: Height.height_48,
   },
 });
+
+HomeHeader.displayName = "HomeHeader";
 
 export default HomeHeader;

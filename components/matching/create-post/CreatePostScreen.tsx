@@ -48,6 +48,7 @@ import {
   reverseGeocode,
   type Coords,
   type NearbyPlace,
+  type NearbyPlaceSortBy,
 } from "@/services/location/locationService";
 import CreatePostLocationPickerModal from "@/components/matching/create-post/CreatePostLocationPickerModal";
 import { createGathering } from "@/services/gathering/gatheringService";
@@ -249,7 +250,7 @@ export default function CreatePostScreen() {
     }
   };
 
-  const handleRecommendNearby = async () => {
+  const fetchNearbyPlaces = async (sortBy: NearbyPlaceSortBy) => {
     if (!form.exerciseType) {
       Alert.alert("운동 종목 미선택", "운동 종목을 먼저 선택해주세요.");
       return;
@@ -257,7 +258,10 @@ export default function CreatePostScreen() {
 
     setIsLocationLoading(true);
     try {
-      const places = await getNearbyPlaces(form.exerciseType);
+      const places = await getNearbyPlaces(form.exerciseType, {
+        coords: locationCoords,
+        sortBy,
+      });
       if (places.length === 0) {
         Alert.alert("주변 스팟 없음", "주변에 등록된 장소가 없어요.");
         return;
@@ -272,6 +276,14 @@ export default function CreatePostScreen() {
     } finally {
       setIsLocationLoading(false);
     }
+  };
+
+  const handleRecommendNearby = () => {
+    Alert.alert("추천 기준 선택", "주변 운동 장소를 어떤 기준으로 볼까요?", [
+      { text: "별점순", onPress: () => fetchNearbyPlaces("rating") },
+      { text: "거리순", onPress: () => fetchNearbyPlaces("distance") },
+      { text: "취소", style: "cancel" },
+    ]);
   };
 
   const handleSubmit = async () => {
@@ -536,13 +548,20 @@ export default function CreatePostScreen() {
       <CreatePostChoiceModal
         visible={isNearbyModalVisible}
         title="주변 스팟 선택"
-        options={nearbyPlaces.map((p) => ({ label: p.name, value: p.name }))}
-        selectedValue={form.location}
+        options={nearbyPlaces.map((p) => ({
+          label: `${p.name}\n★ ${p.rating.toFixed(1)} · ${p.distance}`,
+          value: p.id,
+        }))}
+        selectedValue={
+          nearbyPlaces.find((p) => p.name === form.location)?.id ?? ""
+        }
         onClose={() => setIsNearbyModalVisible(false)}
         onSelect={(value) => {
-          const place = nearbyPlaces.find((p) => p.name === value);
-          updateForm("location", value);
-          if (place) setLocationCoords(place.coords);
+          const place = nearbyPlaces.find((p) => p.id === value);
+          if (place) {
+            updateForm("location", place.name);
+            setLocationCoords(place.coords);
+          }
           setIsNearbyModalVisible(false);
         }}
       />

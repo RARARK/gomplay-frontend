@@ -328,6 +328,11 @@ export default function PostApplyScreen({ postId }: PostApplyScreenProps) {
           <Text style={styles.sectionLabel}>장소</Text>
           <CreatePostLocationCard
             location={post.venue}
+            locationCoords={
+              post.venueLat != null && post.venueLng != null
+                ? { lat: post.venueLat, lng: post.venueLng }
+                : undefined
+            }
             onMapPress={() =>
               Linking.openURL(
                 `https://maps.google.com/maps?q=${encodeURIComponent(post.venue)}`,
@@ -348,10 +353,10 @@ export default function PostApplyScreen({ postId }: PostApplyScreenProps) {
           </View>
         </View>
 
-        {!isOwner && post.currentParticipants > 0 ? (
+        {!isOwner ? (
           <View style={styles.section}>
             <Text style={styles.sectionLabel}>
-              참가 인원 {post.currentParticipants}/{post.maxParticipants}
+              참가 인원 {post.currentParticipants - 1}/{post.maxParticipants}
             </Text>
           </View>
         ) : null}

@@ -128,7 +128,7 @@ export default function EditPersonalityRoute() {
           headerTitle={SPORTS_STEP.headerTitle}
           title={SPORTS_STEP.title}
           description={SPORTS_STEP.description}
-          progressRatio={SPORTS_STEP.progressRatio}
+          progressRatio={1}
           options={SPORTS_STEP.options}
           selectedOptionIds={selectedSports}
           onSelectOption={isSaving ? () => {} : handleSportToggle}

@@ -142,3 +142,19 @@ export type CreateGatheringResponse = {
   status: GatheringStatus;
   createdAt: string;
 };
+
+export type GatheringRecommendItem = {
+  id: number;
+  title: string;
+  sportType: string;
+  difficulty: string;
+  venue: string;
+  scheduledAt: string;
+  scheduledEndAt: string;
+  maxParticipants: number;
+  currentParticipants: number;
+  tags: string | null;
+  status: GatheringStatus;
+  hostProfileImageUrl: string | null;
+  score: number;
+};

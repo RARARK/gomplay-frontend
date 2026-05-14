@@ -1,8 +1,8 @@
 import * as React from "react";
+import { Image } from "expo-image";
 import {
   StyleSheet,
   Text,
-  ImageBackground,
   View,
   Pressable,
   PanResponder,
@@ -22,7 +22,7 @@ const FALLBACK_BANNER: Banner = {
 };
 
 // Receive banner data from the parent so this component only handles banner UI.
-const HeroBanner = ({ banners = [] }: HeroBannerProps) => {
+const HeroBanner = React.memo(({ banners = [] }: HeroBannerProps) => {
   const [index, setIndex] = React.useState(0);
 
   // Keep the current index in bounds when the banner list changes.
@@ -77,31 +77,30 @@ const HeroBanner = ({ banners = [] }: HeroBannerProps) => {
   const bannerImageSource = currentBanner.image ?? FALLBACK_BANNER.image;
 
   return (
-    <View {...panResponder.panHandlers}>
-      <ImageBackground
-        style={styles.heroBanner}
-        imageStyle={styles.heroBannerImage}
+    <View {...panResponder.panHandlers} style={styles.heroBanner}>
+      <Image
         source={bannerImageSource}
-      >
-        <View style={styles.overlay}>
-          <Pressable onPress={prev} hitSlop={10} style={styles.arrowButton}>
-            <BannerImage1 style={styles.leftArrow} width={48} height={48} />
-          </Pressable>
+        style={StyleSheet.absoluteFill}
+        contentFit="cover"
+      />
+      <View style={styles.overlay}>
+        <Pressable onPress={prev} hitSlop={10} style={styles.arrowButton}>
+          <BannerImage1 style={styles.leftArrow} width={48} height={48} />
+        </Pressable>
 
-          <View style={styles.textContainer}>
-            {currentBanner.text ? (
-              <Text style={styles.bannerText}>{currentBanner.text}</Text>
-            ) : null}
-          </View>
-
-          <Pressable onPress={next} hitSlop={10} style={styles.arrowButton}>
-            <BannerImage1 style={styles.rightArrow} width={48} height={48} />
-          </Pressable>
+        <View style={styles.textContainer}>
+          {currentBanner.text ? (
+            <Text style={styles.bannerText}>{currentBanner.text}</Text>
+          ) : null}
         </View>
-      </ImageBackground>
+
+        <Pressable onPress={next} hitSlop={10} style={styles.arrowButton}>
+          <BannerImage1 style={styles.rightArrow} width={48} height={48} />
+        </Pressable>
+      </View>
     </View>
   );
-};
+});
 
 const styles = StyleSheet.create({
   heroBanner: {
@@ -153,5 +152,7 @@ const styles = StyleSheet.create({
     maxWidth: "100%",
   },
 });
+
+HeroBanner.displayName = "HeroBanner";
 
 export default HeroBanner;

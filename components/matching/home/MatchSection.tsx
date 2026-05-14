@@ -1,23 +1,84 @@
 import * as React from "react";
-import { router } from "expo-router";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { router, useFocusEffect } from "expo-router";
+import { ActivityIndicator, FlatList, StyleSheet, Text, View } from "react-native";
 import RecommendationSectionHeader from "./RecommendationSectionHeader";
 import ModernMatchCard from "./ModernMatchCard";
-import { Gap } from "@/constants/locofyHomeStyles";
-import { modernRecommendationCards } from "./homeMockData";
+import { Color, Gap } from "@/constants/locofyHomeStyles";
+import { getGatheringRecommendations } from "@/services/gathering/gatheringService";
+import { getSportImage } from "@/lib/utils/sportImageMap";
+import type { GatheringRecommendItem } from "@/types/domain/gathering";
 import type { ModernMatchCardProps } from "@/types/ui/homeCards";
 
-const MatchSection = () => {
-  const handleHeaderPress = () => {
-    router.push("/posts" as any);
-  };
+const DAY_LABELS = ["일", "월", "화", "수", "목", "금", "토"];
 
-  const handleCardPress = () => {
-    router.push("/posts" as any);
-  };
+function mapRecommendToCard(
+  item: GatheringRecommendItem,
+  onPress: () => void,
+): ModernMatchCardProps {
+  const start = new Date(item.scheduledAt);
+  const end = new Date(item.scheduledEndAt);
 
-  const cards: ModernMatchCardProps[] = modernRecommendationCards.map(
-    (card) => ({ ...card, onPress: handleCardPress })
+  const month = String(start.getMonth() + 1).padStart(2, "0");
+  const day = String(start.getDate()).padStart(2, "0");
+  const date = `${month}.${day}`;
+  const dayOfWeek = DAY_LABELS[start.getDay()];
+
+  const startHH = String(start.getHours()).padStart(2, "0");
+  const startMM = String(start.getMinutes()).padStart(2, "0");
+  const endHH = String(end.getHours()).padStart(2, "0");
+  const endMM = String(end.getMinutes()).padStart(2, "0");
+  const time = `${startHH}:${startMM} ~ ${endHH}:${endMM}`;
+
+  const tags = item.tags
+    ? item.tags
+        .split("#")
+        .map((t) => t.trim())
+        .filter(Boolean)
+        .map((t) => `#${t}`)
+    : [];
+
+  return {
+    imageSource: getSportImage(item.sportType),
+    date,
+    dayOfWeek,
+    sport: item.sportType,
+    time,
+    location: item.venue,
+    tags,
+    difficulty: item.difficulty,
+    currentParticipants: item.currentParticipants,
+    maxParticipants: item.maxParticipants,
+    onPress,
+  };
+}
+
+const MatchSection = React.memo(() => {
+  const [items, setItems] = React.useState<GatheringRecommendItem[]>([]);
+  const [loading, setLoading] = React.useState(true);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      let active = true;
+      setLoading(true);
+      getGatheringRecommendations()
+        .then((data) => { if (active) setItems(data); })
+        .catch(() => { if (active) setItems([]); })
+        .finally(() => { if (active) setLoading(false); });
+      return () => { active = false; };
+    }, []),
+  );
+
+  const handleHeaderPress = React.useCallback(() => {
+    router.push("/posts" as any);
+  }, []);
+
+  const handleCardPress = React.useCallback((id: number) => {
+    router.push(`/posts/${id}` as any);
+  }, []);
+
+  const cardData = React.useMemo(
+    () => items.map((item) => ({ ...mapRecommendToCard(item, () => handleCardPress(item.id)), id: item.id })),
+    [items, handleCardPress],
   );
 
   return (
@@ -30,22 +91,30 @@ const MatchSection = () => {
         <Text style={styles.subtitle}>관심 있는 운동을 선택해보세요</Text>
       </View>
 
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        bounces={false}
-        overScrollMode="never"
-        contentContainerStyle={styles.cardList}
-      >
-        {cards.map((card, index) => (
-          <View key={`${card.date}-${index}`} style={styles.cardItem}>
-            <ModernMatchCard {...card} />
-          </View>
-        ))}
-      </ScrollView>
+      {loading ? (
+        <ActivityIndicator color={Color.primary100} style={styles.loader} />
+      ) : items.length === 0 ? (
+        <Text style={styles.empty}>추천 모집글이 없습니다.</Text>
+      ) : (
+        <FlatList
+          horizontal
+          data={cardData}
+          keyExtractor={(item) => String(item.id)}
+          renderItem={({ item: { id: _id, ...cardProps } }) => (
+            <View style={styles.cardItem}>
+              <ModernMatchCard {...cardProps} />
+            </View>
+          )}
+          showsHorizontalScrollIndicator={false}
+          bounces={false}
+          overScrollMode="never"
+          contentContainerStyle={styles.cardList}
+          removeClippedSubviews
+        />
+      )}
     </View>
   );
-};
+});
 
 const styles = StyleSheet.create({
   container: {
@@ -69,6 +138,18 @@ const styles = StyleSheet.create({
   },
   cardItem: {
     marginRight: Gap.gap_14,
+  },
+  loader: {
+    marginVertical: 24,
+    alignSelf: "center",
+  },
+  empty: {
+    fontSize: 13,
+    lineHeight: 18,
+    color: "#9CA3AF",
+    fontWeight: "500",
+    marginVertical: 24,
+    textAlign: "center",
   },
 });
 

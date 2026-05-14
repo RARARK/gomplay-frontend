@@ -9,6 +9,7 @@ import type {
   GatheringListQuery,
   GatheringListResponse,
   GatheringPostDetailResponse,
+  GatheringRecommendItem,
   JoinGatheringResponse,
   RejectParticipantResponse,
   UpdateGatheringRequest,
@@ -321,6 +322,39 @@ export async function rejectParticipant(
     }
 
     throw new ApiError("신청 거절에 실패했습니다.");
+  }
+}
+
+export async function getGatheringRecommendations(): Promise<GatheringRecommendItem[]> {
+  try {
+    const res = await apiClient.get<GatheringRecommendItem[]>("/api/gathering/recommend", {
+      headers: { "Cache-Control": "no-cache" },
+    });
+    return res.data;
+  } catch (error) {
+    if (error instanceof ApiError) throw error;
+
+    if (isAxiosError(error)) {
+      const errorBody = getBackendErrorBody(error.response?.data);
+
+      if (errorBody?.code === 4000) {
+        throw new ApiError("데이터베이스 연결에 실패하였습니다.");
+      }
+
+      if (error.response?.status === 400) {
+        throw new ApiError(errorBody?.message ?? "유저를 찾을 수 없습니다.");
+      }
+
+      if (error.response?.status === 500) {
+        throw new ApiError("서버 내부 오류", "Internal server error");
+      }
+
+      if (errorBody?.message) {
+        throw new ApiError(errorBody.message);
+      }
+    }
+
+    throw new ApiError("추천 모집글을 불러올 수 없습니다.");
   }
 }
 

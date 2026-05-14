@@ -25,6 +25,14 @@ const DEPARTMENT_LABEL = "학과";
 const DEPARTMENT_PLACEHOLDER = "학과명";
 const SUBMIT_LABEL = "다음";
 
+export type SignupFieldErrors = {
+  schoolEmail?: string;
+  password?: string;
+  name?: string;
+  studentId?: string;
+  department?: string;
+};
+
 type SignupScreenContentProps = {
   schoolEmail: string;
   password: string;
@@ -40,6 +48,7 @@ type SignupScreenContentProps = {
   onClose: () => void;
   isLoading?: boolean;
   errorMessage?: string | null;
+  fieldErrors?: SignupFieldErrors;
 };
 
 export default function SignupScreenContent({
@@ -57,6 +66,7 @@ export default function SignupScreenContent({
   onClose,
   isLoading = false,
   errorMessage,
+  fieldErrors = {},
 }: SignupScreenContentProps) {
   return (
     <ScrollView
@@ -86,6 +96,7 @@ export default function SignupScreenContent({
           onChangeText={onChangeSchoolEmail}
           keyboardType="email-address"
           editable={!isLoading}
+          errorMessage={fieldErrors.schoolEmail}
         />
         <SignupField
           label={PASSWORD_LABEL}
@@ -94,6 +105,7 @@ export default function SignupScreenContent({
           onChangeText={onChangePassword}
           secureTextEntry
           editable={!isLoading}
+          errorMessage={fieldErrors.password}
         />
         <SignupField
           label={NAME_LABEL}
@@ -101,6 +113,7 @@ export default function SignupScreenContent({
           value={name}
           onChangeText={onChangeName}
           editable={!isLoading}
+          errorMessage={fieldErrors.name}
         />
         <SignupField
           label={STUDENT_ID_LABEL}
@@ -109,6 +122,7 @@ export default function SignupScreenContent({
           onChangeText={onChangeStudentId}
           keyboardType="number-pad"
           editable={!isLoading}
+          errorMessage={fieldErrors.studentId}
         />
         <SignupField
           label={DEPARTMENT_LABEL}
@@ -116,6 +130,7 @@ export default function SignupScreenContent({
           value={department}
           onChangeText={onChangeDepartment}
           editable={!isLoading}
+          errorMessage={fieldErrors.department}
         />
       </View>
 
