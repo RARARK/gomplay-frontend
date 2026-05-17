@@ -24,7 +24,7 @@ import type {
   UserTimetableRange,
   UserTimetableState,
 } from "@/types/domain/user";
-import { compressTimetableState, createEmptyTimetableState } from "@/utils/timetable";
+import { compressTimetableState, createDefaultTimetableState } from "@/utils/timetable";
 import { mapTutorialToSurvey } from "@/utils/mapTutorialToSurvey";
 
 const isQuestionStep = (step: TutorialStep): step is TutorialQuestionStep =>
@@ -38,13 +38,14 @@ export default function TutorialScreen() {
   }>();
   const setPendingSurvey = useSurveyStore((s) => s.setPendingSurvey);
   const setPendingSchedule = useSurveyStore((s) => s.setPendingSchedule);
+  const setTutorialSelections = useSurveyStore((s) => s.setTutorialSelections);
   const [currentStep, setCurrentStep] =
     React.useState<TutorialStep>("exerciseStyle");
   const [selectedQuestionOptions, setSelectedQuestionOptions] =
     React.useState(INITIAL_TUTORIAL_SELECTIONS);
   const [selectedSports, setSelectedSports] = React.useState<string[]>([]);
   const [timetable, setTimetable] = React.useState<UserTimetableState>(() =>
-    createEmptyTimetableState(),
+    createDefaultTimetableState(),
   );
   const signupParams = React.useMemo(
     () => ({
@@ -56,13 +57,15 @@ export default function TutorialScreen() {
   );
 
   const saveSurveyAndNavigate = (scheduleRanges?: UserTimetableRange[]) => {
-    const mapped = mapTutorialToSurvey({
+    const selections = {
       exerciseStyle: selectedQuestionOptions.exerciseStyle,
       intensity: selectedQuestionOptions.intensity,
       motivation: selectedQuestionOptions.motivation,
       sports: selectedSports,
-    });
+    };
+    const mapped = mapTutorialToSurvey(selections);
     if (mapped) setPendingSurvey(mapped);
+    setTutorialSelections(selections);
     if (scheduleRanges && scheduleRanges.length > 0) {
       setPendingSchedule(scheduleRanges);
     }
@@ -103,10 +106,6 @@ export default function TutorialScreen() {
     saveSurveyAndNavigate(ranges.length > 0 ? ranges : compressTimetableState(timetable));
   };
 
-  const handleScheduleSkip = () => {
-    saveSurveyAndNavigate();
-  };
-
   const handleBack = () => {
     const previousStep = PREVIOUS_STEP_BY_STEP[currentStep];
 
@@ -142,13 +141,11 @@ export default function TutorialScreen() {
           value={timetable}
           onChange={setTimetable}
           onSave={handleScheduleSave}
-          onSkip={handleScheduleSkip}
           onBack={handleBack}
           headerTitle={SCHEDULE_STEP.headerTitle}
           title={SCHEDULE_STEP.title}
           description={SCHEDULE_STEP.description}
           saveLabel={SCHEDULE_STEP.saveLabel}
-          skipLabel={SCHEDULE_STEP.skipLabel}
           progressRatio={SCHEDULE_STEP.progressRatio}
         />
       </SafeAreaView>

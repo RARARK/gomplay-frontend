@@ -12,10 +12,14 @@ import {
 
 import {
   checkIn,
+  getAttendanceCalendar,
   getAttendanceStatus,
 } from "@/services/attendance/attendanceService";
 import { useAuthStore } from "@/stores/auth/authStore";
-import type { AttendanceStatus } from "@/types/domain/attendance";
+import type {
+  AttendanceCalendarResponse,
+  AttendanceStatus,
+} from "@/types/domain/attendance";
 
 const DAY_LABELS = ["일", "월", "화", "수", "목", "금", "토"];
 
@@ -37,7 +41,10 @@ export default function AttendanceScreen() {
   const today = new Date();
 
   const [status, setStatus] = React.useState<AttendanceStatus | null>(null);
+  const [calendarData, setCalendarData] =
+    React.useState<AttendanceCalendarResponse | null>(null);
   const [isLoading, setIsLoading] = React.useState(true);
+  const [isCalendarLoading, setIsCalendarLoading] = React.useState(false);
   const [isCheckingIn, setIsCheckingIn] = React.useState(false);
   const [viewYear, setViewYear] = React.useState(today.getFullYear());
   const [viewMonth, setViewMonth] = React.useState(today.getMonth());
@@ -51,9 +58,26 @@ export default function AttendanceScreen() {
     }
   }, [userId]);
 
+  const loadCalendar = React.useCallback(
+    async (year: number, month: number) => {
+      setIsCalendarLoading(true);
+      try {
+        const data = await getAttendanceCalendar(year, month + 1);
+        setCalendarData(data);
+      } finally {
+        setIsCalendarLoading(false);
+      }
+    },
+    [],
+  );
+
   React.useEffect(() => {
     loadStatus();
   }, [loadStatus]);
+
+  React.useEffect(() => {
+    loadCalendar(viewYear, viewMonth);
+  }, [loadCalendar, viewYear, viewMonth]);
 
   const handleCheckIn = async () => {
     if (isCheckingIn || status?.todayCheckedIn) return;
@@ -70,6 +94,7 @@ export default function AttendanceScreen() {
             }
           : prev,
       );
+      await loadCalendar(viewYear, viewMonth);
     } catch {
       await loadStatus();
     } finally {
@@ -81,7 +106,7 @@ export default function AttendanceScreen() {
     ? parseDateParts(status.serverDate)
     : { year: today.getFullYear(), month: today.getMonth() + 1, day: today.getDate() };
 
-  const checkedInSet = new Set(status?.checkedInDates ?? []);
+  const checkedInSet = new Set(calendarData?.attendanceDates ?? []);
   const isCurrentMonth =
     viewYear === serverParts.year && viewMonth === serverParts.month - 1;
 
@@ -121,9 +146,7 @@ export default function AttendanceScreen() {
     return checkedInSet.has(dateStr);
   };
 
-  const monthCheckedCount = cells.filter(
-    (day) => day !== null && isCheckedIn(day),
-  ).length;
+  const monthCheckedCount = calendarData?.monthlyCount ?? 0;
 
   return (
     <ScrollView
@@ -212,13 +235,18 @@ export default function AttendanceScreen() {
 
             {/* 날짜 그리드 */}
             <View style={styles.calendarGrid}>
+              {isCalendarLoading && (
+                <View style={styles.calendarLoadingOverlay}>
+                  <ActivityIndicator color="#4C5BE2" size="small" />
+                </View>
+              )}
               {cells.map((day, idx) => {
                 if (day === null) {
                   return <View key={`empty-${idx}`} style={styles.dayCell} />;
                 }
                 const todayCell = isToday(day);
                 const checked = isCheckedIn(day);
-                const isSunday = idx % 7 === 0;
+                const isSunday = new Date(viewYear, viewMonth, day).getDay() === 0;
                 return (
                   <View key={day} style={styles.dayCell}>
                     <View
@@ -421,6 +449,18 @@ const styles = StyleSheet.create({
   calendarGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
+    position: "relative",
+  },
+  calendarLoadingOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(255,255,255,0.6)",
+    zIndex: 1,
   },
   dayCell: {
     width: `${100 / 7}%` as `${number}%`,

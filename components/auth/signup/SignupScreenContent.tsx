@@ -10,6 +10,9 @@ import {
 } from "react-native";
 
 import SignupField from "./SignupField";
+import CollegePicker from "./CollegePicker";
+import DepartmentPicker from "./DepartmentPicker";
+import AdmissionYearPicker from "./AdmissionYearPicker";
 
 const CLOSE_LABEL = "회원가입 닫기";
 const TITLE = "회원가입";
@@ -17,32 +20,39 @@ const EMAIL_LABEL = "이메일 주소";
 const EMAIL_PLACEHOLDER = "단국대 이메일 주소 입력";
 const PASSWORD_LABEL = "비밀번호";
 const PASSWORD_PLACEHOLDER = "영문, 숫자, 특수문자 포함 8자리 이상";
+const PASSWORD_CONFIRM_LABEL = "비밀번호 확인";
+const PASSWORD_CONFIRM_PLACEHOLDER = "비밀번호를 한 번 더 입력";
 const NAME_LABEL = "이름";
 const NAME_PLACEHOLDER = "이름";
-const STUDENT_ID_LABEL = "학번";
-const STUDENT_ID_PLACEHOLDER = "학번";
-const DEPARTMENT_LABEL = "학과";
-const DEPARTMENT_PLACEHOLDER = "학과명";
 const SUBMIT_LABEL = "다음";
 
 export type SignupFieldErrors = {
   schoolEmail?: string;
   password?: string;
+  passwordConfirm?: string;
   name?: string;
   studentId?: string;
+  college?: string;
   department?: string;
 };
 
 type SignupScreenContentProps = {
   schoolEmail: string;
   password: string;
+  passwordConfirm: string;
   name: string;
   studentId: string;
+  college: string;
   department: string;
   onChangeSchoolEmail: (value: string) => void;
+  onBlurSchoolEmail: () => void;
   onChangePassword: (value: string) => void;
+  onBlurPassword: () => void;
+  onChangePasswordConfirm: (value: string) => void;
+  onBlurPasswordConfirm: () => void;
   onChangeName: (value: string) => void;
   onChangeStudentId: (value: string) => void;
+  onChangeCollege: (value: string) => void;
   onChangeDepartment: (value: string) => void;
   onSubmit: () => void;
   onClose: () => void;
@@ -54,13 +64,20 @@ type SignupScreenContentProps = {
 export default function SignupScreenContent({
   schoolEmail,
   password,
+  passwordConfirm,
   name,
   studentId,
+  college,
   department,
   onChangeSchoolEmail,
+  onBlurSchoolEmail,
   onChangePassword,
+  onBlurPassword,
+  onChangePasswordConfirm,
+  onBlurPasswordConfirm,
   onChangeName,
   onChangeStudentId,
+  onChangeCollege,
   onChangeDepartment,
   onSubmit,
   onClose,
@@ -94,6 +111,7 @@ export default function SignupScreenContent({
           placeholder={EMAIL_PLACEHOLDER}
           value={schoolEmail}
           onChangeText={onChangeSchoolEmail}
+          onBlur={onBlurSchoolEmail}
           keyboardType="email-address"
           editable={!isLoading}
           errorMessage={fieldErrors.schoolEmail}
@@ -103,9 +121,20 @@ export default function SignupScreenContent({
           placeholder={PASSWORD_PLACEHOLDER}
           value={password}
           onChangeText={onChangePassword}
+          onBlur={onBlurPassword}
           secureTextEntry
           editable={!isLoading}
           errorMessage={fieldErrors.password}
+        />
+        <SignupField
+          label={PASSWORD_CONFIRM_LABEL}
+          placeholder={PASSWORD_CONFIRM_PLACEHOLDER}
+          value={passwordConfirm}
+          onChangeText={onChangePasswordConfirm}
+          onBlur={onBlurPasswordConfirm}
+          secureTextEntry
+          editable={!isLoading}
+          errorMessage={fieldErrors.passwordConfirm}
         />
         <SignupField
           label={NAME_LABEL}
@@ -115,22 +144,24 @@ export default function SignupScreenContent({
           editable={!isLoading}
           errorMessage={fieldErrors.name}
         />
-        <SignupField
-          label={STUDENT_ID_LABEL}
-          placeholder={STUDENT_ID_PLACEHOLDER}
+        <AdmissionYearPicker
           value={studentId}
-          onChangeText={onChangeStudentId}
-          keyboardType="number-pad"
-          editable={!isLoading}
+          onChange={onChangeStudentId}
           errorMessage={fieldErrors.studentId}
+          disabled={isLoading}
         />
-        <SignupField
-          label={DEPARTMENT_LABEL}
-          placeholder={DEPARTMENT_PLACEHOLDER}
+        <CollegePicker
+          value={college}
+          onChange={onChangeCollege}
+          errorMessage={fieldErrors.college}
+          disabled={isLoading}
+        />
+        <DepartmentPicker
+          college={college}
           value={department}
-          onChangeText={onChangeDepartment}
-          editable={!isLoading}
+          onChange={onChangeDepartment}
           errorMessage={fieldErrors.department}
+          disabled={isLoading}
         />
       </View>
 

@@ -10,3 +10,10 @@ export type CheckInResult = {
   totalPoints: number;
   serverDate: string;
 };
+
+export type AttendanceCalendarResponse = {
+  year: number;
+  month: number;
+  attendanceDates: string[]; // "YYYY-MM-DD"
+  monthlyCount: number;
+};

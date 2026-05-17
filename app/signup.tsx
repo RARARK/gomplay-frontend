@@ -9,31 +9,43 @@ import SignupScreenContent, {
 import { AuthError, signup } from "@/services/auth/authService";
 import { useAuthStore } from "@/stores/auth/authStore";
 
+const DANKOOK_EMAIL_REGEX = /^[A-Za-z0-9._%+-]+@dankook\.ac\.kr$/i;
+const PASSWORD_REGEX = /(?=.*[a-zA-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?])/;
+const DANKOOK_EMAIL_ERROR = "단국대학교 이메일(@dankook.ac.kr)만 사용할 수 있습니다.";
+const PASSWORD_LENGTH_ERROR = "비밀번호는 8자리 이상이어야 합니다.";
+const PASSWORD_COMPLEXITY_ERROR = "영문, 숫자, 특수문자를 모두 포함해야 합니다.";
+const PASSWORD_CONFIRM_ERROR = "비밀번호가 일치하지 않습니다.";
+
 function validate(fields: {
   schoolEmail: string;
   password: string;
+  passwordConfirm: string;
   name: string;
   studentId: string;
+  college: string;
   department: string;
 }): SignupFieldErrors {
   const errors: SignupFieldErrors = {};
+  const schoolEmail = fields.schoolEmail.trim();
 
-  if (!fields.schoolEmail.trim()) {
+  if (!schoolEmail) {
     errors.schoolEmail = "이메일을 입력해주세요.";
-  } else if (!/^[^\s@]+@dankook\.ac\.kr$/.test(fields.schoolEmail.trim())) {
-    errors.schoolEmail = "단국대학교 이메일(@dankook.ac.kr)을 입력해주세요.";
+  } else if (!DANKOOK_EMAIL_REGEX.test(schoolEmail)) {
+    errors.schoolEmail = DANKOOK_EMAIL_ERROR;
   }
 
   if (!fields.password) {
     errors.password = "비밀번호를 입력해주세요.";
   } else if (fields.password.length < 8) {
-    errors.password = "비밀번호는 8자리 이상이어야 합니다.";
-  } else if (
-    !/(?=.*[a-zA-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?])/.test(
-      fields.password,
-    )
-  ) {
-    errors.password = "영문, 숫자, 특수문자를 모두 포함해야 합니다.";
+    errors.password = PASSWORD_LENGTH_ERROR;
+  } else if (!PASSWORD_REGEX.test(fields.password)) {
+    errors.password = PASSWORD_COMPLEXITY_ERROR;
+  }
+
+  if (!fields.passwordConfirm) {
+    errors.passwordConfirm = "비밀번호를 한 번 더 입력해주세요.";
+  } else if (fields.password !== fields.passwordConfirm) {
+    errors.passwordConfirm = PASSWORD_CONFIRM_ERROR;
   }
 
   if (!fields.name.trim()) {
@@ -43,15 +55,17 @@ function validate(fields: {
   }
 
   if (!fields.studentId.trim()) {
-    errors.studentId = "학번을 입력해주세요.";
-  } else if (!/^\d{7,11}$/.test(fields.studentId.trim())) {
-    errors.studentId = "올바른 학번을 입력해주세요. (숫자 7~11자리)";
+    errors.studentId = "입학년도를 선택해주세요.";
+  } else if (!/^\d{4}$/.test(fields.studentId.trim())) {
+    errors.studentId = "올바른 입학년도를 선택해주세요.";
+  }
+
+  if (!fields.college.trim()) {
+    errors.college = "단과대학을 선택해주세요.";
   }
 
   if (!fields.department.trim()) {
-    errors.department = "학과를 입력해주세요.";
-  } else if (fields.department.trim().length < 2) {
-    errors.department = "학과명을 2자 이상 입력해주세요.";
+    errors.department = "학과를 선택해주세요.";
   }
 
   return errors;
@@ -62,17 +76,54 @@ export default function SignupScreen() {
 
   const [schoolEmail, setSchoolEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
+  const [passwordConfirm, setPasswordConfirm] = React.useState("");
   const [name, setName] = React.useState("");
   const [studentId, setStudentId] = React.useState("");
+  const [college, setCollege] = React.useState("");
   const [department, setDepartment] = React.useState("");
   const [isLoading, setIsLoading] = React.useState(false);
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = React.useState<SignupFieldErrors>({});
 
+  const getSchoolEmailError = (value: string) => {
+    const email = value.trim();
+    return email && !DANKOOK_EMAIL_REGEX.test(email) ? DANKOOK_EMAIL_ERROR : undefined;
+  };
+
+  const getPasswordError = (value: string) => {
+    if (!value) return undefined;
+    if (value.length < 8) return PASSWORD_LENGTH_ERROR;
+    return PASSWORD_REGEX.test(value) ? undefined : PASSWORD_COMPLEXITY_ERROR;
+  };
+
+  const getPasswordConfirmError = (nextPassword: string, nextPasswordConfirm: string) => {
+    if (!nextPassword || !nextPasswordConfirm) return undefined;
+    return nextPassword !== nextPasswordConfirm ? PASSWORD_CONFIRM_ERROR : undefined;
+  };
+
+  const validateSchoolEmailOnBlur = () => {
+    setFieldErrors((e) => ({ ...e, schoolEmail: getSchoolEmailError(schoolEmail) }));
+  };
+
+  const validatePasswordConfirmOnBlur = () => {
+    setFieldErrors((e) => ({
+      ...e,
+      passwordConfirm: getPasswordConfirmError(password, passwordConfirm),
+    }));
+  };
+
+  const validatePasswordOnBlur = () => {
+    setFieldErrors((e) => ({
+      ...e,
+      password: getPasswordError(password),
+      passwordConfirm: getPasswordConfirmError(password, passwordConfirm),
+    }));
+  };
+
   const handleSubmit = async () => {
     setErrorMessage(null);
 
-    const errors = validate({ schoolEmail, password, name, studentId, department });
+    const errors = validate({ schoolEmail, password, passwordConfirm, name, studentId, college, department });
     if (Object.keys(errors).length > 0) {
       setFieldErrors(errors);
       return;
@@ -85,8 +136,9 @@ export default function SignupScreen() {
         schoolEmail: schoolEmail.trim(),
         password,
         name: name.trim(),
-        studentId: studentId.trim(),
+        studentId: `${studentId.trim()}학번`,
         department: department.trim(),
+        college: college.trim(),
       });
 
       setPendingCredentials({ schoolEmail: schoolEmail.trim(), password });
@@ -111,13 +163,20 @@ export default function SignupScreen() {
       <SignupScreenContent
         schoolEmail={schoolEmail}
         password={password}
+        passwordConfirm={passwordConfirm}
         name={name}
         studentId={studentId}
+        college={college}
         department={department}
         onChangeSchoolEmail={(v) => { setSchoolEmail(v); setFieldErrors((e) => ({ ...e, schoolEmail: undefined })); }}
-        onChangePassword={(v) => { setPassword(v); setFieldErrors((e) => ({ ...e, password: undefined })); }}
+        onBlurSchoolEmail={validateSchoolEmailOnBlur}
+        onChangePassword={(v) => { setPassword(v); setFieldErrors((e) => ({ ...e, password: undefined, passwordConfirm: undefined })); }}
+        onBlurPassword={validatePasswordOnBlur}
+        onChangePasswordConfirm={(v) => { setPasswordConfirm(v); setFieldErrors((e) => ({ ...e, passwordConfirm: undefined })); }}
+        onBlurPasswordConfirm={validatePasswordConfirmOnBlur}
         onChangeName={(v) => { setName(v); setFieldErrors((e) => ({ ...e, name: undefined })); }}
         onChangeStudentId={(v) => { setStudentId(v); setFieldErrors((e) => ({ ...e, studentId: undefined })); }}
+        onChangeCollege={(v) => { setCollege(v); setDepartment(""); setFieldErrors((e) => ({ ...e, college: undefined, department: undefined })); }}
         onChangeDepartment={(v) => { setDepartment(v); setFieldErrors((e) => ({ ...e, department: undefined })); }}
         onSubmit={handleSubmit}
         onClose={() => router.back()}

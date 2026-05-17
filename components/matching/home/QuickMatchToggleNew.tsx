@@ -3,6 +3,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LinearGradient } from "expo-linear-gradient";
 import * as React from "react";
 import {
+  Animated,
   Modal,
   Pressable,
   TouchableOpacity,
@@ -17,6 +18,7 @@ type Props = {
   state?: HomeStatusVariant;
   isOn?: boolean;
   onChange?: (value: boolean) => void;
+  disabled?: boolean;
 };
 
 const CARD_H = 112;
@@ -53,9 +55,10 @@ const track = StyleSheet.create({
   thumbRight: { alignSelf: "flex-end" },
 });
 
-const QuickMatchToggleNew = React.memo(function QuickMatchToggleNew({ state, isOn: controlledIsOn, onChange }: Props) {
+const QuickMatchToggleNew = React.memo(function QuickMatchToggleNew({ state, isOn: controlledIsOn, onChange, disabled }: Props) {
   const userId = useAuthStore((store) => store.userId);
   const isOn = controlledIsOn ?? state === "Matching";
+  const shakeAnim = React.useRef(new Animated.Value(0)).current;
   const [isPointNoticeVisible, setIsPointNoticeVisible] = React.useState(false);
   const [skipPointNotice, setSkipPointNotice] = React.useState(false);
   const [draftSkipPointNotice, setDraftSkipPointNotice] = React.useState(false);
@@ -90,7 +93,23 @@ const QuickMatchToggleNew = React.memo(function QuickMatchToggleNew({ state, isO
     };
   }, [QUICK_MATCH_MODAL_KEY]);
 
+  const triggerShake = React.useCallback(() => {
+    shakeAnim.setValue(0);
+    Animated.sequence([
+      Animated.timing(shakeAnim, { toValue: 10, duration: 50, useNativeDriver: true }),
+      Animated.timing(shakeAnim, { toValue: -10, duration: 50, useNativeDriver: true }),
+      Animated.timing(shakeAnim, { toValue: 8, duration: 50, useNativeDriver: true }),
+      Animated.timing(shakeAnim, { toValue: -8, duration: 50, useNativeDriver: true }),
+      Animated.timing(shakeAnim, { toValue: 4, duration: 40, useNativeDriver: true }),
+      Animated.timing(shakeAnim, { toValue: 0, duration: 40, useNativeDriver: true }),
+    ]).start();
+  }, [shakeAnim]);
+
   const handleTogglePress = React.useCallback(() => {
+    if (disabled) {
+      triggerShake();
+      return;
+    }
     if (isOn) {
       onChange?.(false);
       return;
@@ -101,7 +120,7 @@ const QuickMatchToggleNew = React.memo(function QuickMatchToggleNew({ state, isO
     }
     setDraftSkipPointNotice(false);
     setIsPointNoticeVisible(true);
-  }, [isOn, skipPointNotice, onChange]);
+  }, [disabled, isOn, skipPointNotice, onChange, triggerShake]);
 
   const handleConfirmQuickMatch = React.useCallback(async () => {
     if (draftSkipPointNotice && QUICK_MATCH_MODAL_KEY) {
@@ -120,7 +139,11 @@ const QuickMatchToggleNew = React.memo(function QuickMatchToggleNew({ state, isO
   const content = (
     <>
       <View style={[styles.iconWrap, isOn ? styles.iconWrapOn : styles.iconWrapOff]}>
-        <Ionicons name="flash" size={30} color={isOn ? "#FCD34D" : "#9CA3AF"} />
+        <Ionicons
+          name={disabled ? "lock-closed" : "flash"}
+          size={disabled ? 24 : 30}
+          color={isOn ? "#FCD34D" : "#9CA3AF"}
+        />
       </View>
 
       <View style={styles.textBlock}>
@@ -131,18 +154,20 @@ const QuickMatchToggleNew = React.memo(function QuickMatchToggleNew({ state, isO
         <View style={styles.statusRow}>
           <View style={[styles.dot, isOn ? styles.dotOn : styles.dotOff]} />
           <Text style={[styles.statusText, isOn ? styles.statusOn : styles.statusOff]}>
-            {isOn ? "공강 중 · 자동 매칭 활성화" : "공강 중 · 매칭 비활성화"}
+            {disabled ? "시간표 미설정" : isOn ? "공강 중 · 자동 매칭 활성화" : "공강 중 · 매칭 비활성화"}
           </Text>
         </View>
 
         <View style={[styles.helperPill, isOn ? styles.helperPillOn : styles.helperPillOff]}>
           <Ionicons
-            name="time-outline"
+            name={disabled ? "calendar-outline" : "time-outline"}
             size={11}
             color={isOn ? "rgba(255,255,255,0.8)" : "#9CA3AF"}
           />
           <Text style={[styles.helperText, isOn ? styles.helperTextOn : styles.helperTextOff]}>
-            {isOn
+            {disabled
+              ? "시간표를 먼저 입력해주세요"
+              : isOn
               ? "보다 빠르게 파트너를 찾아드려요"
               : "직접 원하는 시간에 매칭할 수 있어요"}
           </Text>
@@ -154,14 +179,15 @@ const QuickMatchToggleNew = React.memo(function QuickMatchToggleNew({ state, isO
   );
 
   return (
+    <Animated.View style={{ transform: [{ translateX: shakeAnim }] }}>
     <TouchableOpacity
       accessibilityRole="switch"
-      accessibilityState={{ checked: isOn }}
-      activeOpacity={0.88}
+      accessibilityState={{ checked: isOn, disabled }}
+      activeOpacity={disabled ? 1 : 0.88}
       onPress={handleTogglePress}
-      style={[styles.cardOuter, isOn ? styles.cardOuterOn : styles.cardOuterOff]}
+      style={[styles.cardOuter, isOn ? styles.cardOuterOn : styles.cardOuterOff, disabled && styles.cardOuterDisabled]}
     >
-      {isOn ? (
+      {isOn && !disabled ? (
         <LinearGradient
           colors={["#7C3AED", "#4F46E5"]}
           start={{ x: 0, y: 0 }}
@@ -171,7 +197,7 @@ const QuickMatchToggleNew = React.memo(function QuickMatchToggleNew({ state, isO
           {content}
         </LinearGradient>
       ) : (
-        <View style={[styles.cardInner, styles.cardInnerOff]}>
+        <View style={[styles.cardInner, styles.cardInnerOff, disabled && styles.cardInnerDisabled]}>
           {content}
         </View>
       )}
@@ -226,6 +252,7 @@ const QuickMatchToggleNew = React.memo(function QuickMatchToggleNew({ state, isO
         </View>
       </Modal>
     </TouchableOpacity>
+    </Animated.View>
   );
 });
 
@@ -256,6 +283,13 @@ const styles = StyleSheet.create({
     backgroundColor: "#F8FAFC",
     borderWidth: 1,
     borderColor: "#E5E7EB",
+  },
+  cardOuterDisabled: {
+    opacity: 0.5,
+  },
+  cardInnerDisabled: {
+    backgroundColor: "#EFEFEF",
+    borderColor: "#D1D5DB",
   },
 
   iconWrap: {

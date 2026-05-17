@@ -6,6 +6,7 @@ type SignupFieldProps = {
   placeholder: string;
   value: string;
   onChangeText: (value: string) => void;
+  onBlur?: () => void;
   secureTextEntry?: boolean;
   keyboardType?: "default" | "email-address" | "number-pad";
   editable?: boolean;
@@ -17,6 +18,7 @@ export default function SignupField({
   placeholder,
   value,
   onChangeText,
+  onBlur,
   secureTextEntry = false,
   keyboardType = "default",
   editable = true,
@@ -35,6 +37,7 @@ export default function SignupField({
         placeholderTextColor="#5C5A63"
         value={value}
         onChangeText={onChangeText}
+        onBlur={onBlur}
         secureTextEntry={secureTextEntry}
         keyboardType={keyboardType}
         autoCapitalize="none"

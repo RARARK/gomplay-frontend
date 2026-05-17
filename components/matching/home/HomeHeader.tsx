@@ -1,3 +1,4 @@
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import Frame91 from "@/assets/home/Frame-91.svg";
 import { Height, Width } from "@/constants/locofyHomeStyles";
 import { Image } from "expo-image";
@@ -23,7 +24,33 @@ const HomeHeader = React.memo(() => {
       </Pressable>
 
       {/* Keep the secondary actions grouped on the right side of the header. */}
-      <View style={styles.rightIcons}>
+      <View style={[styles.rightIcons, { width: Width.width_48 * 4 }]}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Open tutorial result preview"
+          style={styles.iconButton}
+          onPress={() => router.push("/tutorial-result" as any)}
+        >
+          <MaterialCommunityIcons
+            name="clipboard-list-outline"
+            size={26}
+            color="#22C55E"
+          />
+        </Pressable>
+
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Open onboarding preview"
+          style={styles.iconButton}
+          onPress={() => router.push("/onboarding" as any)}
+        >
+          <MaterialCommunityIcons
+            name="rocket-launch"
+            size={26}
+            color="#4C5BE2"
+          />
+        </Pressable>
+
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Open notifications"
@@ -60,7 +87,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   rightIcons: {
-    width: Width.width_48 * 2,
+    width: Width.width_48 * 3,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",

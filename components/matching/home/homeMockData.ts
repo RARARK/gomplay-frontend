@@ -7,19 +7,19 @@ import type { Banner } from "@/types/ui/homeBanner";
 
 export const homeBanners: Banner[] = [
   {
-    id: "banner-1",
+    id: "banner-hero",
     image: require("../../../assets/home/HeroBanner.png"),
-    text: "Just do it!",
+    text: "내 시간표에 맞는\n운동 메이트 찾기",
   },
   {
-    id: "banner-2",
-    image: require("../../../assets/home/adaptive-icon.png"),
-    text: "Weekly Fitness Champion",
+    id: "banner-ad-gym",
+    image: require("../../../assets/home/ad-gym.jpg"),
+    isAd: true,
   },
   {
-    id: "banner-3",
-    image: require("../../../assets/home/icon.png"),
-    text: "Sponsored: Protein Supplement",
+    id: "banner-ad-protein",
+    image: require("../../../assets/home/ad-protien.jpg"),
+    isAd: true,
   },
 ];
 

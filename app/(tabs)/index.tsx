@@ -20,8 +20,7 @@ import {
   setHasScheduleCache,
 } from "@/services/schedule/scheduleService";
 import {
-  acceptMatchRequest,
-  rejectMatchRequest,
+  passCandidate,
   requestPartnerMatch,
   toggleMatching,
 } from "@/services/matching/matchingService";
@@ -39,10 +38,13 @@ export default function HomePage() {
   const setMatching = useAuthStore((s) => s.setMatching);
 
   const candidates = useMatchingStore((s) => s.candidates);
+  const disconnectedCandidateIds = useMatchingStore((s) => s.disconnectedCandidateIds);
   const setCandidates = useMatchingStore((s) => s.setCandidates);
+  const addCandidate = useMatchingStore((s) => s.addCandidate);
   const removeCandidate = useMatchingStore((s) => s.removeCandidate);
-  const pendingMatchRequest = useMatchingStore((s) => s.pendingMatchRequest);
-  const setPendingMatchRequest = useMatchingStore((s) => s.setPendingMatchRequest);
+  const popFromBuffer = useMatchingStore((s) => s.popFromBuffer);
+  const seenCandidateIds = useMatchingStore((s) => s.seenCandidateIds);
+  const addSeenIds = useMatchingStore((s) => s.addSeenIds);
   const lastResolvedMatchRequest = useMatchingStore((s) => s.lastResolvedMatchRequest);
   const clearLastResolvedMatchRequest = useMatchingStore((s) => s.clearLastResolvedMatchRequest);
   const wsConnected = useMatchingStore((s) => s.wsConnected);
@@ -51,6 +53,7 @@ export default function HomePage() {
   const [forceMatchedContent, setForceMatchedContent] = React.useState(false);
   const [forceMatchedContentNew, setForceMatchedContentNew] = React.useState(false);
   const [banners] = React.useState<Banner[]>(homeBanners);
+  const [noMoreCandidates, setNoMoreCandidates] = React.useState(false);
   const isTogglingRef = React.useRef(false);
 
   const [hasTimetable, setHasTimetable] = React.useState<boolean | null>(
@@ -64,36 +67,7 @@ export default function HomePage() {
     toggleMatching(true).catch(() => {});
   }, [wsConnected]);
 
-  // Show alert when another user sends us a match request via WS
-  React.useEffect(() => {
-    if (!pendingMatchRequest) return;
-    const { matchRequestId, expiresAt } = pendingMatchRequest;
-    const secondsLeft = Math.max(
-      0,
-      Math.round((new Date(expiresAt).getTime() - Date.now()) / 1000),
-    );
-    Alert.alert(
-      "매칭 요청",
-      `상대방이 매칭을 요청했어요. ${secondsLeft}초 안에 수락하시겠어요?`,
-      [
-        {
-          text: "거절",
-          style: "cancel",
-          onPress: () => {
-            rejectMatchRequest(matchRequestId).catch(() => {});
-            setPendingMatchRequest(null);
-          },
-        },
-        {
-          text: "수락",
-          onPress: () => {
-            acceptMatchRequest(matchRequestId).catch(() => {});
-            setPendingMatchRequest(null);
-          },
-        },
-      ],
-    );
-  }, [pendingMatchRequest, setPendingMatchRequest]);
+  // Match request notifications are handled by MatchRequestToast in (tabs)/_layout.tsx
 
   // Show alert when the opponent accepts or rejects our match request via WS
   React.useEffect(() => {
@@ -165,6 +139,33 @@ export default function HomePage() {
     }
   }, []);
 
+  const handlePass = React.useCallback(
+    async (userProfileId: number) => {
+      removeCandidate(userProfileId);
+      setNoMoreCandidates(false);
+
+      const next = popFromBuffer();
+      if (next) {
+        addCandidate(next);
+        addSeenIds([next.userProfileId]);
+        return;
+      }
+
+      try {
+        const candidate = await passCandidate(seenCandidateIds);
+        if (candidate) {
+          addCandidate(candidate);
+          addSeenIds([candidate.userProfileId]);
+        } else {
+          setNoMoreCandidates(true);
+        }
+      } catch {
+        // 조용히 실패 — WS로 NEW_CANDIDATE가 올 수도 있음
+      }
+    },
+    [removeCandidate, popFromBuffer, addCandidate, addSeenIds, seenCandidateIds],
+  );
+
   const mappedCandidates = React.useMemo(
     () =>
       candidates.map((c): PartnerCardProps => {
@@ -179,12 +180,13 @@ export default function HomePage() {
           exerciseIntensity: c.exerciseIntensity,
           exerciseReason: c.exerciseReason,
           exerciseTypes: c.exerciseTypes,
-          matchScore: c.compatibilityScore,
+          matchScore: c.compatibilityScore ?? c.matchScore,
+          disconnected: disconnectedCandidateIds.includes(c.userProfileId),
           onAccept: () => handleMatchRequest(c.userProfileId),
-          onReject: () => removeCandidate(c.userProfileId),
+          onReject: () => handlePass(c.userProfileId),
         };
       }),
-    [candidates, handleMatchRequest, removeCandidate],
+    [candidates, disconnectedCandidateIds, handleMatchRequest, handlePass],
   );
 
   const handleToggleQuickMatch = React.useCallback(async (value: boolean) => {
@@ -193,6 +195,7 @@ export default function HomePage() {
       setIsQuickMatchOn(false);
       setMatching(false);
       setCandidates([]);
+      setNoMoreCandidates(false);
       toggleMatching(false).catch(() => {});
       return;
     }
@@ -260,11 +263,18 @@ export default function HomePage() {
           </View>
           <HeroBanner banners={banners} />
 
+          <View style={styles.sectionTitle}>
+            <Text style={styles.sectionTitleText}>오늘 운동 파트너를 찾아보세요</Text>
+            <Text style={styles.sectionTitleSub}>나에게 맞는 운동 파트너를 매칭해드려요</Text>
+          </View>
+
           <HomeStatusSection
             state={currentState}
             isQuickMatchOn={isQuickMatchOn}
             onToggleQuickMatch={handleToggleQuickMatch}
             candidates={mappedCandidates}
+            isToggleDisabled={hasTimetable === false}
+            noMoreCandidates={noMoreCandidates}
           />
 
           <MatchSection />
@@ -333,6 +343,25 @@ const styles = StyleSheet.create({
   },
   testButtonNewText: {
     color: "#E24CB5",
+  },
+  sectionTitle: {
+    paddingHorizontal: 20,
+    gap: 4,
+    marginTop: -8,
+    marginBottom: -8,
+  },
+  sectionTitleText: {
+    fontSize: 20,
+    lineHeight: 28,
+    fontWeight: "800",
+    color: "#111827",
+    letterSpacing: -0.4,
+  },
+  sectionTitleSub: {
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: "500",
+    color: "#9CA3AF",
   },
   fab: {
     position: "absolute",

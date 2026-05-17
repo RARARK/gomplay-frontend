@@ -12,13 +12,11 @@ type TutorialScheduleScreenContentProps = {
   value: UserTimetableState;
   onChange: React.Dispatch<React.SetStateAction<UserTimetableState>>;
   onSave: (ranges: UserTimetableRange[]) => void;
-  onSkip: () => void;
   onBack: () => void;
   headerTitle: string;
   title: string;
   description: string;
   saveLabel: string;
-  skipLabel: string;
   progressRatio: number;
 };
 
@@ -28,13 +26,11 @@ export default function TutorialScheduleScreenContent({
   value,
   onChange,
   onSave,
-  onSkip,
   onBack,
   headerTitle,
   title,
   description,
   saveLabel,
-  skipLabel,
   progressRatio,
 }: TutorialScheduleScreenContentProps) {
   return (
@@ -68,8 +64,6 @@ export default function TutorialScheduleScreenContent({
         title={title}
         subtitle={description}
         saveLabel={saveLabel}
-        secondaryActionLabel={skipLabel}
-        onSecondaryAction={onSkip}
       />
     </View>
   );

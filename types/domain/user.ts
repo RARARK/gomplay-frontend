@@ -43,6 +43,7 @@ export type UserProfile = {
   name: string;
   department: string;
   studentId: string;
+  isVerified?: boolean;
   profileImageUrl: string | null;
   mannerTemperature: number;
   noShowCount: number;

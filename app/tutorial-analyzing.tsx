@@ -34,7 +34,7 @@ export default function TutorialAnalyzingRoute() {
 
     const timeoutId = setTimeout(() => {
       router.replace({
-        pathname: "/tutorial-complete",
+        pathname: "/tutorial-result",
         params: {
           email: typeof params.email === "string" ? params.email : "",
           nickname: typeof params.nickname === "string" ? params.nickname : "",

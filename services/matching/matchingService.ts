@@ -8,8 +8,10 @@ import {
   type CompleteMatchInput,
   type CompleteMatchResult,
   type Match,
+  type MatchCandidate,
   type MatchRequestBody,
   type MatchRequestResponse,
+  type PassCandidateResponse,
   type RejectMatchRequestResponse,
   type ToggleMatchingRequest,
   type ToggleMatchingResponse,
@@ -171,6 +173,29 @@ export async function rejectMatchRequest(
     }
 
     throw new ApiError("매칭 거절에 실패했습니다.");
+  }
+}
+
+export async function passCandidate(
+  excludeIds: number[],
+): Promise<MatchCandidate | null> {
+  try {
+    const res = await apiClient.post<PassCandidateResponse>("/api/match/pass", {
+      excludeIds,
+    });
+    return res.data.data;
+  } catch (error) {
+    if (error instanceof ApiError) throw error;
+    if (isAxiosError(error)) {
+      const errorBody = getBackendErrorBody(error.response?.data);
+      if (errorBody?.code === 4000) {
+        throw new ApiError("데이터베이스 연결에 실패하였습니다.");
+      }
+      if (error.response?.status === 500) {
+        throw new ApiError("서버 내부 오류");
+      }
+    }
+    throw new ApiError("다음 추천을 불러오는 데 실패했습니다.");
   }
 }
 

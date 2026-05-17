@@ -15,6 +15,8 @@ type Props = {
   isQuickMatchOn?: boolean;
   onToggleQuickMatch?: (value: boolean) => void;
   candidates?: PartnerCardProps[];
+  isToggleDisabled?: boolean;
+  noMoreCandidates?: boolean;
 };
 
 // States whose content fits within STATUS_SLOT_HEIGHT.
@@ -36,14 +38,23 @@ const STATUS_SLOT_HEIGHT =
   24 +                                 // textBlock marginTop in Matching
   HomeLayout.statusContentMinHeight;  // 180  →  total 396
 
-function renderContent(state: HomeStatusVariant, candidates: PartnerCardProps[]) {
+function renderContent(
+  state: HomeStatusVariant,
+  candidates: PartnerCardProps[],
+  noMoreCandidates: boolean,
+) {
   switch (state) {
     case "Matched":
       return <MatchedContent partners={candidates.length > 0 ? candidates : undefined} />;
     case "MatchedNew":
       return <MatchedContentNew />;
     case "Matching":
-      return <MatchingContent nearbyCount={candidates.length || 7} />;
+      return (
+        <MatchingContent
+          nearbyCount={candidates.length || 7}
+          exhausted={noMoreCandidates}
+        />
+      );
     case "NoSchedule":
       return <NoScheduleContent />;
     case "Default":
@@ -58,11 +69,16 @@ const HomeStatusSection = React.memo(function HomeStatusSection({
   isQuickMatchOn,
   onToggleQuickMatch,
   candidates = [],
+  isToggleDisabled,
+  noMoreCandidates = false,
 }: Props) {
   const isFixedSlot = FIXED_HEIGHT_VARIANTS.has(state);
   const fadeAnim = React.useRef(new Animated.Value(1)).current;
   const prevState = React.useRef(state);
-  const content = React.useMemo(() => renderContent(state, candidates), [state, candidates]);
+  const content = React.useMemo(
+    () => renderContent(state, candidates, noMoreCandidates),
+    [state, candidates, noMoreCandidates],
+  );
 
   React.useEffect(() => {
     if (prevState.current === state) return;
@@ -84,6 +100,7 @@ const HomeStatusSection = React.memo(function HomeStatusSection({
           state={state}
           isOn={isQuickMatchOn}
           onChange={onToggleQuickMatch}
+          disabled={isToggleDisabled}
         />
       </View>
 

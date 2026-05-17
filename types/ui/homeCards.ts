@@ -17,9 +17,11 @@ export type PartnerCardProps = {
   exerciseTypes?: string[];
   tags?: string[];
   matchScore?: number;
+  matchInsight?: string;
   rejectLabel?: string;
   acceptLabel?: string;
   width?: number;
+  disconnected?: boolean;
   onReject?: () => void;
   onAccept?: () => void;
 };

@@ -7,6 +7,7 @@ import { Color, HomeLayout } from "@/constants/locofyHomeStyles";
 type MatchingContentProps = {
   nearbyCount?: number;
   isFound?: boolean;
+  exhausted?: boolean;
 };
 
 const BEAR_SIZE = HomeLayout.statusIllustrationSize; // 144
@@ -53,6 +54,7 @@ const EllipsisText = React.memo(function EllipsisText() {
 const MatchingContent = React.memo(function MatchingContent({
   nearbyCount = 7,
   isFound = false,
+  exhausted = false,
 }: MatchingContentProps) {
   const spinValue = React.useRef(new Animated.Value(0)).current;
   const dotOpacities = React.useRef(
@@ -149,7 +151,14 @@ const MatchingContent = React.memo(function MatchingContent({
       </View>
 
       <View style={styles.textBlock}>
-        {isFound ? (
+        {exhausted ? (
+          <>
+            <Text style={styles.titleSuccess}>추천할 상대가 없어요</Text>
+            <Text style={styles.description}>
+              새로운 파트너가 나타나면 알려드릴게요
+            </Text>
+          </>
+        ) : isFound ? (
           <>
             <Text style={styles.titleSuccess}>
               {nearbyCount}명의 추천 파트너를 찾았어요!

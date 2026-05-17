@@ -98,6 +98,12 @@ const HeroBanner = React.memo(({ banners = [] }: HeroBannerProps) => {
           <BannerImage1 style={styles.rightArrow} width={48} height={48} />
         </Pressable>
       </View>
+
+      {currentBanner.isAd && (
+        <View style={styles.adBadge}>
+          <Text style={styles.adBadgeText}>AD</Text>
+        </View>
+      )}
     </View>
   );
 });
@@ -150,6 +156,22 @@ const styles = StyleSheet.create({
     color: Color.accent100,
     textAlign: "center",
     maxWidth: "100%",
+  },
+  adBadge: {
+    position: "absolute",
+    top: 8,
+    right: 10,
+    paddingHorizontal: 7,
+    paddingVertical: 3,
+    borderRadius: 6,
+    backgroundColor: "rgba(0,0,0,0.45)",
+  },
+  adBadgeText: {
+    fontSize: 11,
+    lineHeight: 15,
+    fontWeight: "800",
+    color: "#FFFFFF",
+    letterSpacing: 0.8,
   },
 });
 

@@ -132,7 +132,13 @@ const getLabelByValue = <T extends string>(
   value: T,
 ) => options.find((option) => option.value === value)?.label;
 
-export default function PostListScreen() {
+type PostListScreenProps = {
+  showBackButton?: boolean;
+};
+
+export default function PostListScreen({
+  showBackButton = true,
+}: PostListScreenProps) {
   const insets = useSafeAreaInsets();
 
   const [posts, setPosts] = React.useState<GatheringListItem[]>([]);
@@ -264,16 +270,20 @@ export default function PostListScreen() {
     <>
       <View style={styles.screen}>
         <View style={styles.header}>
-          <Pressable
-            accessibilityRole="button"
-            onPress={() => router.back()}
-            style={styles.backButton}
-            hitSlop={10}
-          >
-            <Ionicons name="chevron-back" size={24} color="#070322" />
-          </Pressable>
+          {showBackButton ? (
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => router.back()}
+              style={styles.backButton}
+              hitSlop={10}
+            >
+              <Ionicons name="chevron-back" size={24} color="#070322" />
+            </Pressable>
+          ) : (
+            <View style={styles.backButton} />
+          )}
 
-          <Text style={styles.title} numberOfLines={1}>추천 매칭 리스트</Text>
+          <Text style={styles.title} numberOfLines={1}>매칭 리스트</Text>
 
           <View style={styles.headerSpacer} />
         </View>
@@ -377,8 +387,25 @@ export default function PostListScreen() {
           </View>
         ) : errorMessage ? (
           <View style={styles.stateBox}>
-            <Text style={styles.emptyTitle}>불러오기 실패</Text>
-            <Text style={styles.emptyText}>{errorMessage}</Text>
+            <Text style={styles.emptyTitle}>모집글을 불러오지 못했어요</Text>
+            <Text style={styles.emptyText}>잠시 후 다시 시도해주세요.</Text>
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => {
+                setIsLoading(true);
+                setErrorMessage(null);
+                getGatheringPosts({ size: 50 })
+                  .then((res) => { setPosts(res.content); })
+                  .catch((err) => {
+                    setPosts([]);
+                    setErrorMessage(err instanceof Error ? err.message : "모집글을 불러오지 못했어요.");
+                  })
+                  .finally(() => setIsLoading(false));
+              }}
+              style={styles.retryButton}
+            >
+              <Text style={styles.retryText}>다시 시도</Text>
+            </Pressable>
           </View>
         ) : filteredPosts.length > 0 ? (
           <FlatList
@@ -546,6 +573,19 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     color: "#5C5A63",
     fontWeight: "600",
+  },
+  retryButton: {
+    marginTop: 12,
+    paddingHorizontal: 24,
+    paddingVertical: 10,
+    borderRadius: 8,
+    backgroundColor: "#4C5BE2",
+  },
+  retryText: {
+    fontSize: 14,
+    lineHeight: 18,
+    color: "#FFFFFF",
+    fontWeight: "700",
   },
   fab: {
     position: "absolute",

@@ -24,6 +24,7 @@ import type { Survey } from "@/types/domain/survey";
 const MANNER_TEMPERATURE_COLOR = "#F59E0B";
 const MANNER_TEMPERATURE_TRACK = "#FEF3C7";
 const DEFAULT_PROFILE_IMAGE = require("../../assets/match/Ellipse-12.png");
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 type MannerTemperatureIcon =
   | {
@@ -126,8 +127,11 @@ export default function MyPageScreen() {
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
   const [isMannerDescriptionVisible, setIsMannerDescriptionVisible] =
     React.useState(false);
+  const [isUniversityBadgeExpanded, setIsUniversityBadgeExpanded] =
+    React.useState(false);
   const [survey, setSurvey] = React.useState<Survey | null>(null);
   const mannerDescriptionProgress = React.useRef(new Animated.Value(0)).current;
+  const universityBadgeProgress = React.useRef(new Animated.Value(0)).current;
 
   const loadProfile = React.useCallback(() => {
     let cancelled = false;
@@ -151,6 +155,10 @@ export default function MyPageScreen() {
         }
       });
 
+    getSurvey()
+      .then((data) => { if (!cancelled) setSurvey(data); })
+      .catch(() => {});
+
     return () => {
       cancelled = true;
     };
@@ -171,10 +179,13 @@ export default function MyPageScreen() {
   }, [isMannerDescriptionVisible, mannerDescriptionProgress]);
 
   React.useEffect(() => {
-    getSurvey()
-      .then(setSurvey)
-      .catch(() => {});
-  }, []);
+    Animated.timing(universityBadgeProgress, {
+      toValue: isUniversityBadgeExpanded ? 1 : 0,
+      duration: 180,
+      useNativeDriver: false,
+    }).start();
+  }, [isUniversityBadgeExpanded, universityBadgeProgress]);
+
 
   const handleLogout = async () => {
     await logout();
@@ -186,6 +197,25 @@ export default function MyPageScreen() {
     const url = normalizeImageUrl(profile?.profileImageUrl);
     return url ? { uri: url } : DEFAULT_PROFILE_IMAGE;
   }, [profile?.profileImageUrl]);
+  const hasDankookVerification = profile
+    ? (profile.isVerified ?? true)
+    : false;
+  const universityBadgeWidth = universityBadgeProgress.interpolate({
+    inputRange: [0, 1],
+    outputRange: [30, 124],
+  });
+  const universityBadgeTextWidth = universityBadgeProgress.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, 82],
+  });
+  const universityBadgeTextMargin = universityBadgeProgress.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, 5],
+  });
+  const universityBadgeTextOpacity = universityBadgeProgress.interpolate({
+    inputRange: [0, 0.55, 1],
+    outputRange: [0, 0, 1],
+  });
 
   const mannerTemperature = profile?.mannerTemperature ?? 36.5;
   const mannerTemperatureWidth =
@@ -193,20 +223,19 @@ export default function MyPageScreen() {
   const mannerTemperatureIcon = getMannerTemperatureIcon(mannerTemperature);
   const styleSummary = survey
     ? (STYLE_SUMMARY[survey.partnerStyle] ?? {
-        title: PARTNER_STYLE_LABEL[survey.partnerStyle] ?? survey.partnerStyle,
+        title: PARTNER_STYLE_LABEL[survey.partnerStyle] ?? survey.partnerStyle ?? "미설정",
         description: "선호하는 파트너 스타일이에요",
       })
     : null;
   const intensitySummary = survey
     ? (INTENSITY_SUMMARY[survey.exerciseIntensity] ?? {
-        title:
-          INTENSITY_LABEL[survey.exerciseIntensity] ?? survey.exerciseIntensity,
+        title: INTENSITY_LABEL[survey.exerciseIntensity] ?? survey.exerciseIntensity ?? "미설정",
         description: "선호하는 운동 강도예요",
       })
     : null;
   const reasonSummary = survey
     ? (REASON_SUMMARY[survey.exerciseReason] ?? {
-        title: REASON_LABEL[survey.exerciseReason] ?? survey.exerciseReason,
+        title: REASON_LABEL[survey.exerciseReason] ?? survey.exerciseReason ?? "미설정",
         description: "운동을 시작하는 이유예요",
       })
     : null;
@@ -267,7 +296,51 @@ export default function MyPageScreen() {
           </View>
 
           <View style={styles.profileInfo}>
-            <Text style={styles.name}>{profile?.name ?? ""}</Text>
+            <View style={styles.nameRow}>
+              <Text style={styles.name} numberOfLines={1}>
+                {profile?.name ?? ""}
+              </Text>
+              {hasDankookVerification ? (
+                <AnimatedPressable
+                  accessibilityRole="button"
+                  accessibilityLabel={
+                    isUniversityBadgeExpanded
+                      ? "단국대학교 인증 접기"
+                      : "단국대학교 인증 보기"
+                  }
+                  hitSlop={8}
+                  onPress={() => setIsUniversityBadgeExpanded((v) => !v)}
+                  style={[
+                    styles.universityBadge,
+                    { width: universityBadgeWidth },
+                  ]}
+                >
+                  <Ionicons
+                    name="shield-checkmark"
+                    size={17}
+                    color="#1D4ED8"
+                  />
+                  <Animated.View
+                    pointerEvents="none"
+                    style={[
+                      styles.universityBadgeTextWrap,
+                      {
+                        width: universityBadgeTextWidth,
+                        marginLeft: universityBadgeTextMargin,
+                        opacity: universityBadgeTextOpacity,
+                      },
+                    ]}
+                  >
+                    <Text
+                      numberOfLines={1}
+                      style={styles.universityBadgeText}
+                    >
+                      단국대학교 인증
+                    </Text>
+                  </Animated.View>
+                </AnimatedPressable>
+              ) : null}
+            </View>
             <Text style={styles.department}>
               {profile?.department ?? ""}
               {"\n"}
@@ -451,6 +524,8 @@ export default function MyPageScreen() {
           </View>
         ) : null}
 
+        <LockedExerciseReport />
+
         <View style={styles.card}>
           <Text style={styles.cardTitle}>빠른 이동</Text>
           <View style={styles.quickActionRow}>
@@ -478,6 +553,7 @@ export default function MyPageScreen() {
                 <Ionicons name="wallet-outline" size={28} color="#4C5BE2" />
               }
               label="포인트 내역"
+              onPress={() => router.push("/point-logs" as any)}
             />
           </View>
         </View>
@@ -491,6 +567,61 @@ export default function MyPageScreen() {
         </Pressable>
       </View>
     </ScrollView>
+  );
+}
+
+function LockedExerciseReport() {
+  return (
+    <View style={styles.reportCard}>
+      <View style={styles.reportHeader}>
+        <View style={styles.reportTitleRow}>
+          <Text style={styles.reportTitle}>운동 레포트</Text>
+          <View style={styles.lockedBadge}>
+            <Ionicons name="lock-closed" size={12} color="#7C3AED" />
+            <Text style={styles.lockedBadgeText}>잠금</Text>
+          </View>
+        </View>
+        <Text style={styles.reportSubtitle}>
+          과금 후 주간 운동 패턴과 매칭 기록 분석을 확인할 수 있어요
+        </Text>
+      </View>
+
+      <View style={styles.reportPreview}>
+        <View style={styles.reportPreviewRow}>
+          <View style={styles.reportMetric}>
+            <Text style={styles.reportMetricLabel}>주간 운동량</Text>
+            <View style={styles.lockedValueBarWide} />
+          </View>
+          <View style={styles.reportMetric}>
+            <Text style={styles.reportMetricLabel}>추천 루틴</Text>
+            <View style={styles.lockedValueBarShort} />
+          </View>
+        </View>
+
+        <View style={styles.lockedChart}>
+          <View style={[styles.lockedChartBar, styles.lockedChartBarLow]} />
+          <View style={[styles.lockedChartBar, styles.lockedChartBarHigh]} />
+          <View style={[styles.lockedChartBar, styles.lockedChartBarMid]} />
+          <View style={[styles.lockedChartBar, styles.lockedChartBarTall]} />
+          <View style={[styles.lockedChartBar, styles.lockedChartBarLow]} />
+        </View>
+
+        <View style={styles.reportLockOverlay}>
+          <View style={styles.reportLockIcon}>
+            <Ionicons name="lock-closed" size={24} color="#FFFFFF" />
+          </View>
+          <Text style={styles.reportLockText}>프리미엄 레포트</Text>
+        </View>
+      </View>
+
+      <Pressable
+        accessibilityRole="button"
+        style={styles.reportUnlockButton}
+      >
+        <Ionicons name="sparkles" size={16} color="#FFFFFF" />
+        <Text style={styles.reportUnlockText}>레포트 잠금 해제</Text>
+      </Pressable>
+    </View>
   );
 }
 
@@ -649,11 +780,43 @@ const styles = StyleSheet.create({
   profileInfo: {
     flex: 1,
     gap: 8,
+    minWidth: 0,
+  },
+  nameRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    minWidth: 0,
   },
   name: {
     fontSize: 24,
     lineHeight: 32,
     color: "#111827",
+    fontWeight: "800",
+    flexShrink: 0,
+  },
+  universityBadge: {
+    width: 30,
+    height: 30,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 15,
+    borderWidth: 1,
+    borderColor: "#BFDBFE",
+    backgroundColor: "#FFFFFF",
+    overflow: "hidden",
+    flexShrink: 0,
+  },
+  universityBadgeTextWrap: {
+    overflow: "hidden",
+    flexShrink: 0,
+  },
+  universityBadgeText: {
+    flexShrink: 0,
+    fontSize: 11,
+    lineHeight: 15,
+    color: "#1D4ED8",
     fontWeight: "800",
   },
   department: {
@@ -664,6 +827,7 @@ const styles = StyleSheet.create({
   },
   statGroup: {
     alignItems: "center",
+    marginTop: 24,
   },
   statItem: {
     alignItems: "center",
@@ -895,6 +1059,151 @@ const styles = StyleSheet.create({
     color: "#374151",
     fontWeight: "600",
     textAlign: "center",
+  },
+  reportCard: {
+    borderRadius: 16,
+    backgroundColor: "#FFFFFF",
+    paddingHorizontal: 16,
+    paddingVertical: 18,
+    gap: 16,
+    shadowColor: "#000000",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  reportHeader: {
+    gap: 8,
+  },
+  reportTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
+  },
+  reportTitle: {
+    fontSize: 18,
+    lineHeight: 24,
+    color: "#111827",
+    fontWeight: "900",
+  },
+  lockedBadge: {
+    minHeight: 26,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    borderRadius: 999,
+    backgroundColor: "#F3E8FF",
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+  },
+  lockedBadgeText: {
+    fontSize: 12,
+    lineHeight: 16,
+    color: "#7C3AED",
+    fontWeight: "900",
+  },
+  reportSubtitle: {
+    fontSize: 13,
+    lineHeight: 18,
+    color: "#6B7280",
+    fontWeight: "600",
+  },
+  reportPreview: {
+    minHeight: 150,
+    borderRadius: 12,
+    backgroundColor: "#F8FAFC",
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    padding: 14,
+    gap: 16,
+    overflow: "hidden",
+  },
+  reportPreviewRow: {
+    flexDirection: "row",
+    gap: 12,
+  },
+  reportMetric: {
+    flex: 1,
+    gap: 8,
+  },
+  reportMetricLabel: {
+    fontSize: 12,
+    lineHeight: 16,
+    color: "#6B7280",
+    fontWeight: "800",
+  },
+  lockedValueBarWide: {
+    width: "82%",
+    height: 12,
+    borderRadius: 999,
+    backgroundColor: "#D1D5DB",
+  },
+  lockedValueBarShort: {
+    width: "62%",
+    height: 12,
+    borderRadius: 999,
+    backgroundColor: "#D1D5DB",
+  },
+  lockedChart: {
+    height: 72,
+    flexDirection: "row",
+    alignItems: "flex-end",
+    gap: 10,
+    opacity: 0.55,
+  },
+  lockedChartBar: {
+    flex: 1,
+    borderRadius: 8,
+    backgroundColor: "#C7D2FE",
+  },
+  lockedChartBarLow: {
+    height: 28,
+  },
+  lockedChartBarMid: {
+    height: 44,
+  },
+  lockedChartBarHigh: {
+    height: 58,
+  },
+  lockedChartBarTall: {
+    height: 68,
+  },
+  reportLockOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    backgroundColor: "rgba(17, 24, 39, 0.30)",
+  },
+  reportLockIcon: {
+    width: 46,
+    height: 46,
+    borderRadius: 23,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#4C5BE2",
+  },
+  reportLockText: {
+    fontSize: 13,
+    lineHeight: 18,
+    color: "#FFFFFF",
+    fontWeight: "900",
+  },
+  reportUnlockButton: {
+    minHeight: 44,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    borderRadius: 10,
+    backgroundColor: "#4C5BE2",
+  },
+  reportUnlockText: {
+    fontSize: 14,
+    lineHeight: 19,
+    color: "#FFFFFF",
+    fontWeight: "900",
   },
   tagRow: {
     flexDirection: "row",

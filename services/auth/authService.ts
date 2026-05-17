@@ -29,8 +29,9 @@ export async function login(
     return data;
   } catch (error) {
     if (error instanceof ApiError) throw error;
-    if (isAxiosError(error) && error.response?.status === 400) {
-      throw new ApiError("로그인에 실패하였습니다.");
+    if (isAxiosError(error) && error.response) {
+      const serverMessage = (error.response.data as ApiResponse<unknown>)?.message;
+      throw new ApiError(serverMessage || "로그인에 실패하였습니다.");
     }
     throw new ApiError("알 수 없는 오류가 발생하였습니다.");
   }
@@ -55,8 +56,9 @@ export async function verifyEmail(token: string): Promise<string> {
     return res.data.message;
   } catch (error) {
     if (error instanceof ApiError) throw error;
-    if (isAxiosError(error) && error.response?.status === 400) {
-      throw new ApiError("인증 코드가 올바르지 않습니다.");
+    if (isAxiosError(error) && error.response) {
+      const serverMessage = (error.response.data as ApiResponse<unknown>)?.message;
+      throw new ApiError(serverMessage || "인증 코드가 올바르지 않습니다.");
     }
     throw new ApiError("알 수 없는 오류가 발생하였습니다.");
   }
@@ -71,8 +73,9 @@ export async function resendVerification(schoolEmail: string): Promise<string> {
     return res.data.message;
   } catch (error) {
     if (error instanceof ApiError) throw error;
-    if (isAxiosError(error) && error.response?.status === 400) {
-      throw new ApiError("인증 코드 재전송에 실패하였습니다.");
+    if (isAxiosError(error) && error.response) {
+      const serverMessage = (error.response.data as ApiResponse<unknown>)?.message;
+      throw new ApiError(serverMessage || "인증 코드 재전송에 실패하였습니다.");
     }
     throw new ApiError("알 수 없는 오류가 발생하였습니다.");
   }
@@ -91,9 +94,12 @@ export async function signup(
     return { email, message: res.data.message };
   } catch (error) {
     if (error instanceof ApiError) throw error;
-    if (isAxiosError(error) && error.response?.status === 400) {
-      throw new ApiError("회원가입에 실패하였습니다.");
+    if (isAxiosError(error) && error.response) {
+      console.error("[signup] HTTP", error.response.status, JSON.stringify(error.response.data));
+      const serverMessage = (error.response.data as ApiResponse<unknown>)?.message;
+      throw new ApiError(serverMessage || "회원가입에 실패하였습니다.");
     }
+    console.error("[signup] unexpected error", error);
     throw new ApiError("알 수 없는 오류가 발생하였습니다.");
   }
 }

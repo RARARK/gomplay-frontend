@@ -45,6 +45,17 @@ export const createEmptyTimetableState = (
   FRI: Array(slotCount).fill(false),
 });
 
+// Default: 월요일 09:00~10:30 (slots 0, 1, 2)
+export const createDefaultTimetableState = (
+  slotCount = TIME_SLOTS.length
+): UserTimetableState => {
+  const state = createEmptyTimetableState(slotCount);
+  state.MON[0] = true;
+  state.MON[1] = true;
+  state.MON[2] = true;
+  return state;
+};
+
 export const updateTimetableCell = (
   state: UserTimetableState,
   dayOfWeek: DayOfWeek,
@@ -57,6 +68,9 @@ export const updateTimetableCell = (
   ),
 });
 
+// "09:00:00" → "09:00" to handle APIs that return seconds
+const normalizeTime = (t: string) => t.slice(0, 5);
+
 export const expandTimetableRanges = (
   ranges: UserTimetableRange[],
   slotCount = TIME_SLOTS.length,
@@ -64,8 +78,8 @@ export const expandTimetableRanges = (
   const state = createEmptyTimetableState(slotCount);
 
   ranges.forEach(({ dayOfWeek, startTime, endTime }) => {
-    const startIndex = TIME_SLOTS.indexOf(startTime);
-    const endIndex = TIME_SLOTS.indexOf(endTime);
+    const startIndex = TIME_SLOTS.indexOf(normalizeTime(startTime));
+    const endIndex = TIME_SLOTS.indexOf(normalizeTime(endTime));
     if (startIndex === -1) return;
     const last = endIndex === -1 ? slotCount : endIndex;
     for (let i = startIndex; i < last; i++) {

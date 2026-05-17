@@ -212,8 +212,7 @@ export const SCHEDULE_STEP = {
   headerTitle: "시간표 입력",
   title: "언제 운동할 수 있나요?",
   description:
-    "강의가 있는 시간대를 선택해주시면 더 잘 맞는 파트너를\n추천해드려요. 나중에 다시 설정하실 수 있어요.",
+    "강의가 있는 시간대를 선택해주세요.\n시간표를 입력해야 파트너 매칭을 이용할 수 있어요.",
   saveLabel: "분석 시작하기",
-  skipLabel: "지금은 건너뛰기",
   progressRatio: 1,
 } as const;

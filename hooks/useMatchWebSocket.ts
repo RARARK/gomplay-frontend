@@ -6,7 +6,7 @@ import {
   disconnectMatchWs,
 } from "@/lib/ws/matchWsClient";
 import { useAuthStore } from "@/stores/auth/authStore";
-import { useMatchingStore } from "@/stores/matching/matchingStore";
+import { useMatchingStore, VISIBLE_CANDIDATE_LIMIT } from "@/stores/matching/matchingStore";
 import type { WsMatchEvent } from "@/types/domain/wsEvents";
 
 export function useMatchWebSocket(): void {
@@ -27,15 +27,33 @@ export function useMatchWebSocket(): void {
 
       const store = useMatchingStore.getState();
       switch (event.type) {
-        case "CANDIDATES_UPDATE":
-          store.setCandidates(event.data);
+        case "CANDIDATES_UPDATE": {
+          const all = event.data;
+          store.setCandidates(all.slice(0, VISIBLE_CANDIDATE_LIMIT));
+          store.setCandidateBuffer(all.slice(VISIBLE_CANDIDATE_LIMIT));
+          store.addSeenIds(all.map((c) => c.userProfileId));
+          store.resetDisconnectedCandidates();
           break;
+        }
         case "NEW_CANDIDATE":
-          store.addCandidate(event.data);
+          store.clearDisconnectedCandidate(event.data.userProfileId);
+          if (store.candidates.length < VISIBLE_CANDIDATE_LIMIT) {
+            store.addCandidate(event.data);
+          } else {
+            store.addToBuffer(event.data);
+          }
+          store.addSeenIds([event.data.userProfileId]);
           break;
-        case "CANDIDATE_LEFT":
-          store.removeCandidate(event.data);
+        case "CANDIDATE_LEFT": {
+          const isVisible = store.candidates.some(
+            (c) => c.userProfileId === event.data,
+          );
+          store.removeFromBuffer(event.data);
+          if (isVisible) {
+            store.markCandidateDisconnected(event.data);
+          }
           break;
+        }
         case "MATCH_REQUEST":
           store.setPendingMatchRequest(event.data);
           break;

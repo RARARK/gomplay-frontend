@@ -1,8 +1,10 @@
 import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
+import { View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useChatStore } from "@/stores/chat/chatStore";
+import MatchRequestToast from "@/components/matching/toast/MatchRequestToast";
 
 export default function TabsLayout() {
   const insets = useSafeAreaInsets();
@@ -38,7 +40,7 @@ export default function TabsLayout() {
         } else if (route.name === "chat") {
           iconName = focused ? "chatbubble" : "chatbubble-outline";
         } else if (route.name === "partner") {
-          iconName = focused ? "people" : "people-outline";
+          iconName = focused ? "list" : "list-outline";
         } else {
           iconName = "ellipse";
         }
@@ -50,11 +52,14 @@ export default function TabsLayout() {
   );
 
   return (
-    <Tabs screenOptions={screenOptions}>
-      <Tabs.Screen name="index" options={{ title: "홈" }} />
-      <Tabs.Screen name="match" options={{ title: "매칭현황" }} />
-      <Tabs.Screen name="chat" options={{ title: "채팅", tabBarBadge: chatBadge }} />
-      <Tabs.Screen name="partner" options={{ title: "파트너찾기" }} />
-    </Tabs>
+    <View style={{ flex: 1 }}>
+      <Tabs screenOptions={screenOptions}>
+        <Tabs.Screen name="index" options={{ title: "홈" }} />
+        <Tabs.Screen name="partner" options={{ title: "모집" }} />
+        <Tabs.Screen name="match" options={{ title: "매칭현황" }} />
+        <Tabs.Screen name="chat" options={{ title: "채팅", tabBarBadge: chatBadge }} />
+      </Tabs>
+      <MatchRequestToast />
+    </View>
   );
 }

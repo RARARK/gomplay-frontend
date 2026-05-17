@@ -1,4 +1,11 @@
-import type { AttendanceStatus, CheckInResult } from "@/types/domain/attendance";
+import { isAxiosError } from "axios";
+
+import apiClient, { ApiError } from "@/lib/api/client";
+import type {
+  AttendanceCalendarResponse,
+  AttendanceStatus,
+  CheckInResult,
+} from "@/types/domain/attendance";
 
 const POINTS_PER_CHECKIN = 10;
 
@@ -42,4 +49,26 @@ export async function checkIn(_userId: number): Promise<CheckInResult> {
     totalPoints,
     serverDate,
   };
+}
+
+export async function getAttendanceCalendar(
+  year: number,
+  month: number,
+): Promise<AttendanceCalendarResponse> {
+  try {
+    const res = await apiClient.get<AttendanceCalendarResponse>(
+      "/api/attendance/calendar",
+      { params: { year, month } },
+    );
+    return res.data;
+  } catch (error) {
+    if (error instanceof ApiError) throw error;
+    if (isAxiosError(error) && error.response?.status === 400) {
+      const message =
+        (error.response.data as { message?: string })?.message ??
+        "유저를 찾을 수 없습니다.";
+      throw new ApiError(message);
+    }
+    throw new ApiError("알 수 없는 오류가 발생하였습니다.");
+  }
 }

@@ -4,4 +4,5 @@ export type Banner = {
   id: string;
   image: ImageSourcePropType;
   text?: string;
+  isAd?: boolean;
 };

@@ -1,12 +1,13 @@
+import React from "react";
 import { StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import PostListScreen from "@/components/matching/posts/PostListScreen";
+import PointLogsScreen from "@/components/profile/PointLogsScreen";
 
-export default function PartnerRoute() {
+export default function PointLogsRoute() {
   return (
     <SafeAreaView edges={["top"]} style={styles.safeArea}>
-      <PostListScreen showBackButton={false} />
+      <PointLogsScreen />
     </SafeAreaView>
   );
 }

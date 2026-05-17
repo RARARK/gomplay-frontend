@@ -446,7 +446,13 @@ const TimetableSelector = ({
     [],
   );
 
+  const isEmpty = React.useMemo(
+    () => DAY_OF_WEEKS.every((day) => value[day].every((v) => !v)),
+    [value],
+  );
+
   const handleSave = () => {
+    if (isEmpty) return;
     onSave?.(compressTimetableState(value));
   };
 
@@ -585,11 +591,15 @@ const TimetableSelector = ({
 
       <Pressable
         accessibilityRole="button"
-        style={styles.saveButton}
+        style={[styles.saveButton, isEmpty && styles.saveButtonDisabled]}
         onPress={handleSave}
+        disabled={isEmpty}
       >
         <Text style={styles.saveButtonText}>{saveLabel}</Text>
       </Pressable>
+      {isEmpty && (
+        <Text style={styles.emptyHint}>최소 1개 이상의 시간대를 선택해주세요.</Text>
+      )}
 
       {secondaryActionLabel && onSecondaryAction ? (
         <Pressable
@@ -726,11 +736,22 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+  saveButtonDisabled: {
+    backgroundColor: "#C4C8F0",
+  },
   saveButtonText: {
     color: "#ffffff",
     fontSize: 18,
     lineHeight: 24,
     fontWeight: "700",
+  },
+  emptyHint: {
+    marginTop: 10,
+    textAlign: "center",
+    fontSize: 13,
+    lineHeight: 18,
+    color: "#EF4444",
+    fontWeight: "500",
   },
   secondaryAction: {
     marginTop: 14,

@@ -90,14 +90,27 @@ export type ToggleMatchingResponse = {
 export type MatchCandidate = {
   userProfileId: number;
   name: string;
-  profileImageUrl: string;
+  profileImageUrl: string | null;
   department: string;
+  college?: string;
   studentId: string;
   partnerStyle: string;
   exerciseIntensity: string;
   exerciseReason: string;
   exerciseTypes: string[];
   compatibilityScore?: number;
+  matchScore?: number;
+  matchReasons?: string[];
+};
+
+export type PassCandidateRequest = {
+  excludeIds: number[];
+};
+
+export type PassCandidateResponse = {
+  success: boolean;
+  message: string;
+  data: MatchCandidate | null;
 };
 
 export type MatchRequestStatus = "PENDING" | "TIMEOUT";

@@ -271,13 +271,16 @@ const PartnerCard = ({
   exerciseReason,
   exerciseTypes = [],
   matchScore,
+  matchInsight,
   rejectLabel = "Pass",
   acceptLabel = "Accept",
   width,
+  disconnected = false,
   onReject,
   onAccept,
 }: PartnerCardProps) => {
   const hasMeta = Boolean(department || studentId);
+  const [infoExpanded, setInfoExpanded] = React.useState(false);
 
   return (
     <View style={[S.card, width != null && { width }]}>
@@ -321,57 +324,93 @@ const PartnerCard = ({
         <View style={S.nameDivider} />
       </ImageBackground>
 
+      {/* ── Match Insight ── */}
+      <View style={S.insightCard}>
+        <View style={S.insightHeader}>
+          <View style={S.insightIconWrap}>
+            <Ionicons name="sparkles" size={14} color="#7C6FF7" />
+          </View>
+          <Text style={S.insightTitle}>Match Insight</Text>
+          <View style={S.insightBadge}>
+            <Text style={S.insightBadgeText}>추천 이유</Text>
+          </View>
+        </View>
+        <View style={S.insightBody}>
+          <Text style={S.insightQuote}>{"“"}</Text>
+          <Text style={S.insightText} numberOfLines={3}>
+            {matchInsight ?? "운동 스타일과 강도가 잘 맞고, 선호하는 종목도 겹쳐요. 함께라면 꾸준히 운동할 수 있을 거예요!"}
+          </Text>
+        </View>
+      </View>
+
       {/* ── Info section ── */}
       <View style={S.infoCard}>
-        {sharedInterests != null && (
-          <InfoRow
-            icon="heart-outline"
-            iconColor="#16A34A"
-            iconBg="#DCFCE7"
-            label="공통 관심사"
-            values={[`${sharedInterests}개`]}
-            chipBg="#DCFCE7"
-            chipTextColor="#16A34A"
+        <Pressable
+          accessibilityRole="button"
+          style={S.infoToggleRow}
+          onPress={() => setInfoExpanded((v) => !v)}
+        >
+          <Text style={S.infoToggleLabel}>파트너 성향 상세</Text>
+          <Ionicons
+            name={infoExpanded ? "chevron-up" : "chevron-down"}
+            size={16}
+            color="#7C6FF7"
           />
+        </Pressable>
+
+        {infoExpanded && (
+          <>
+            {sharedInterests != null && (
+              <InfoRow
+                icon="heart-outline"
+                iconColor="#16A34A"
+                iconBg="#DCFCE7"
+                label="공통 관심사"
+                values={[`${sharedInterests}개`]}
+                chipBg="#DCFCE7"
+                chipTextColor="#16A34A"
+              />
+            )}
+            <InfoRow
+              icon="people-outline"
+              iconColor="#7C6FF7"
+              iconBg="#EDE9FF"
+              label="파트너 성향"
+              values={toArr(partnerStyle)}
+              chipBg="#EDE9FF"
+              chipTextColor="#7C6FF7"
+            />
+            <InfoRow
+              icon="flame-outline"
+              iconColor="#EA6F0A"
+              iconBg="#FEF3E2"
+              label="운동 강도"
+              values={toArr(exerciseIntensity)}
+              chipBg="#FFF1E6"
+              chipTextColor="#EA6F0A"
+            />
+            <InfoRow
+              icon="trophy-outline"
+              iconColor="#2563EB"
+              iconBg="#EFF6FF"
+              label="운동 이유"
+              values={toArr(exerciseReason)}
+              chipBg="#EFF6FF"
+              chipTextColor="#2563EB"
+            />
+            <InfoRow
+              icon="barbell-outline"
+              iconColor="#059669"
+              iconBg="#ECFDF5"
+              label="선호 운동"
+              values={exerciseTypes}
+              chipBg="#ECFDF5"
+              chipTextColor="#059669"
+              isLast
+              scrollable
+            />
+          </>
         )}
-        <InfoRow
-          icon="people-outline"
-          iconColor="#7C6FF7"
-          iconBg="#EDE9FF"
-          label="파트너 성향"
-          values={toArr(partnerStyle)}
-          chipBg="#EDE9FF"
-          chipTextColor="#7C6FF7"
-        />
-        <InfoRow
-          icon="flame-outline"
-          iconColor="#EA6F0A"
-          iconBg="#FEF3E2"
-          label="운동 강도"
-          values={toArr(exerciseIntensity)}
-          chipBg="#FFF1E6"
-          chipTextColor="#EA6F0A"
-        />
-        <InfoRow
-          icon="trophy-outline"
-          iconColor="#2563EB"
-          iconBg="#EFF6FF"
-          label="운동 이유"
-          values={toArr(exerciseReason)}
-          chipBg="#EFF6FF"
-          chipTextColor="#2563EB"
-        />
-        <InfoRow
-          icon="barbell-outline"
-          iconColor="#059669"
-          iconBg="#ECFDF5"
-          label="선호 운동"
-          values={exerciseTypes}
-          chipBg="#ECFDF5"
-          chipTextColor="#059669"
-          isLast
-          scrollable
-        />
       </View>
 
       {/* ── Buttons ── */}
@@ -399,6 +438,16 @@ const PartnerCard = ({
           </LinearGradient>
         </Pressable>
       </View>
+
+      {disconnected && (
+        <View style={S.disconnectedOverlay}>
+          <View style={S.disconnectedBadge}>
+            <Ionicons name="wifi-outline" size={28} color="#9CA3AF" />
+            <Text style={S.disconnectedTitle}>자리를 비웠어요</Text>
+            <Text style={S.disconnectedDesc}>퀵매치 연결을 끊었습니다</Text>
+          </View>
+        </View>
+      )}
     </View>
   );
 };
@@ -544,6 +593,76 @@ const S = StyleSheet.create({
     marginTop: 8,
   },
 
+  // ── Match Insight ──
+  insightCard: {
+    marginHorizontal: 12,
+    marginTop: 12,
+    marginBottom: 0,
+    backgroundColor: "#F5F3FF",
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: "#DDD8FF",
+    paddingHorizontal: 14,
+    paddingTop: 12,
+    paddingBottom: 14,
+    gap: 10,
+  },
+  insightHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 7,
+  },
+  insightIconWrap: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: "#EDE9FF",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  insightTitle: {
+    flex: 1,
+    fontSize: 13,
+    lineHeight: 17,
+    fontWeight: "800",
+    color: "#4C3FBF",
+    letterSpacing: 0.2,
+  },
+  insightBadge: {
+    paddingHorizontal: 9,
+    paddingVertical: 3,
+    borderRadius: 20,
+    backgroundColor: "#DDD8FF",
+  },
+  insightBadgeText: {
+    fontSize: 10,
+    lineHeight: 14,
+    fontWeight: "700",
+    color: "#5B4FF0",
+  },
+  insightBody: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 2,
+  },
+  insightQuote: {
+    fontSize: 44,
+    lineHeight: 36,
+    color: "#C4B8FF",
+    fontWeight: "900",
+    marginTop: -4,
+    width: 28,
+    flexShrink: 0,
+  },
+  insightText: {
+    flex: 1,
+    fontSize: 13,
+    lineHeight: 20,
+    fontWeight: "500",
+    color: "#4B4B6B",
+    paddingTop: 4,
+  },
+
   // ── Info card ──
   infoCard: {
     marginHorizontal: 12,
@@ -560,6 +679,21 @@ const S = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.07,
     shadowRadius: 6,
+  },
+
+  infoToggleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 10,
+    paddingHorizontal: 2,
+  },
+  infoToggleLabel: {
+    fontFamily: FontFamily.inter,
+    fontSize: 13,
+    lineHeight: 17,
+    fontWeight: "700",
+    color: "#5B4FF0",
   },
 
   // ── Buttons ──
@@ -615,6 +749,43 @@ const S = StyleSheet.create({
     lineHeight: LineHeight.lh_20,
     fontWeight: "700",
     color: "#FFFFFF",
+  },
+
+  disconnectedOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(243, 244, 246, 0.92)",
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 20,
+  },
+  disconnectedBadge: {
+    alignItems: "center",
+    gap: 8,
+    paddingHorizontal: 28,
+    paddingVertical: 24,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  disconnectedTitle: {
+    fontFamily: FontFamily.inter,
+    fontSize: 16,
+    lineHeight: 22,
+    fontWeight: "700",
+    color: "#374151",
+    textAlign: "center",
+  },
+  disconnectedDesc: {
+    fontFamily: FontFamily.inter,
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: "500",
+    color: "#9CA3AF",
+    textAlign: "center",
   },
 });
 

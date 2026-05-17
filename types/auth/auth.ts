@@ -23,6 +23,7 @@ export type SignupRequest = {
   name: string;
   studentId: string;
   department: string;
+  college: string;
 };
 
 export type SignupResponseData = {
