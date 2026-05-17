@@ -85,7 +85,7 @@ const MatchSection = React.memo(function MatchSection() {
     <View style={styles.container}>
       <View style={styles.headerBlock}>
         <RecommendationSectionHeader
-          title="Recommended matches"
+          title="추천 매칭"
           onPress={handleHeaderPress}
         />
         <Text style={styles.subtitle}>관심 있는 운동을 선택해보세요</Text>

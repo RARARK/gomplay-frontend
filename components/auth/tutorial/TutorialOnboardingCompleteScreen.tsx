@@ -7,15 +7,12 @@ import {
   useWindowDimensions,
   type ImageSourcePropType,
 } from "react-native";
+import { Image } from "expo-image";
 
-import ChatLocationPin from "@/assets/chat/Locationpin.png";
-import ChatProfileImage from "@/assets/chat/Profileimage.png";
-import HomeMatchingBear from "@/assets/home/MatchingBear.png";
-import HomePartnerCardBackground from "@/assets/home/PartnerCardBackground.png";
-import HomePartnerCardBackground2 from "@/assets/home/PartnerCardBackground2.png";
-import HomePartnerProfileImage from "@/assets/home/PartnerProfileImage.png";
-import HomeScheduleBear from "@/assets/home/ScheduleBear.png";
-import LoginTutorialLogo from "@/assets/login/tutorial_logo.png";
+import OnboardingImage1 from "@/assets/login/onboarding1.png";
+import OnboardingImage2 from "@/assets/login/onboarding2.png";
+import OnboardingImage3 from "@/assets/login/onboarding3.png";
+import OnboardingImage4 from "@/assets/login/onboarding4.png";
 
 type TutorialOnboardingCompleteScreenProps = {
   onPressCta: () => void;
@@ -26,11 +23,7 @@ type OnboardingSlide = {
   title: string;
   description: string;
   buttonLabel: string;
-  heroAccent: string;
-  heroAccentSecondary: string;
-  leftImage: ImageSourcePropType;
-  centerImage: ImageSourcePropType;
-  rightImage: ImageSourcePropType;
+  heroImage: ImageSourcePropType;
 };
 
 const SLIDES: OnboardingSlide[] = [
@@ -39,33 +32,21 @@ const SLIDES: OnboardingSlide[] = [
     title: "나에게 딱 맞는\n운동 파트너를 찾아보세요!",
     description: "함께 운동하면 꾸준함이 달라져요.",
     buttonLabel: "다음",
-    heroAccent: "rgba(255, 211, 116, 0.38)",
-    heroAccentSecondary: "rgba(68, 110, 255, 0.88)",
-    leftImage: HomePartnerProfileImage,
-    centerImage: HomePartnerCardBackground,
-    rightImage: ChatProfileImage,
+    heroImage: OnboardingImage1,
   },
   {
     id: "quick match",
     title: "지금 바로 매칭해보세요!",
     description: "기다림 없이 파트너를 찾고\n바로 운동을 시작해보세요.",
     buttonLabel: "다음",
-    heroAccent: "rgba(164, 244, 214, 0.42)",
-    heroAccentSecondary: "rgba(109, 90, 255, 0.82)",
-    leftImage: HomePartnerCardBackground2,
-    centerImage: HomeScheduleBear,
-    rightImage: ChatLocationPin,
+    heroImage: OnboardingImage2,
   },
   {
     id: "normal match",
     title: "정해진 일정으로\n함께 운동해요",
     description: "나에게 맞는 시간에 고정 파트너와\n꾸준히 운동할 수 있어요.",
     buttonLabel: "다음",
-    heroAccent: "rgba(255, 194, 228, 0.34)",
-    heroAccentSecondary: "rgba(65, 114, 255, 0.82)",
-    leftImage: HomeMatchingBear,
-    centerImage: LoginTutorialLogo,
-    rightImage: HomeScheduleBear,
+    heroImage: OnboardingImage3,
   },
   {
     id: "partner match",
@@ -73,23 +54,17 @@ const SLIDES: OnboardingSlide[] = [
     description:
       "비슷한 운동 성향과 취향을 가진 파트너와\n더 즐거운 운동을 경험해보세요.",
     buttonLabel: "시작하기",
-    heroAccent: "rgba(255, 225, 163, 0.36)",
-    heroAccentSecondary: "rgba(44, 111, 255, 0.84)",
-    leftImage: HomePartnerProfileImage,
-    centerImage: HomePartnerCardBackground2,
-    rightImage: ChatProfileImage,
+    heroImage: OnboardingImage4,
   },
 ];
 
 export default function TutorialOnboardingCompleteScreen({
   onPressCta,
 }: TutorialOnboardingCompleteScreenProps) {
-  const { width, height } = useWindowDimensions();
+  const { height } = useWindowDimensions();
   const [activeIndex, setActiveIndex] = React.useState(0);
 
   const heroHeight = Math.min(Math.max(height * 0.42, 320), 420);
-  const phoneWidth = Math.min(width * 0.88, 500);
-  const phoneHeight = phoneWidth * 1.18;
   const slide = SLIDES[activeIndex];
 
   const handlePress = () => {
@@ -103,7 +78,14 @@ export default function TutorialOnboardingCompleteScreen({
 
   return (
     <View style={styles.screen}>
-      <View style={[styles.hero, { height: heroHeight }]}></View>
+      <View style={[styles.hero, { height: heroHeight }]}>
+        <Image
+          source={slide.heroImage}
+          style={styles.heroImage}
+          contentFit="cover"
+          transition={180}
+        />
+      </View>
 
       <View style={styles.content}>
         <View style={styles.copyBlock}>
@@ -145,6 +127,10 @@ const styles = StyleSheet.create({
   hero: {
     backgroundColor: "#2F43E8",
     overflow: "hidden",
+  },
+  heroImage: {
+    width: "100%",
+    height: "100%",
   },
   phoneMock: {
     position: "absolute",

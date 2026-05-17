@@ -18,6 +18,7 @@ import { logout } from "@/services/auth/authService";
 import { getSurvey } from "@/services/survey/surveyService";
 import { getMyProfile } from "@/services/user/userService";
 import { useAuthStore } from "@/stores/auth/authStore";
+import { useMatchingStore } from "@/stores/matching/matchingStore";
 import { useUserStore } from "@/stores/user/userStore";
 import type { Survey } from "@/types/domain/survey";
 
@@ -122,6 +123,7 @@ export default function MyPageScreen() {
   const clearAuth = useAuthStore((state) => state.clearAuth);
   const profile = useUserStore((state) => state.profile);
   const setProfile = useUserStore((state) => state.setProfile);
+  const wsConnected = useMatchingStore((state) => state.wsConnected);
 
   const [isLoading, setIsLoading] = React.useState(!profile);
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
@@ -292,7 +294,12 @@ export default function MyPageScreen() {
               cachePolicy="none"
               transition={120}
             />
-            <View style={styles.onlineDot} />
+            <View
+              style={[
+                styles.onlineDot,
+                wsConnected ? styles.onlineDotActive : styles.onlineDotInactive,
+              ]}
+            />
           </View>
 
           <View style={styles.profileInfo}>
@@ -775,7 +782,12 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     borderWidth: 5,
     borderColor: "#FFFFFF",
-    backgroundColor: "#FF4B1F",
+  },
+  onlineDotActive: {
+    backgroundColor: "#22C55E",
+  },
+  onlineDotInactive: {
+    backgroundColor: "#EF4444",
   },
   profileInfo: {
     flex: 1,

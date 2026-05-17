@@ -36,6 +36,10 @@ function parseDateParts(dateStr: string) {
   return { year: y, month: m, day: d };
 }
 
+function formatDateKey(year: number, monthIndex: number, day: number) {
+  return `${year}-${String(monthIndex + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+}
+
 export default function AttendanceScreen() {
   const userId = useAuthStore((state) => state.userId);
   const today = new Date();
@@ -89,11 +93,29 @@ export default function AttendanceScreen() {
           ? {
               ...prev,
               todayCheckedIn: true,
-              checkedInDates: [...prev.checkedInDates, result.serverDate],
+              checkedInDates: Array.from(
+                new Set([...prev.checkedInDates, result.serverDate]),
+              ),
               totalPoints: result.totalPoints,
+              serverDate: result.serverDate,
             }
           : prev,
       );
+      const resultParts = parseDateParts(result.serverDate);
+      if (resultParts.year === viewYear && resultParts.month === viewMonth + 1) {
+        setCalendarData((prev) => {
+          const attendanceDates = Array.from(
+            new Set([...(prev?.attendanceDates ?? []), result.serverDate]),
+          );
+
+          return {
+            year: viewYear,
+            month: viewMonth + 1,
+            attendanceDates,
+            monthlyCount: Math.max(prev?.monthlyCount ?? 0, attendanceDates.length),
+          };
+        });
+      }
       await loadCalendar(viewYear, viewMonth);
     } catch {
       await loadStatus();
@@ -106,7 +128,21 @@ export default function AttendanceScreen() {
     ? parseDateParts(status.serverDate)
     : { year: today.getFullYear(), month: today.getMonth() + 1, day: today.getDate() };
 
-  const checkedInSet = new Set(calendarData?.attendanceDates ?? []);
+  const checkedInDates = React.useMemo(() => {
+    const dates = new Set(calendarData?.attendanceDates ?? []);
+
+    status?.checkedInDates.forEach((date) => dates.add(date));
+    if (status?.todayCheckedIn && status.serverDate) {
+      dates.add(status.serverDate);
+    }
+
+    return Array.from(dates);
+  }, [calendarData?.attendanceDates, status?.checkedInDates, status?.serverDate, status?.todayCheckedIn]);
+
+  const checkedInSet = React.useMemo(
+    () => new Set(checkedInDates),
+    [checkedInDates],
+  );
   const isCurrentMonth =
     viewYear === serverParts.year && viewMonth === serverParts.month - 1;
 
@@ -142,11 +178,18 @@ export default function AttendanceScreen() {
     isCurrentMonth && day === serverParts.day;
 
   const isCheckedIn = (day: number) => {
-    const dateStr = `${viewYear}-${String(viewMonth + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+    const dateStr = formatDateKey(viewYear, viewMonth, day);
     return checkedInSet.has(dateStr);
   };
 
-  const monthCheckedCount = calendarData?.monthlyCount ?? 0;
+  const localMonthCheckedCount = checkedInDates.filter((date) => {
+    const parts = parseDateParts(date);
+    return parts.year === viewYear && parts.month === viewMonth + 1;
+  }).length;
+  const monthCheckedCount = Math.max(
+    calendarData?.monthlyCount ?? 0,
+    localMonthCheckedCount,
+  );
 
   return (
     <ScrollView

@@ -151,9 +151,11 @@ export default function PartnerCardNew({
   rejectLabel = "Pass",
   acceptLabel = "Match Now",
   width,
+  disconnected = false,
   onReject,
   onAccept,
 }: PartnerCardProps) {
+  const isOnline = !disconnected;
   const sports = getSports(tags);
   const style = getFirstKnown(tags, STYLE_TAGS, "같이");
   const intensity = getFirstKnown(tags, INTENSITY_TAGS, "가볍게");
@@ -203,7 +205,12 @@ export default function PartnerCardNew({
               style={styles.avatar}
               contentFit="cover"
             />
-            <View style={styles.onlineBadge} />
+            <View
+              style={[
+                styles.onlineBadge,
+                isOnline ? styles.onlineBadgeActive : styles.onlineBadgeInactive,
+              ]}
+            />
           </View>
 
           {/* Name / dept / active */}
@@ -218,8 +225,20 @@ export default function PartnerCardNew({
               </Text>
             </View>
             <View style={styles.activeRow}>
-              <View style={styles.activeDot} />
-              <Text style={styles.activeText}>Active now</Text>
+              <View
+                style={[
+                  styles.activeDot,
+                  isOnline ? styles.activeDotActive : styles.activeDotInactive,
+                ]}
+              />
+              <Text
+                style={[
+                  styles.activeText,
+                  isOnline ? styles.activeTextActive : styles.activeTextInactive,
+                ]}
+              >
+                {isOnline ? "Active now" : "Offline"}
+              </Text>
             </View>
           </View>
 
@@ -332,7 +351,12 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     borderWidth: 3,
     borderColor: "#FFFFFF",
+  },
+  onlineBadgeActive: {
     backgroundColor: "#22C55E",
+  },
+  onlineBadgeInactive: {
+    backgroundColor: "#EF4444",
   },
   profileInfo: {
     flex: 1,
@@ -380,13 +404,23 @@ const styles = StyleSheet.create({
     width: 9,
     height: 9,
     borderRadius: 5,
+  },
+  activeDotActive: {
     backgroundColor: "#22C55E",
+  },
+  activeDotInactive: {
+    backgroundColor: "#EF4444",
   },
   activeText: {
     fontSize: 13,
     lineHeight: 18,
-    color: "#16A34A",
     fontWeight: "700",
+  },
+  activeTextActive: {
+    color: "#16A34A",
+  },
+  activeTextInactive: {
+    color: "#DC2626",
   },
 
   // ── Match ring ─────────────────────────────────────────────────
