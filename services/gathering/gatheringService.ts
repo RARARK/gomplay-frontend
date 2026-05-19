@@ -1,6 +1,7 @@
 import { isAxiosError } from "axios";
 
 import apiClient, { ApiError } from "@/lib/api/client";
+import { POST_STATUS } from "@/types/domain/post";
 import type {
   AcceptParticipantResponse,
   CreateGatheringRequest,
@@ -81,7 +82,16 @@ export async function getGatheringPosts(
     const res = await apiClient.get<GatheringListResponse>("/api/gathering", {
       params: query,
     });
-    return res.data;
+    const openContent = res.data.content.filter(
+      (item) => item.status === POST_STATUS.OPEN,
+    );
+
+    return {
+      ...res.data,
+      content: openContent,
+      empty: openContent.length === 0,
+      numberOfElements: openContent.length,
+    };
   } catch (error) {
     if (error instanceof ApiError) throw error;
 
@@ -363,7 +373,7 @@ export async function getGatheringRecommendations(): Promise<GatheringRecommendI
     const res = await apiClient.get<GatheringRecommendItem[]>("/api/gathering/recommend", {
       headers: { "Cache-Control": "no-cache" },
     });
-    return res.data;
+    return res.data.filter((item) => item.status === POST_STATUS.OPEN);
   } catch (error) {
     if (error instanceof ApiError) throw error;
 
