@@ -7,7 +7,7 @@ import DifficultyIcon from "@/assets/match/heroicons-chart-bar-16-solid.svg";
 import ExerciseIcon from "@/assets/match/fluent-run-16-filled.svg";
 
 export type MatchSourceType = "POST" | "PARTNER";
-export type MatchStatus = "IN_PROGRESS" | "PENDING";
+export type MatchStatus = "IN_PROGRESS" | "PENDING" | "COMPLETED";
 export type MatchRole = "HOST" | "GUEST";
 
 export type MatchItem = {
@@ -38,11 +38,16 @@ export default function MatchStatusCard({
   onViewApplicants,
 }: MatchStatusCardProps) {
   const isInProgress = item.status === "IN_PROGRESS";
+  const isCompleted = item.status === "COMPLETED";
   const isHost = item.role === "HOST";
   const isPost = item.sourceType === "POST";
 
   const badgeColor = isPost ? "#C8960C" : "#4E9B6A";
-  const statusLabel = isInProgress ? "진행중" : "수락 대기";
+  const statusLabel = isCompleted
+    ? "완료"
+    : isInProgress
+      ? "진행중"
+      : "수락 대기";
 
   const location = isPost ? item.location : (item.location ?? "장소 협의");
   const scheduledTime = isPost
@@ -91,7 +96,9 @@ export default function MatchStatusCard({
               <View
                 style={[
                   styles.statusPill,
-                  isInProgress
+                  isCompleted
+                    ? styles.statusPillCompleted
+                    : isInProgress
                     ? styles.statusPillActive
                     : styles.statusPillPending,
                 ]}
@@ -99,7 +106,9 @@ export default function MatchStatusCard({
                 <Text
                   style={[
                     styles.statusText,
-                    isInProgress
+                    isCompleted
+                      ? styles.statusTextCompleted
+                      : isInProgress
                       ? styles.statusTextActive
                       : styles.statusTextPending,
                   ]}
@@ -155,15 +164,24 @@ export default function MatchStatusCard({
           </View>
 
           <View style={styles.actionRow}>
-            {isInProgress ? (
+            {isCompleted ? (
+              <View style={[styles.actionButton, styles.completedActionButton]}>
+                <Ionicons name="checkmark-circle" size={14} color="#16A34A" />
+                <Text style={[styles.actionText, styles.completedActionText]}>
+                  운동 완료
+                </Text>
+              </View>
+            ) : isInProgress ? (
               <>
-                <Pressable
-                  style={[styles.actionButton, styles.primaryActionButton]}
-                  onPress={onComplete}
-                >
-                  <Ionicons name="checkmark" size={14} color="#FFFFFF" />
-                  <Text style={styles.primaryActionText}>운동 완료하기</Text>
-                </Pressable>
+                {onComplete ? (
+                  <Pressable
+                    style={[styles.actionButton, styles.primaryActionButton]}
+                    onPress={onComplete}
+                  >
+                    <Ionicons name="checkmark" size={14} color="#FFFFFF" />
+                    <Text style={styles.primaryActionText}>운동 완료하기</Text>
+                  </Pressable>
+                ) : null}
                 <Pressable style={styles.actionButton} onPress={onChat}>
                   <Ionicons
                     name="chatbubble-outline"
@@ -302,6 +320,9 @@ const styles = StyleSheet.create({
   statusPillPending: {
     backgroundColor: "#F3F4F6",
   },
+  statusPillCompleted: {
+    backgroundColor: "#F0FDF4",
+  },
   statusText: {
     fontSize: 11,
     lineHeight: 14,
@@ -312,6 +333,9 @@ const styles = StyleSheet.create({
   },
   statusTextPending: {
     color: "#6B7280",
+  },
+  statusTextCompleted: {
+    color: "#16A34A",
   },
   openIndicator: {
     width: 24,
@@ -377,6 +401,10 @@ const styles = StyleSheet.create({
     borderColor: "#E5E7EB",
     backgroundColor: "#F9FAFB",
   },
+  completedActionButton: {
+    borderColor: "#BBF7D0",
+    backgroundColor: "#F0FDF4",
+  },
   actionText: {
     fontSize: 12,
     lineHeight: 16,
@@ -391,5 +419,8 @@ const styles = StyleSheet.create({
   },
   pendingActionText: {
     color: "#9CA3AF",
+  },
+  completedActionText: {
+    color: "#16A34A",
   },
 });

@@ -6,6 +6,7 @@ import type {
   CreateGatheringRequest,
   CreateGatheringResponse,
   DeleteGatheringRequest,
+  GatheringHistoryItem,
   GatheringListQuery,
   GatheringListResponse,
   GatheringPostDetailResponse,
@@ -237,6 +238,38 @@ export async function joinGathering(postId: number): Promise<JoinGatheringRespon
   }
 }
 
+export async function completeGathering(gatheringId: number): Promise<void> {
+  try {
+    await apiClient.patch(`/api/gathering/${gatheringId}/complete`);
+  } catch (error) {
+    if (error instanceof ApiError) throw error;
+
+    if (isAxiosError(error)) {
+      const errorBody = getBackendErrorBody(error.response?.data);
+
+      if (errorBody?.code === 4000) {
+        throw new ApiError("데이터베이스 연결에 실패하였습니다.");
+      }
+
+      if (error.response?.status === 400) {
+        throw new ApiError(
+          errorBody?.message ?? "모집글 또는 참여자 정보를 찾을 수 없습니다.",
+        );
+      }
+
+      if (error.response?.status === 500) {
+        throw new ApiError("서버 내부 오류", "Internal server error");
+      }
+
+      if (errorBody?.message) {
+        throw new ApiError(errorBody.message);
+      }
+    }
+
+    throw new ApiError("운동 완료 처리에 실패했습니다.");
+  }
+}
+
 export async function acceptParticipant(
   gatheringId: number,
   participantId: number,
@@ -355,6 +388,29 @@ export async function getGatheringRecommendations(): Promise<GatheringRecommendI
     }
 
     throw new ApiError("추천 모집글을 불러올 수 없습니다.");
+  }
+}
+
+export async function getGatheringHistory(): Promise<GatheringHistoryItem[]> {
+  try {
+    const res = await apiClient.get<GatheringHistoryItem[]>("/api/gathering/history");
+    return res.data;
+  } catch (error) {
+    if (error instanceof ApiError) throw error;
+
+    if (isAxiosError(error)) {
+      const errorBody = getBackendErrorBody(error.response?.data);
+
+      if (error.response?.status === 500) {
+        throw new ApiError("서버 내부 오류", "Internal server error");
+      }
+
+      if (errorBody?.message) {
+        throw new ApiError(errorBody.message);
+      }
+    }
+
+    throw new ApiError("히스토리를 불러올 수 없습니다.");
   }
 }
 

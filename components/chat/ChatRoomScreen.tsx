@@ -15,12 +15,12 @@ import MatchInfoCard from "./MatchInfoCard";
 import PostMatchReviewCard from "./PostMatchReviewCard";
 import { Color, FontFamily, FontSize } from "../GlobalStyles";
 import {
-  getChatMessages,
-  getChatRoom,
-  getChatRooms,
+  connectChatWs,
+  getChatRoomDetails,
   markChatRoomAsRead,
   sendChatMessage,
   subscribeToChatMessages,
+  subscribeToChatRoomEvents,
 } from "@/services/chat/chatService";
 import { useChatStore } from "@/stores/chat/chatStore";
 import type { ChatMessage } from "@/types/domain/chatMessage";
@@ -37,7 +37,7 @@ export default function ChatRoomScreen() {
   const chatRoomId = parseChatRoomId(params.chatRoomId);
 
   const chatRooms = useChatStore((state) => state.chatRooms);
-  const setChatRooms = useChatStore((state) => state.setChatRooms);
+  const upsertChatRoom = useChatStore((state) => state.upsertChatRoom);
   const setSelectedChatRoomId = useChatStore(
     (state) => state.setSelectedChatRoomId,
   );
@@ -66,68 +66,66 @@ export default function ChatRoomScreen() {
   const isReadOnly = chatRoom?.status === CHAT_ROOM_STATUS.READ_ONLY;
 
   useEffect(() => {
+    connectChatWs();
+
     let isMounted = true;
 
     async function loadChatRoom() {
       setIsLoading(true);
 
-      const [nextChatRoom, nextPage, nextChatRooms] = await Promise.all([
-        getChatRoom(chatRoomId),
-        getChatMessages({ chatRoomId }),
-        getChatRooms(),
-      ]);
+      const details = await getChatRoomDetails(chatRoomId);
 
-      if (!isMounted) {
-        return;
-      }
+      if (!isMounted) return;
 
-      if (!nextChatRoom) {
+      if (!details) {
         router.replace("/(tabs)/chat");
         return;
       }
 
-      setChatRooms(nextChatRooms);
+      upsertChatRoom(details.chatRoom);
       setSelectedChatRoomId(chatRoomId);
-      setMessages(chatRoomId, nextPage.messages);
-
+      setMessages(chatRoomId, details.messages);
       await markChatRoomAsRead(chatRoomId);
-      const refreshedChatRooms = await getChatRooms();
 
       if (isMounted) {
-        setChatRooms(refreshedChatRooms);
+        setIsLoading(false);
       }
-
-      setIsLoading(false);
     }
 
     void loadChatRoom();
 
-    const unsubscribe = subscribeToChatMessages(chatRoomId, (message) => {
+    const unsubscribeMessages = subscribeToChatMessages(chatRoomId, (message) => {
       const currentMessages =
         useChatStore.getState().messagesByRoomId[chatRoomId] ?? [];
-      const alreadyExists = currentMessages.some((item) => item.id === message.id);
-
-      if (!alreadyExists) {
+      if (!currentMessages.some((item) => item.id === message.id)) {
         appendMessage(chatRoomId, message);
       }
-
-      void getChatRooms().then((nextChatRooms) => {
-        setChatRooms(nextChatRooms);
-      });
     });
 
     return () => {
       isMounted = false;
-      unsubscribe();
+      unsubscribeMessages();
       setSelectedChatRoomId(null);
     };
   }, [
     appendMessage,
     chatRoomId,
-    setChatRooms,
+    upsertChatRoom,
     setMessages,
     setSelectedChatRoomId,
   ]);
+
+  useEffect(() => {
+    if (!chatRoom?.matchId) return;
+
+    return subscribeToChatRoomEvents(chatRoom.matchId, (event) => {
+      if (event.type === "MATCH_COMPLETED") {
+        void getChatRoomDetails(chatRoom.id).then((details) => {
+          if (details) upsertChatRoom(details.chatRoom);
+        });
+      }
+    });
+  }, [chatRoom?.matchId, chatRoom?.id, upsertChatRoom]);
 
   const handleSendMessage = async () => {
     const trimmedDraft = draft.trim();
@@ -139,15 +137,14 @@ export default function ChatRoomScreen() {
     setIsSending(true);
 
     try {
-      await sendChatMessage({
+      const sentMessage = await sendChatMessage({
         chatRoomId,
         message: trimmedDraft,
         clientMessageId: `draft-${Date.now()}`,
       });
 
+      appendMessage(chatRoomId, sentMessage);
       setDraft(chatRoomId, "");
-      const nextChatRooms = await getChatRooms();
-      setChatRooms(nextChatRooms);
     } finally {
       setIsSending(false);
     }
@@ -205,7 +202,12 @@ export default function ChatRoomScreen() {
           title="Workout finished!"
           description="How was the session today? Please leave a review for your partner."
           buttonLabel="Leave review"
-          onPressReview={() => router.push(`/review/${chatRoom.matchId}` as any)}
+          onPressReview={() => {
+            const opponent = chatRoom.participants[0];
+            router.push(
+              `/review/${chatRoom.matchId}?revieweeId=${opponent?.id ?? ""}` as any,
+            );
+          }}
           inputPlaceholder={
             isReadOnly ? "This chat is read-only." : "Write a message..."
           }

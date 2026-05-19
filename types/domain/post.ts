@@ -2,6 +2,7 @@ export const POST_STATUS = {
   OPEN: "OPEN",
   CLOSED: "CLOSED",
   CANCELLED: "CANCELLED",
+  COMPLETED: "COMPLETED",
 } as const;
 
 export type PostStatus = (typeof POST_STATUS)[keyof typeof POST_STATUS];

@@ -1,11 +1,11 @@
 import type {
   ChatRealtimeListener,
-  ChatMessagesPage,
   CreateSystemMessageInput,
-  GetChatMessagesParams,
   SendChatMessageInput,
   UpdateChatRoomStatusInput,
 } from "@/types/domain/chat";
+import { useAuthStore } from "@/stores/auth/authStore";
+
 import type { ChatMessage } from "@/types/domain/chatMessage";
 import {
   CHAT_MESSAGE_STATUS,
@@ -14,175 +14,119 @@ import {
 import type { ChatRoom } from "@/types/domain/chatRoom";
 import { CHAT_ROOM_STATUS } from "@/types/domain/chatRoom";
 import { MATCH_STATUS } from "@/types/domain/match";
+import apiClient from "@/lib/api/client";
+import type { ApiResponse } from "@/types/auth/auth";
+import {
+  addChatEventHandler,
+  publishChatMessage,
+  type ChatWsEvent,
+} from "@/lib/ws/chatWsClient";
 
-const CURRENT_USER_ID = 1;
-const PAGE_SIZE = 20;
+export { connectChatWs, disconnectChatWs } from "@/lib/ws/chatWsClient";
 
-let nextMessageId = 1000;
 
-const chatRooms: ChatRoom[] = [
-  {
-    id: 1,
-    matchId: 101,
-    matchStatus: MATCH_STATUS.IN_PROGRESS,
-    status: CHAT_ROOM_STATUS.ACTIVE,
-    participants: [
-      {
-        id: 1,
-        name: "Current User",
-        isSelf: true,
-      },
-      {
-        id: 2,
-        name: "Kim Danguk",
-        profileImageUrl: "assets/chat/Profileimage.png",
-      },
-    ],
-    lastMessage: "Where should we meet?",
-    lastMessageType: CHAT_MESSAGE_TYPE.USER,
-    lastMessageAt: "2026-04-27T18:01:50.000Z",
-    unreadMessageCount: 2,
-    reviewCompleted: false,
-    createdAt: "2026-04-27T17:30:00.000Z",
-  },
-  {
-    id: 2,
-    matchId: 102,
-    matchStatus: MATCH_STATUS.COMPLETED,
-    status: CHAT_ROOM_STATUS.READ_ONLY,
-    participants: [
-      {
-        id: 1,
-        name: "Current User",
-        isSelf: true,
-      },
-      {
-        id: 3,
-        name: "Minsu Lee",
-        profileImageUrl: "assets/chat/Profileimage.png",
-      },
-    ],
-    lastMessage: "Workout has been completed.",
-    lastMessageType: CHAT_MESSAGE_TYPE.SYSTEM,
-    lastMessageAt: "2026-04-26T12:15:00.000Z",
-    unreadMessageCount: 0,
-    matchCompletedAt: "2026-04-26T12:10:00.000Z",
-    reviewCompleted: true,
-    createdAt: "2026-04-26T09:10:00.000Z",
-  },
-];
-
-const messagesByRoomId: Record<number, ChatMessage[]> = {
-  1: [
-    {
-      id: 1,
-      chatRoomId: 1,
-      senderId: 2,
-      senderName: "Kim Danguk",
-      message: "Match has been accepted.",
-      type: CHAT_MESSAGE_TYPE.SYSTEM,
-      status: CHAT_MESSAGE_STATUS.SENT,
-      systemEvent: "MATCH_ACCEPTED",
-      createdAt: "2026-04-27T17:30:00.000Z",
-    },
-    {
-      id: 2,
-      chatRoomId: 1,
-      senderId: 2,
-      senderName: "Kim Danguk",
-      message: "Hello",
-      type: CHAT_MESSAGE_TYPE.USER,
-      status: CHAT_MESSAGE_STATUS.SENT,
-      isMine: false,
-      createdAt: "2026-04-27T18:01:00.000Z",
-    },
-    {
-      id: 3,
-      chatRoomId: 1,
-      senderId: CURRENT_USER_ID,
-      senderName: "Current User",
-      message: "Hello, are you available tomorrow?",
-      type: CHAT_MESSAGE_TYPE.USER,
-      status: CHAT_MESSAGE_STATUS.SENT,
-      isMine: true,
-      createdAt: "2026-04-27T18:01:20.000Z",
-    },
-    {
-      id: 4,
-      chatRoomId: 1,
-      senderId: 2,
-      senderName: "Kim Danguk",
-      message: "Where should we meet?",
-      type: CHAT_MESSAGE_TYPE.USER,
-      status: CHAT_MESSAGE_STATUS.SENT,
-      isMine: false,
-      createdAt: "2026-04-27T18:01:50.000Z",
-    },
-  ],
-  2: [
-    {
-      id: 3,
-      chatRoomId: 2,
-      senderId: 3,
-      senderName: "Minsu Lee",
-      message: "Workout has been completed.",
-      type: CHAT_MESSAGE_TYPE.SYSTEM,
-      status: CHAT_MESSAGE_STATUS.SENT,
-      systemEvent: "MATCH_COMPLETED",
-      createdAt: "2026-04-26T12:15:00.000Z",
-    },
-  ],
+type ChatRoomApiItem = {
+  roomId: number;
+  matchResultId: number;
+  opponentId: number;
+  opponentName: string;
+  opponentProfileImageUrl: string | null;
+  matchStatus: "IN_PROGRESS" | "COMPLETED";
+  unreadCount: number;
+  createdAt: string;
+  lastMessageContent?: string | null;
+  lastMessageAt?: string | null;
+  completeButtonVisible: boolean;
 };
 
-const listenersByRoomId = new Map<number, Set<ChatRealtimeListener>>();
-
-export async function getChatRooms(): Promise<ChatRoom[]> {
-  return [...chatRooms].sort((left, right) => {
-    const leftTime = new Date(left.lastMessageAt ?? left.createdAt).getTime();
-    const rightTime = new Date(right.lastMessageAt ?? right.createdAt).getTime();
-
-    return rightTime - leftTime;
-  });
-}
-
-export async function getChatMessages({
-  chatRoomId,
-  cursor,
-  limit = PAGE_SIZE,
-}: GetChatMessagesParams): Promise<ChatMessagesPage> {
-  const allMessages = messagesByRoomId[chatRoomId] ?? [];
-  const startIndex = cursor
-    ? Number(cursor)
-    : Math.max(allMessages.length - limit, 0);
-  const pagedMessages = allMessages.slice(startIndex, startIndex + limit);
-  const nextCursor =
-    startIndex > 0 ? String(Math.max(startIndex - limit, 0)) : undefined;
-
+function mapApiChatRoom(item: ChatRoomApiItem): ChatRoom {
   return {
-    chatRoomId,
-    messages: pagedMessages,
-    nextCursor,
+    id: item.roomId,
+    matchId: item.matchResultId,
+    matchStatus: item.matchStatus,
+    status:
+      item.matchStatus === MATCH_STATUS.COMPLETED
+        ? CHAT_ROOM_STATUS.READ_ONLY
+        : CHAT_ROOM_STATUS.ACTIVE,
+    participants: [
+      {
+        id: item.opponentId,
+        name: item.opponentName,
+        profileImageUrl: item.opponentProfileImageUrl ?? undefined,
+      },
+    ],
+    lastMessage: item.lastMessageContent ?? undefined,
+    lastMessageAt: item.lastMessageAt ?? undefined,
+    unreadMessageCount: item.unreadCount,
+    completeButtonVisible: item.completeButtonVisible,
+    reviewCompleted: false,
+    createdAt: item.createdAt,
   };
 }
 
-export async function getChatRoom(chatRoomId: number): Promise<ChatRoom | null> {
-  return chatRooms.find((chatRoom) => chatRoom.id === chatRoomId) ?? null;
+export async function getChatRooms(): Promise<ChatRoom[]> {
+  const response = await apiClient.get<ApiResponse<ChatRoomApiItem[]>>(
+    "/api/chat/rooms",
+  );
+  return response.data.data.map(mapApiChatRoom);
+}
+
+type ChatRoomMessageApiItem = {
+  messageId: number;
+  roomId: number;
+  senderId: number;
+  senderName: string;
+  content: string;
+  sentAt: string;
+  read: boolean;
+};
+
+type ChatRoomDetailsApiResponse = ChatRoomApiItem & {
+  messages: ChatRoomMessageApiItem[];
+};
+
+export type ChatRoomDetails = {
+  chatRoom: ChatRoom;
+  messages: ChatMessage[];
+};
+
+export async function getChatRoomDetails(
+  chatRoomId: number,
+): Promise<ChatRoomDetails | null> {
+  try {
+    const response = await apiClient.get<ApiResponse<ChatRoomDetailsApiResponse>>(
+      `/api/chat/room/${chatRoomId}`,
+    );
+    const data = response.data.data;
+    const currentUserId = useAuthStore.getState().userId;
+
+    const chatRoom = mapApiChatRoom(data);
+    const messages: ChatMessage[] = data.messages.map((msg) => ({
+      id: msg.messageId,
+      chatRoomId: msg.roomId,
+      senderId: msg.senderId,
+      senderName: msg.senderName,
+      message: msg.content,
+      type: CHAT_MESSAGE_TYPE.USER,
+      status: CHAT_MESSAGE_STATUS.SENT,
+      isMine: msg.senderId === currentUserId,
+      createdAt: msg.sentAt,
+    }));
+
+    return { chatRoom, messages };
+  } catch {
+    return null;
+  }
 }
 
 export async function sendChatMessage(
   input: SendChatMessageInput,
 ): Promise<ChatMessage> {
-  const chatRoom = findChatRoomOrThrow(input.chatRoomId);
+  publishChatMessage(input.chatRoomId, input.message);
 
-  if (chatRoom.status !== CHAT_ROOM_STATUS.ACTIVE) {
-    throw new Error("Cannot send messages in a read-only chat room.");
-  }
-
-  const message: ChatMessage = {
-    id: nextMessageId++,
+  return {
+    id: Date.now(),
     chatRoomId: input.chatRoomId,
-    senderId: CURRENT_USER_ID,
-    senderName: "Current User",
     message: input.message,
     type: CHAT_MESSAGE_TYPE.USER,
     status: CHAT_MESSAGE_STATUS.SENT,
@@ -190,18 +134,13 @@ export async function sendChatMessage(
     clientMessageId: input.clientMessageId,
     createdAt: new Date().toISOString(),
   };
-
-  appendMessage(message);
-
-  return message;
 }
 
 export async function createSystemMessage(
   input: CreateSystemMessageInput,
 ): Promise<ChatMessage> {
-  findChatRoomOrThrow(input.chatRoomId);
-  const message: ChatMessage = {
-    id: nextMessageId++,
+  return {
+    id: Date.now(),
     chatRoomId: input.chatRoomId,
     message: input.message,
     type: CHAT_MESSAGE_TYPE.SYSTEM,
@@ -209,93 +148,53 @@ export async function createSystemMessage(
     systemEvent: input.systemEvent,
     createdAt: new Date().toISOString(),
   };
-
-  appendMessage(message);
-
-  return message;
 }
 
 export async function updateChatRoomStatus(
-  input: UpdateChatRoomStatusInput,
-): Promise<ChatRoom> {
-  const chatRoom = findChatRoomOrThrow(input.chatRoomId);
-  chatRoom.status = input.status;
-
-  if (input.status === CHAT_ROOM_STATUS.READ_ONLY) {
-    chatRoom.matchCompletedAt = new Date().toISOString();
-  }
-
-  return chatRoom;
+  _input: UpdateChatRoomStatusInput,
+): Promise<void> {
+  // no-op until REST endpoint is available
 }
 
-export async function markChatRoomAsRead(chatRoomId: number): Promise<void> {
-  const chatRoom = findChatRoomOrThrow(chatRoomId);
-  chatRoom.unreadMessageCount = 0;
-
-  const roomMessages = messagesByRoomId[chatRoomId] ?? [];
-  const readAt = new Date().toISOString();
-
-  for (const message of roomMessages) {
-    if (!message.isMine && message.type === CHAT_MESSAGE_TYPE.USER) {
-      message.readAt = readAt;
-    }
-  }
+export async function markChatRoomAsRead(_chatRoomId: number): Promise<void> {
+  // no-op until REST endpoint is available
 }
 
 export function subscribeToChatMessages(
   chatRoomId: number,
   listener: ChatRealtimeListener,
 ): () => void {
-  const listeners = listenersByRoomId.get(chatRoomId) ?? new Set();
-  listeners.add(listener);
-  listenersByRoomId.set(chatRoomId, listeners);
+  return addChatEventHandler((event) => {
+    if (event.type !== "NEW_MESSAGE") return;
+    if (event.data.roomId !== chatRoomId) return;
 
-  return () => {
-    const currentListeners = listenersByRoomId.get(chatRoomId);
-    currentListeners?.delete(listener);
+    const message: ChatMessage = {
+      id: event.data.messageId,
+      chatRoomId: event.data.roomId,
+      senderId: event.data.senderId,
+      senderName: event.data.senderName,
+      message: event.data.content,
+      type: CHAT_MESSAGE_TYPE.USER,
+      status: CHAT_MESSAGE_STATUS.SENT,
+      isMine: false,
+      createdAt: event.data.sentAt,
+    };
 
-    if (currentListeners && currentListeners.size === 0) {
-      listenersByRoomId.delete(chatRoomId);
-    }
-  };
-}
-
-function findChatRoomOrThrow(chatRoomId: number) {
-  const chatRoom = chatRooms.find((item) => item.id === chatRoomId);
-
-  if (!chatRoom) {
-    throw new Error(`Chat room ${chatRoomId} was not found.`);
-  }
-
-  return chatRoom;
-}
-
-function appendMessage(message: ChatMessage) {
-  const roomMessages = messagesByRoomId[message.chatRoomId] ?? [];
-  messagesByRoomId[message.chatRoomId] = [...roomMessages, message];
-  touchChatRoom(message.chatRoomId, message);
-  emitMessage(message.chatRoomId, message);
-}
-
-function touchChatRoom(chatRoomId: number, message: ChatMessage) {
-  const chatRoom = findChatRoomOrThrow(chatRoomId);
-  chatRoom.lastMessage = message.message;
-  chatRoom.lastMessageType = message.type;
-  chatRoom.lastMessageAt = message.createdAt;
-
-  if (!message.isMine && message.type === CHAT_MESSAGE_TYPE.USER) {
-    chatRoom.unreadMessageCount += 1;
-  }
-}
-
-function emitMessage(chatRoomId: number, message: ChatMessage) {
-  const listeners = listenersByRoomId.get(chatRoomId);
-
-  if (!listeners) {
-    return;
-  }
-
-  for (const listener of listeners) {
     listener(message);
-  }
+  });
+}
+
+export type ChatRoomEventListener = (
+  event: Extract<ChatWsEvent, { type: "PARTNER_COMPLETED" | "MATCH_COMPLETED" }>,
+) => void;
+
+export function subscribeToChatRoomEvents(
+  matchResultId: number,
+  listener: ChatRoomEventListener,
+): () => void {
+  return addChatEventHandler((event) => {
+    if (event.type !== "PARTNER_COMPLETED" && event.type !== "MATCH_COMPLETED") return;
+    if (event.data !== matchResultId) return;
+    listener(event as Extract<ChatWsEvent, { type: "PARTNER_COMPLETED" | "MATCH_COMPLETED" }>);
+  });
 }

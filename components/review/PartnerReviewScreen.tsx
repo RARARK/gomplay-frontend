@@ -3,6 +3,7 @@ import { Image } from "expo-image";
 import { router } from "expo-router";
 import React from "react";
 import {
+  ActivityIndicator,
   Alert,
   KeyboardAvoidingView,
   Platform,
@@ -13,6 +14,8 @@ import {
   TextInput,
   View,
 } from "react-native";
+
+import { submitReview } from "@/services/review/reviewService";
 
 
 const POSITIVE_TRAITS = [
@@ -51,7 +54,11 @@ const MOCK_PARTNER = {
   exerciseType: "풋살",
 };
 
-type Props = { matchId: string };
+type Props = {
+  matchResultId?: number | null;
+  gatheringId?: number | null;
+  revieweeId: number;
+};
 
 
 function TraitCheckbox({
@@ -84,7 +91,7 @@ function TraitCheckbox({
   );
 }
 
-export default function PartnerReviewScreen({ matchId: _matchId }: Props) {
+export default function PartnerReviewScreen({ matchResultId, gatheringId, revieweeId }: Props) {
   const [selectedTraits, setSelectedTraits] = React.useState<Set<string>>(
     new Set(),
   );
@@ -95,6 +102,7 @@ export default function PartnerReviewScreen({ matchId: _matchId }: Props) {
   >(new Set());
   const [reportDescription, setReportDescription] = React.useState("");
   const [comment, setComment] = React.useState("");
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
 
   const toggleTrait = (id: string) => {
     setSelectedTraits((prev) => {
@@ -114,20 +122,49 @@ export default function PartnerReviewScreen({ matchId: _matchId }: Props) {
     });
   };
 
-  const handleSubmit = () => {
-    // TODO: API 연동
-    if (isReportExpanded) {
+  const handleSubmit = async () => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+
+    const goodTags = POSITIVE_TRAITS
+      .filter((t) => selectedTraits.has(t.id))
+      .map((t) => t.label);
+    const badTags = NEGATIVE_TRAITS
+      .filter((t) => selectedTraits.has(t.id))
+      .map((t) => t.label);
+
+    try {
+      await submitReview({
+        revieweeId,
+        matchResultId: matchResultId ?? null,
+        gatheringId: gatheringId ?? null,
+        goodTags,
+        badTags,
+        isNoShow,
+        comment: comment.trim() || null,
+        reportCategories: isReportExpanded
+          ? Array.from(selectedReportReasons)
+          : [],
+        reportContent: isReportExpanded && reportDescription.trim()
+          ? reportDescription.trim()
+          : null,
+      });
+
       Alert.alert(
-        "피드백 접수 완료",
-        "남겨주신 문제 내용을 확인하고 매칭 품질 개선에 반영할게요.",
+        isReportExpanded ? "피드백 접수 완료" : "평가 완료",
+        isReportExpanded
+          ? "남겨주신 문제 내용을 확인하고 매칭 품질 개선에 반영할게요."
+          : "파트너 평가가 제출됐어요.",
         [{ text: "확인", onPress: () => router.back() }],
       );
-      return;
+    } catch (err) {
+      Alert.alert(
+        "제출 실패",
+        err instanceof Error ? err.message : "다시 시도해주세요.",
+      );
+    } finally {
+      setIsSubmitting(false);
     }
-
-    Alert.alert("평가 완료", "파트너 평가가 제출됐어요.", [
-      { text: "확인", onPress: () => router.back() },
-    ]);
   };
 
   return (
@@ -385,11 +422,18 @@ export default function PartnerReviewScreen({ matchId: _matchId }: Props) {
           </Pressable>
           <Pressable
             accessibilityRole="button"
-            style={styles.submitButton}
+            style={[styles.submitButton, isSubmitting && { opacity: 0.7 }]}
             onPress={handleSubmit}
+            disabled={isSubmitting}
           >
-            <Ionicons name="checkmark" size={20} color="#FFFFFF" />
-            <Text style={styles.submitButtonText}>평가 완료</Text>
+            {isSubmitting ? (
+              <ActivityIndicator color="#FFFFFF" size="small" />
+            ) : (
+              <>
+                <Ionicons name="checkmark" size={20} color="#FFFFFF" />
+                <Text style={styles.submitButtonText}>평가 완료</Text>
+              </>
+            )}
           </Pressable>
         </View>
       </ScrollView>

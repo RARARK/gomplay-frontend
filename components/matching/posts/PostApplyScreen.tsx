@@ -31,6 +31,7 @@ import {
   formatCreatePostTimeRangeLabel,
 } from "@/components/matching/create-post/createPostUtils";
 import {
+  completeGathering,
   deleteGathering,
   getGatheringDetail,
   joinGathering,
@@ -64,6 +65,7 @@ export default function PostApplyScreen({ postId }: PostApplyScreenProps) {
   const [isLoading, setIsLoading] = React.useState(true);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [isSaving, setIsSaving] = React.useState(false);
+  const [isCompleting, setIsCompleting] = React.useState(false);
 
   const [editTitle, setEditTitle] = React.useState("");
   const [editTags, setEditTags] = React.useState<string[]>([]);
@@ -100,6 +102,10 @@ export default function PostApplyScreen({ postId }: PostApplyScreenProps) {
   const isOwner = userId !== null && post?.hostId === userId;
   const canEdit = isOwner && post?.status === POST_STATUS.OPEN;
   const canApply = !isOwner && post?.status === POST_STATUS.OPEN;
+  const canComplete =
+    post?.status !== POST_STATUS.CANCELLED &&
+    post?.status !== POST_STATUS.COMPLETED &&
+    (isOwner || !canApply);
 
   const handleToggleTag = (tag: string) => {
     setEditTags((prev) => {
@@ -169,6 +175,35 @@ export default function PostApplyScreen({ postId }: PostApplyScreenProps) {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleComplete = () => {
+    if (!post || isCompleting) return;
+
+    Alert.alert("운동 완료하기", "이번 모집 운동을 완료 처리할까요?", [
+      { text: "취소", style: "cancel" },
+      {
+        text: "완료하기",
+        onPress: async () => {
+          if (!post) return;
+          setIsCompleting(true);
+          try {
+            await completeGathering(post.id);
+            setPost((prev) =>
+              prev ? { ...prev, status: POST_STATUS.COMPLETED } : prev,
+            );
+            Alert.alert("완료 처리됨", "내 운동 완료 상태가 반영됐어요.");
+          } catch (error) {
+            Alert.alert(
+              "완료 처리 실패",
+              error instanceof Error ? error.message : "다시 시도해주세요.",
+            );
+          } finally {
+            setIsCompleting(false);
+          }
+        },
+      },
+    ]);
   };
 
   if (isLoading) {
@@ -390,25 +425,66 @@ export default function PostApplyScreen({ postId }: PostApplyScreenProps) {
         </View>
 
         {canEdit ? (
-          <View style={styles.ownerButtonRow}>
-            <Pressable
-              accessibilityRole="button"
-              onPress={handleSave}
-              disabled={isSaving}
-              style={[styles.editButton, isSaving && styles.buttonDisabled]}
-            >
-              <Text style={styles.editButtonText}>
-                {isSaving ? "저장 중..." : "수정하기"}
-              </Text>
-            </Pressable>
-            <Pressable
-              accessibilityRole="button"
-              onPress={handleDelete}
-              style={styles.deleteButton}
-            >
-              <Text style={styles.deleteButtonText}>매칭 취소</Text>
-            </Pressable>
-          </View>
+          <>
+            <View style={styles.ownerButtonRow}>
+              <Pressable
+                accessibilityRole="button"
+                onPress={handleSave}
+                disabled={isSaving}
+                style={[styles.editButton, isSaving && styles.buttonDisabled]}
+              >
+                <Text style={styles.editButtonText}>
+                  {isSaving ? "저장 중..." : "수정하기"}
+                </Text>
+              </Pressable>
+              <Pressable
+                accessibilityRole="button"
+                onPress={handleDelete}
+                style={styles.deleteButton}
+              >
+                <Text style={styles.deleteButtonText}>매칭 취소</Text>
+              </Pressable>
+            </View>
+            {canComplete ? (
+              <Pressable
+                accessibilityRole="button"
+                disabled={isCompleting}
+                onPress={handleComplete}
+                style={[
+                  styles.completeButton,
+                  isCompleting && styles.buttonDisabled,
+                ]}
+              >
+                <Ionicons
+                  name="checkmark-circle-outline"
+                  size={20}
+                  color="#FFFFFF"
+                />
+                <Text style={styles.completeButtonText}>
+                  {isCompleting ? "완료 처리 중..." : "운동 완료하기"}
+                </Text>
+              </Pressable>
+            ) : null}
+          </>
+        ) : canComplete ? (
+          <Pressable
+            accessibilityRole="button"
+            disabled={isCompleting}
+            onPress={handleComplete}
+            style={[
+              styles.completeButton,
+              isCompleting && styles.buttonDisabled,
+            ]}
+          >
+            <Ionicons
+              name="checkmark-circle-outline"
+              size={20}
+              color="#FFFFFF"
+            />
+            <Text style={styles.completeButtonText}>
+              {isCompleting ? "완료 처리 중..." : "운동 완료하기"}
+            </Text>
+          </Pressable>
         ) : canApply ? (
           <Pressable
             accessibilityRole="button"
@@ -729,6 +805,22 @@ const styles = StyleSheet.create({
     fontSize: 18,
     lineHeight: 24,
     color: "#EF4444",
+    fontWeight: "800",
+  },
+  completeButton: {
+    minHeight: 60,
+    borderRadius: 16,
+    backgroundColor: "#16A34A",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    marginTop: 6,
+  },
+  completeButtonText: {
+    fontSize: 18,
+    lineHeight: 24,
+    color: "#FFFFFF",
     fontWeight: "800",
   },
   submitButton: {

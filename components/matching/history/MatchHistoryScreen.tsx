@@ -1,71 +1,73 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import MatchHistoryCard, {
   type MatchHistoryItem,
 } from "@/components/matching/history/MatchHistoryCard";
+import { getGatheringHistory } from "@/services/gathering/gatheringService";
 
-type HistoryFilter = "ALL" | "COMPLETED" | "CANCELLED";
+function formatDate(iso: string) {
+  const d = new Date(iso);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
 
-const FILTERS: { label: string; value: HistoryFilter }[] = [
-  { label: "전체", value: "ALL" },
-  { label: "매칭 완료", value: "COMPLETED" },
-  { label: "매칭 취소", value: "CANCELLED" },
-];
-
-const MOCK_HISTORY: MatchHistoryItem[] = [
-  {
-    id: "history-1",
-    sourceType: "POST",
-    status: "COMPLETED",
-    partnerName: "김단국",
-    partnerDepartment: "소프트웨어학과",
-    completedAt: "2026-04-04",
-    location: "체육관",
-    scheduledTime: "19:00~21:00",
-    difficulty: "초보자",
-    exerciseType: "풋살",
-  },
-  {
-    id: "history-2",
-    sourceType: "PARTNER",
-    status: "COMPLETED",
-    partnerName: "김단국",
-    partnerDepartment: "소프트웨어학과",
-    completedAt: "2026-04-04",
-    location: "장소 협의",
-    scheduledTime: "시간 협의",
-    difficulty: "입문자",
-    exerciseType: "종목 협의",
-  },
-  {
-    id: "history-3",
-    sourceType: "POST",
-    status: "CANCELLED",
-    partnerName: "이서윤",
-    partnerDepartment: "체육교육과",
-    completedAt: "2026-04-02",
-    location: "서양대 체육관",
-    scheduledTime: "18:30~20:00",
-    difficulty: "입문자",
-    exerciseType: "배드민턴",
-  },
-];
+function formatTimeRange(start: string, end: string) {
+  const fmt = (iso: string) =>
+    new Date(iso).toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    });
+  return `${fmt(start)}~${fmt(end)}`;
+}
 
 export default function MatchHistoryScreen() {
   const insets = useSafeAreaInsets();
-  const [filter, setFilter] = React.useState<HistoryFilter>("ALL");
+  const [history, setHistory] = React.useState<MatchHistoryItem[]>([]);
+  const [isLoading, setIsLoading] = React.useState(true);
 
-  const filteredHistory = React.useMemo(
-    () =>
-      filter === "ALL"
-        ? MOCK_HISTORY
-        : MOCK_HISTORY.filter((item) => item.status === filter),
-    [filter],
-  );
+  React.useEffect(() => {
+    let isMounted = true;
+
+    async function load() {
+      try {
+        const items = await getGatheringHistory();
+        if (!isMounted) return;
+        setHistory(
+          items.map((item) => ({
+            id: String(item.id),
+            sourceType: "POST" as const,
+            status: "COMPLETED" as const,
+            partnerName: item.title,
+            completedAt: formatDate(item.scheduledAt),
+            location: item.venue,
+            scheduledTime: formatTimeRange(item.scheduledAt, item.scheduledEndAt),
+            exerciseType: item.sportType,
+            reviewed: item.reviewed,
+            gatheringId: item.id,
+          })),
+        );
+      } finally {
+        if (isMounted) setIsLoading(false);
+      }
+    }
+
+    void load();
+    return () => { isMounted = false; };
+  }, []);
 
   return (
     <ScrollView
@@ -85,41 +87,24 @@ export default function MatchHistoryScreen() {
         <View style={styles.headerSpacer} />
       </View>
 
-      <ScrollView
-        horizontal
-        bounces={false}
-        overScrollMode="never"
-        showsHorizontalScrollIndicator={false}
-        style={styles.filterScrollView}
-        contentContainerStyle={styles.filterRow}
-      >
-        {FILTERS.map((item) => {
-          const selected = filter === item.value;
-
-          return (
-            <Pressable
-              key={item.value}
-              accessibilityRole="button"
-              onPress={() => setFilter(item.value)}
-              style={[styles.filterChip, selected && styles.filterChipActive]}
-            >
-              <Text
-                style={[styles.filterText, selected && styles.filterTextActive]}
-              >
-                {item.label}
-              </Text>
-            </Pressable>
-          );
-        })}
-      </ScrollView>
-
-      {filteredHistory.length > 0 ? (
+      {isLoading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator color="#4C5BE2" />
+        </View>
+      ) : history.length > 0 ? (
         <View style={styles.list}>
-          {filteredHistory.map((item) => (
+          {history.map((item) => (
             <MatchHistoryCard
               key={item.id}
               item={item}
-              onReview={() => router.push(`/review/${item.id}` as any)}
+              onReview={
+                item.reviewed
+                  ? undefined
+                  : () =>
+                      router.push(
+                        `/review/${item.gatheringId}?type=gathering` as any,
+                      )
+              }
             />
           ))}
         </View>
@@ -164,36 +149,11 @@ const styles = StyleSheet.create({
   headerSpacer: {
     width: 40,
   },
-  filterScrollView: {
-    flexGrow: 0,
-    marginHorizontal: -16,
-  },
-  filterRow: {
-    flexDirection: "row",
-    gap: 8,
-    paddingHorizontal: 16,
-  },
-  filterChip: {
-    minHeight: 32,
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: "#4C5BE2",
-    backgroundColor: "#FFFFFF",
+  loadingContainer: {
+    flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: 12,
-  },
-  filterChipActive: {
-    backgroundColor: "#4C5BE2",
-  },
-  filterText: {
-    fontSize: 13,
-    lineHeight: 18,
-    color: "#070322",
-    fontWeight: "700",
-  },
-  filterTextActive: {
-    color: "#FFFFFF",
+    paddingTop: 80,
   },
   list: {
     gap: 16,

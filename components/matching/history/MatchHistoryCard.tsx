@@ -17,19 +17,19 @@ export type MatchHistoryItem = {
   scheduledTime?: string;
   difficulty?: string;
   exerciseType?: string;
+  reviewed?: boolean;
+  gatheringId?: number;
 };
 
 type MatchHistoryCardProps = {
   item: MatchHistoryItem;
   onChat?: () => void;
-  onRetry?: () => void;
   onReview?: () => void;
 };
 
 export default function MatchHistoryCard({
   item,
   onChat,
-  onRetry,
   onReview,
 }: MatchHistoryCardProps) {
   const isPost = item.sourceType === "POST";
@@ -113,14 +113,6 @@ export default function MatchHistoryCard({
           ) : null}
 
           <View style={styles.actionRow}>
-            <Pressable
-              accessibilityRole="button"
-              onPress={onRetry}
-              style={[styles.actionButton, styles.retryActionButton]}
-            >
-              <Ionicons name="refresh" size={14} color="#4C5BE2" />
-              <Text style={styles.actionText}>다시 매칭하기</Text>
-            </Pressable>
             {isCompleted ? (
               <>
                 <Pressable
@@ -137,11 +129,18 @@ export default function MatchHistoryCard({
                 </Pressable>
                 <Pressable
                   accessibilityRole="button"
-                  onPress={onReview}
-                  style={styles.actionButton}
+                  onPress={item.reviewed ? undefined : onReview}
+                  disabled={item.reviewed}
+                  style={[styles.actionButton, item.reviewed && styles.actionButtonDone]}
                 >
-                  <Ionicons name="star-outline" size={14} color="#4C5BE2" />
-                  <Text style={styles.actionText}>평가하기</Text>
+                  <Ionicons
+                    name={item.reviewed ? "star" : "star-outline"}
+                    size={14}
+                    color={item.reviewed ? "#9CA3AF" : "#4C5BE2"}
+                  />
+                  <Text style={[styles.actionText, item.reviewed && styles.actionTextDone]}>
+                    {item.reviewed ? "평가완료" : "평가하기"}
+                  </Text>
                 </Pressable>
               </>
             ) : null}
@@ -290,9 +289,6 @@ const styles = StyleSheet.create({
     borderColor: "#4C5BE2",
     paddingHorizontal: 4,
   },
-  retryActionButton: {
-    flex: 1.22,
-  },
   actionText: {
     flexShrink: 1,
     fontSize: 10,
@@ -300,5 +296,11 @@ const styles = StyleSheet.create({
     color: "#4C5BE2",
     fontWeight: "700",
     textAlign: "center",
+  },
+  actionButtonDone: {
+    borderColor: "#D1D5DB",
+  },
+  actionTextDone: {
+    color: "#9CA3AF",
   },
 });

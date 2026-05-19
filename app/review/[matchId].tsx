@@ -6,11 +6,21 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import PartnerReviewScreen from "@/components/review/PartnerReviewScreen";
 
 export default function ReviewRoute() {
-  const { matchId } = useLocalSearchParams<{ matchId: string }>();
+  const { matchId, revieweeId, type } = useLocalSearchParams<{
+    matchId: string;
+    revieweeId?: string;
+    type?: string;
+  }>();
+
+  const isGathering = type === "gathering";
 
   return (
     <SafeAreaView edges={["top"]} style={styles.safeArea}>
-      <PartnerReviewScreen matchId={matchId ?? ""} />
+      <PartnerReviewScreen
+        matchResultId={isGathering ? null : Number(matchId)}
+        gatheringId={isGathering ? Number(matchId) : null}
+        revieweeId={Number(revieweeId) || 0}
+      />
     </SafeAreaView>
   );
 }

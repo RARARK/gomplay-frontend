@@ -6,16 +6,34 @@ export const REVIEW_STATUS = {
 
 export type ReviewStatus = (typeof REVIEW_STATUS)[keyof typeof REVIEW_STATUS];
 
-export type Review = {
-  id: number;
-
-  matchId: number;
-  reviewerId: number;
+export type ReviewRequest = {
   revieweeId: number;
+  gatheringId?: number | null;
+  matchResultId?: number | null;
+  goodTags: string[];
+  badTags: string[];
+  isNoShow: boolean;
+  comment?: string | null;
+  reportCategories?: string[];
+  reportContent?: string | null;
+};
 
-  score: number;
-  isNoShow?: boolean;
-  comment?: string;
+export type ReviewResponse = {
+  id: number;
+  revieweeId: number;
+  goodTags: string;
+  badTags: string;
+  noShow: boolean;
+  comment: string | null;
+  createdAt: string;
+};
 
+export type ReceivedReview = {
+  id: number;
+  revieweeId: number;
+  goodTags: string;
+  badTags: string;
+  noShow: boolean;
+  comment: string | null;
   createdAt: string;
 };

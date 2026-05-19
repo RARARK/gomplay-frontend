@@ -49,7 +49,7 @@ export type CreateGatheringRequest = {
   tags?: string;
 };
 
-export type GatheringStatus = "OPEN" | "CLOSED" | "CANCELLED";
+export type GatheringStatus = "OPEN" | "CLOSED" | "CANCELLED" | "COMPLETED";
 
 export type UpdateGatheringRequest = {
   hostId: number;
@@ -157,4 +157,14 @@ export type GatheringRecommendItem = {
   status: GatheringStatus;
   hostProfileImageUrl: string | null;
   score: number;
+};
+
+export type GatheringHistoryItem = {
+  id: number;
+  title: string;
+  sportType: string;
+  venue: string;
+  scheduledAt: string;
+  scheduledEndAt: string;
+  reviewed: boolean;
 };
