@@ -1,13 +1,11 @@
 # dependencies
 node_modules/
 
-# build outputs
+# Expo
+.expo/
 dist/
 web-build/
 expo-env.d.ts
-
-# Expo
-.expo/
 
 # Native
 .kotlin/
@@ -21,31 +19,34 @@ expo-env.d.ts
 # Metro
 .metro-health-check*
 
-# debug / logs
+# debug
 npm-debug.*
 yarn-debug.*
 yarn-error.*
+
+# logs
 logs
 *.log
 
-# OS
+# macOS
 .DS_Store
+
+# Windows
 Thumbs.db
 
-# local env
+# local env files
 .env*.local
 
-# TypeScript
+# typescript
 *.tsbuildinfo
 
 # IDE
 .vscode/
 .idea/
 
-# generated native
-/gomplay-frontend/ios
-/gomplay-frontend/android
-/gomplay-frontend/app-example
+# example
+/app-example
 
-# Claude Code
-.claude/
+# generated native folders
+/ios
+/android

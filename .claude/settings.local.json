@@ -1,11 +1,25 @@
 {
   "permissions": {
     "allow": [
-      "Bash(npx expo *)",
-      "Bash(Get-ChildItem -Path \"C:\\\\Gomplay\\\\gomplay-frontend\" -Directory)",
-      "Bash(Select-Object -ExpandProperty Name)",
-      "Bash(grep -E \"\\\\.tsx$\")",
-      "Bash(xargs cat *)"
+      "Bash(Get-ChildItem -Path \"c:\\\\Gomplay\" -Recurse -Directory)",
+      "Bash(Select-Object -First 20 FullName)",
+      "Bash(dir \"c:\\\\Gomplay\\\\gomplay-frontend\\\\assets\\\\home\" /b)",
+      "Bash(node -e \"require\\('sharp'\\)\")",
+      "Bash(node -e \"const fs=require\\('fs'\\); console.log\\(Object.keys\\(require\\('c:/Gomplay/gomplay-frontend/node_modules/sharp/package.json'\\)\\)\\)\")",
+      "Bash(npm list *)",
+      "Bash(Copy-Item \"c:\\\\Gomplay\\\\gomplay-frontend\\\\assets\\\\home\\\\HeroBanner@3x.png\" \"c:\\\\Gomplay\\\\gomplay-frontend\\\\assets\\\\home\\\\HeroBanner.png\")",
+      "PowerShell(Get-ChildItem c:\\\\Gomplay\\\\gomplay-frontend -Recurse -Directory | Where-Object { $_.FullName -notmatch 'node_modules' } | Select-Object FullName)",
+      "PowerShell(Get-ChildItem c:\\\\Gomplay\\\\gomplay-frontend\\\\services\\\\user | Select-Object Name; Get-Content c:\\\\Gomplay\\\\gomplay-frontend\\\\services\\\\user\\\\\\(Get-ChildItem c:\\\\Gomplay\\\\gomplay-frontend\\\\services\\\\user | Select-Object -First 1 -ExpandProperty Name\\))",
+      "PowerShell(Invoke-RestMethod -Uri \"http://3.38.165.56:8080/api/auth/signup\" -Method POST -ContentType \"application/json\" -Body '{\"schoolEmail\":\"test@dankook.ac.kr\",\"password\":\"Test1234!\",\"name\":\"�׽�Ʈ\",\"studentId\":\"2024\",\"department\":\"��ǻ�Ͱ��а�\"}' -ErrorAction SilentlyContinue)",
+      "Bash(ls /mnt/c/Gomplay)",
+      "Read(//mnt/c/**)",
+      "PowerShell(New-Item -ItemType Directory -Force \"c:\\\\Gomplay\\\\gomplay-admin\\\\src\\\\lib\")",
+      "PowerShell(New-Item -ItemType Directory -Force \"c:\\\\Gomplay\\\\gomplay-admin\\\\src\\\\pages\")",
+      "PowerShell(New-Item -ItemType Directory -Force \"c:\\\\Gomplay\\\\gomplay-admin\\\\src\\\\components\")",
+      "PowerShell(New-Item -ItemType Directory -Force \"c:\\\\Gomplay\\\\gomplay-admin\\\\src\\\\types\")",
+      "PowerShell(dir \"c:\\\\Gomplay\\\\gomplay-admin\\\\src\" -Recurse | Where-Object { -not $_.PSIsContainer } | Select-Object -ExpandProperty FullName | ForEach-Object { $_.Replace\\(\"C:\\\\Gomplay\\\\gomplay-admin\\\\src\\\\\", \"\"\\) })",
+      "Bash(Move-Item \"C:\\\\Gomplay\\\\gomplay-frontend\\\\.git\" \"C:\\\\Gomplay\\\\.git\")",
+      "Bash(git add *)"
     ]
   }
 }
