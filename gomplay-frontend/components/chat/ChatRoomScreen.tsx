@@ -73,22 +73,24 @@ export default function ChatRoomScreen() {
     async function loadChatRoom() {
       setIsLoading(true);
 
-      const details = await getChatRoomDetails(chatRoomId);
+      try {
+        const details = await getChatRoomDetails(chatRoomId);
 
-      if (!isMounted) return;
+        if (!isMounted) return;
 
-      if (!details) {
-        router.replace("/(tabs)/chat");
-        return;
-      }
+        if (!details) {
+          router.replace("/(tabs)/chat");
+          return;
+        }
 
-      upsertChatRoom(details.chatRoom);
-      setSelectedChatRoomId(chatRoomId);
-      setMessages(chatRoomId, details.messages);
-      await markChatRoomAsRead(chatRoomId);
-
-      if (isMounted) {
-        setIsLoading(false);
+        upsertChatRoom(details.chatRoom);
+        setSelectedChatRoomId(chatRoomId);
+        setMessages(chatRoomId, details.messages);
+        await markChatRoomAsRead(chatRoomId);
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
       }
     }
 

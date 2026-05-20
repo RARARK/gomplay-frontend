@@ -1,4 +1,5 @@
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import Frame91 from "@/assets/home/Frame-91.svg";
 import { Image } from "expo-image";
 import { router, useFocusEffect } from "expo-router";
 import React from "react";
@@ -202,6 +203,15 @@ export default function MyPageScreen() {
     router.replace("/login");
   };
 
+  const handleBackPress = () => {
+    if (router.canGoBack()) {
+      router.back();
+      return;
+    }
+
+    router.replace("/" as any);
+  };
+
   const profileImageSource = React.useMemo(() => {
     const url = normalizeImageUrl(profile?.profileImageUrl);
     return url ? { uri: url } : DEFAULT_PROFILE_IMAGE;
@@ -281,14 +291,20 @@ export default function MyPageScreen() {
         <View style={styles.headerRow}>
           <Pressable
             accessibilityRole="button"
-            onPress={() => router.back()}
+            onPress={handleBackPress}
             style={styles.iconButton}
+            hitSlop={10}
           >
             <Ionicons name="chevron-back" size={28} color="#111111" />
           </Pressable>
-          <View style={styles.headerSpacer} />
-          <Pressable accessibilityRole="button" style={styles.iconButton}>
-            <Ionicons name="settings-outline" size={24} color="#111111" />
+          <Text pointerEvents="none" style={styles.headerTitle}>마이페이지</Text>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Open notifications"
+            onPress={() => router.push("/notifications" as any)}
+            style={styles.iconButton}
+          >
+            <Frame91 style={styles.notificationIcon} width={48} height={48} />
           </Pressable>
         </View>
 
@@ -419,7 +435,7 @@ export default function MyPageScreen() {
                 ]}
               >
                 <Text style={styles.mannerPopoverText}>
-                  매칭 참여, 노쇼, 후기를 바탕으로 한 신뢰 지표예요.
+                  매칭 참여, 노쇼, 후기를 바탕으로 한 신뢰 지표에요.
                 </Text>
               </Animated.View>
             ) : null}
@@ -817,9 +833,21 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   headerRow: {
+    height: 48,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+  },
+  headerTitle: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    alignSelf: "center",
+    fontSize: 20,
+    lineHeight: 28,
+    fontWeight: "800",
+    color: "#111827",
+    textAlign: "center",
   },
   iconButton: {
     width: 40,
@@ -827,6 +855,11 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     alignItems: "center",
     justifyContent: "center",
+    zIndex: 1,
+  },
+  notificationIcon: {
+    width: 48,
+    height: 48,
   },
   headerSpacer: {
     width: 40,
@@ -1041,12 +1074,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 18,
     color: "#111827",
-    fontWeight: "700",
-  },
-  linkText: {
-    fontSize: 13,
-    lineHeight: 18,
-    color: "#6B7280",
     fontWeight: "700",
   },
   preferenceCard: {

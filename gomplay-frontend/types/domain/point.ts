@@ -6,7 +6,9 @@ export type PointLogReason =
   | "review"
   | "no_show"
   | "first_match"
-  | "match_complete";
+  | "match_complete"
+  | "recommendation_refresh"
+  | "post_boost";
 
 export type PointLog = {
   id: number;

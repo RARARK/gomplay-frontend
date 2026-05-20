@@ -99,15 +99,36 @@ export const useChatStore = create<ChatState>((set) => ({
     })),
 
   appendMessage: (chatRoomId, message) =>
-    set((state) => ({
-      messagesByRoomId: {
-        ...state.messagesByRoomId,
-        [chatRoomId]: [
-          ...(state.messagesByRoomId[chatRoomId] ?? []),
-          message,
-        ],
-      },
-    })),
+    set((state) => {
+      const chatRooms = state.chatRooms.map((chatRoom) =>
+        chatRoom.id === chatRoomId
+          ? {
+              ...chatRoom,
+              lastMessage: message.message,
+              lastMessageType: message.type,
+              lastMessageAt: message.createdAt,
+            }
+          : chatRoom,
+      );
+
+      chatRooms.sort((left, right) => {
+        const leftTime = new Date(left.lastMessageAt ?? left.createdAt).getTime();
+        const rightTime = new Date(right.lastMessageAt ?? right.createdAt).getTime();
+
+        return rightTime - leftTime;
+      });
+
+      return {
+        messagesByRoomId: {
+          ...state.messagesByRoomId,
+          [chatRoomId]: [
+            ...(state.messagesByRoomId[chatRoomId] ?? []),
+            message,
+          ],
+        },
+        chatRooms,
+      };
+    }),
 
   updateMessage: (chatRoomId, messageId, updater) =>
     set((state) => ({

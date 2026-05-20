@@ -6,7 +6,7 @@ import PostListScreen from "@/components/matching/posts/PostListScreen";
 export default function PartnerRoute() {
   return (
     <SafeAreaView edges={["top"]} style={styles.safeArea}>
-      <PostListScreen showBackButton={false} />
+      <PostListScreen />
     </SafeAreaView>
   );
 }

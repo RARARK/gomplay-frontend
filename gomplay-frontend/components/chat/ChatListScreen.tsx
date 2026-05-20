@@ -17,14 +17,17 @@ export default function ChatListScreen() {
     let isMounted = true;
 
     async function loadChatRooms() {
-      const nextChatRooms = await getChatRooms();
+      try {
+        const nextChatRooms = await getChatRooms();
 
-      if (!isMounted) {
-        return;
+        if (isMounted) {
+          setChatRooms(nextChatRooms);
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
       }
-
-      setChatRooms(nextChatRooms);
-      setIsLoading(false);
     }
 
     void loadChatRooms();
@@ -37,7 +40,7 @@ export default function ChatListScreen() {
   return (
     <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
       <View style={styles.container}>
-        <ChatHeader title="Chat" />
+        <ChatHeader title="채팅" />
         <View style={styles.listContainer}>
           {isLoading ? (
             <View style={styles.loadingContainer}>

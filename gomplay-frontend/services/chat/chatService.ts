@@ -18,11 +18,27 @@ import apiClient from "@/lib/api/client";
 import type { ApiResponse } from "@/types/auth/auth";
 import {
   addChatEventHandler,
+  isChatWsActive,
   publishChatMessage,
   type ChatWsEvent,
 } from "@/lib/ws/chatWsClient";
+import {
+  createMockChatRooms,
+  createMockMessagesByRoomId,
+  isMockChatRoomId,
+} from "@/services/chat/mockChatData";
 
 export { connectChatWs, disconnectChatWs } from "@/lib/ws/chatWsClient";
+
+function getMockChatRoomDetails(chatRoomId: number): ChatRoomDetails | null {
+  const chatRoom = createMockChatRooms().find((room) => room.id === chatRoomId);
+  if (!chatRoom) return null;
+
+  return {
+    chatRoom,
+    messages: createMockMessagesByRoomId()[chatRoomId] ?? [],
+  };
+}
 
 
 type ChatRoomApiItem = {
@@ -65,10 +81,15 @@ function mapApiChatRoom(item: ChatRoomApiItem): ChatRoom {
 }
 
 export async function getChatRooms(): Promise<ChatRoom[]> {
-  const response = await apiClient.get<ApiResponse<ChatRoomApiItem[]>>(
-    "/api/chat/rooms",
-  );
-  return response.data.data.map(mapApiChatRoom);
+  try {
+    const response = await apiClient.get<ApiResponse<ChatRoomApiItem[]>>(
+      "/api/chat/rooms",
+    );
+    const chatRooms = response.data.data.map(mapApiChatRoom);
+    return chatRooms.length > 0 || !__DEV__ ? chatRooms : createMockChatRooms();
+  } catch {
+    return __DEV__ ? createMockChatRooms() : [];
+  }
 }
 
 type ChatRoomMessageApiItem = {
@@ -115,14 +136,16 @@ export async function getChatRoomDetails(
 
     return { chatRoom, messages };
   } catch {
-    return null;
+    return __DEV__ ? getMockChatRoomDetails(chatRoomId) : null;
   }
 }
 
 export async function sendChatMessage(
   input: SendChatMessageInput,
 ): Promise<ChatMessage> {
-  publishChatMessage(input.chatRoomId, input.message);
+  if (isChatWsActive() && !isMockChatRoomId(input.chatRoomId)) {
+    publishChatMessage(input.chatRoomId, input.message);
+  }
 
   return {
     id: Date.now(),

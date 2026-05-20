@@ -69,6 +69,15 @@ export default function MatchHistoryScreen() {
     return () => { isMounted = false; };
   }, []);
 
+  const handleBackPress = () => {
+    if (router.canGoBack()) {
+      router.back();
+      return;
+    }
+
+    router.replace("/" as any);
+  };
+
   return (
     <ScrollView
       style={styles.screen}
@@ -78,12 +87,13 @@ export default function MatchHistoryScreen() {
       <View style={styles.headerRow}>
         <Pressable
           accessibilityRole="button"
-          onPress={() => router.back()}
+          onPress={handleBackPress}
           style={styles.backButton}
+          hitSlop={10}
         >
           <Ionicons name="chevron-back" size={28} color="#111111" />
         </Pressable>
-        <Text style={styles.headerTitle}>매치 히스토리</Text>
+        <Text pointerEvents="none" style={styles.headerTitle}>매치 히스토리</Text>
         <View style={styles.headerSpacer} />
       </View>
 
@@ -139,12 +149,18 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     alignItems: "center",
     justifyContent: "center",
+    zIndex: 1,
   },
   headerTitle: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    alignSelf: "center",
     fontSize: 20,
     lineHeight: 28,
     color: "#111827",
     fontWeight: "800",
+    textAlign: "center",
   },
   headerSpacer: {
     width: 40,

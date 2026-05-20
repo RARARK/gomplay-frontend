@@ -2,7 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
-import { Color, FontSize, LineHeight } from "../GlobalStyles";
+import { Color } from "../GlobalStyles";
 
 type ChatHeaderProps = {
   title?: string;
@@ -23,7 +23,10 @@ export default function ChatHeader({
 
     if (router.canGoBack()) {
       router.back();
+      return;
     }
+
+    router.replace("/" as any);
   };
 
   return (
@@ -33,7 +36,7 @@ export default function ChatHeader({
           <Pressable
             accessibilityLabel="Go back"
             accessibilityRole="button"
-            hitSlop={8}
+            hitSlop={10}
             onPress={handleBackPress}
             style={styles.backButton}
           >
@@ -42,13 +45,12 @@ export default function ChatHeader({
         ) : (
           <View style={styles.backButtonPlaceholder} />
         )}
-        <Text numberOfLines={1} style={styles.title}>
+        <Text pointerEvents="none" numberOfLines={1} style={styles.title}>
           {title}
         </Text>
         <Pressable
           accessibilityLabel="Open profile"
           accessibilityRole="button"
-          hitSlop={8}
           onPress={() => router.push("/mypage" as any)}
           style={styles.myButton}
         >
@@ -62,12 +64,14 @@ export default function ChatHeader({
 const styles = StyleSheet.create({
   container: {
     backgroundColor: Color.colorWhite,
+    paddingHorizontal: 16,
+    paddingTop: 18,
   },
   headerRow: {
     height: 48,
-    paddingHorizontal: 16,
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "space-between",
   },
   backButton: {
     width: 40,
@@ -75,28 +79,33 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     alignItems: "center",
     justifyContent: "center",
+    zIndex: 1,
   },
   backButtonPlaceholder: {
     width: 40,
     height: 40,
   },
   title: {
-    flex: 1,
-    fontSize: FontSize.fs_17,
-    lineHeight: LineHeight.lh_22,
-    fontWeight: "700",
-    color: Color.labelsPrimary,
+    position: "absolute",
+    left: 0,
+    right: 0,
+    alignSelf: "center",
+    fontSize: 20,
+    lineHeight: 28,
+    fontWeight: "800",
+    color: "#111827",
     textAlign: "center",
   },
   myButton: {
-    width: 40,
-    height: 40,
+    width: 48,
+    height: 48,
     alignItems: "center",
     justifyContent: "center",
+    zIndex: 1,
   },
   myButtonText: {
     fontSize: 16,
-    lineHeight: 16,
+    lineHeight: 18,
     color: "#111111",
     fontWeight: "900",
   },

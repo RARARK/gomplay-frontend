@@ -204,7 +204,7 @@ export default function PartnerReviewScreen({ matchResultId, gatheringId, review
               <View style={styles.nameRowNew}>
                 <Text style={styles.partnerName}>{MOCK_PARTNER.name}</Text>
                 <View style={styles.completedBadge}>
-                  <Ionicons name="checkmark" size={12} color="#16A34A" />
+                  <Ionicons name="checkmark" size={12} color="#4C5BE2" />
                   <Text style={styles.completedBadgeText}>운동 완료</Text>
                 </View>
               </View>
@@ -530,7 +530,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 3,
-    backgroundColor: "#DCFCE7",
+    backgroundColor: "#EEF2FF",
     borderRadius: 999,
     paddingHorizontal: 10,
     paddingVertical: 4,
@@ -538,7 +538,7 @@ const styles = StyleSheet.create({
   completedBadgeText: {
     fontSize: 11,
     fontWeight: "700",
-    color: "#16A34A",
+    color: "#4C5BE2",
   },
   partnerDept: {
     fontSize: 13,
@@ -563,7 +563,7 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: "#22C55E",
+    backgroundColor: "#4C5BE2",
   },
   infoChipText: {
     fontSize: 12,

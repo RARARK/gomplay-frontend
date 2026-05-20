@@ -29,6 +29,8 @@ import type { GatheringListItem } from "@/types/domain/gathering";
 import type { PostDifficulty } from "@/types/domain/post";
 
 const ALL_FILTER_VALUE = "";
+const PAGE_SIZE = 50;
+const ERR_FETCH_FAILED = ERR_FETCH_FAILED;
 
 type DifficultyFilterValue = PostDifficulty | typeof ALL_FILTER_VALUE;
 type DateFilterValue =
@@ -240,7 +242,7 @@ export default function PostListScreen({
 
       setIsLoading(true);
       setErrorMessage(null);
-      getGatheringPosts({ size: 50 })
+      getGatheringPosts({ size: PAGE_SIZE })
         .then((res) => {
           if (isActive) {
             setPosts(res.content);
@@ -250,7 +252,7 @@ export default function PostListScreen({
           if (isActive) {
             setPosts([]);
             setErrorMessage(
-              err instanceof Error ? err.message : "모집글을 불러오지 못했어요.",
+              err instanceof Error ? err.message : ERR_FETCH_FAILED,
             );
           }
         })
@@ -266,6 +268,15 @@ export default function PostListScreen({
     }, []),
   );
 
+  const handleBackPress = () => {
+    if (router.canGoBack()) {
+      router.back();
+      return;
+    }
+
+    router.replace("/" as any);
+  };
+
   return (
     <>
       <View style={styles.screen}>
@@ -273,19 +284,26 @@ export default function PostListScreen({
           {showBackButton ? (
             <Pressable
               accessibilityRole="button"
-              onPress={() => router.back()}
+              onPress={handleBackPress}
               style={styles.backButton}
               hitSlop={10}
             >
-              <Ionicons name="chevron-back" size={24} color="#070322" />
+              <Ionicons name="chevron-back" size={28} color="#111111" />
             </Pressable>
           ) : (
             <View style={styles.backButton} />
           )}
 
-          <Text style={styles.title} numberOfLines={1}>매칭 리스트</Text>
+          <Text pointerEvents="none" style={styles.title} numberOfLines={1}>매칭 리스트</Text>
 
-          <View style={styles.headerSpacer} />
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Open profile"
+            onPress={() => router.push("/mypage" as any)}
+            style={styles.myButton}
+          >
+            <Text style={styles.myButtonText}>MY</Text>
+          </Pressable>
         </View>
 
         <ScrollView
@@ -394,11 +412,11 @@ export default function PostListScreen({
               onPress={() => {
                 setIsLoading(true);
                 setErrorMessage(null);
-                getGatheringPosts({ size: 50 })
+                getGatheringPosts({ size: PAGE_SIZE })
                   .then((res) => { setPosts(res.content); })
                   .catch((err) => {
                     setPosts([]);
-                    setErrorMessage(err instanceof Error ? err.message : "모집글을 불러오지 못했어요.");
+                    setErrorMessage(err instanceof Error ? err.message : ERR_FETCH_FAILED);
                   })
                   .finally(() => setIsLoading(false));
               }}
@@ -488,29 +506,42 @@ const styles = StyleSheet.create({
     paddingTop: 18,
   },
   header: {
+    height: 48,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     marginBottom: 16,
-    position: "relative",
   },
   backButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 40,
+    height: 40,
+    borderRadius: 999,
     alignItems: "center",
     justifyContent: "center",
+    zIndex: 1,
   },
-  headerSpacer: {
-    width: 36,
-    height: 36,
+  myButton: {
+    width: 48,
+    height: 48,
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 1,
+  },
+  myButtonText: {
+    fontSize: 16,
+    lineHeight: 18,
+    color: "#111111",
+    fontWeight: "900",
   },
   title: {
-    flex: 1,
+    position: "absolute",
+    left: 0,
+    right: 0,
+    alignSelf: "center",
     fontSize: 20,
     lineHeight: 28,
-    color: "#070322",
-    fontWeight: "900",
+    color: "#111827",
+    fontWeight: "800",
     textAlign: "center",
   },
   filterScrollView: {

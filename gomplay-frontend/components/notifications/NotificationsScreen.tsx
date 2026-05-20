@@ -61,6 +61,15 @@ function NotificationRow({ item }: { item: NotificationItem }) {
 export default function NotificationsScreen() {
   const [filter, setFilter] = React.useState<FilterType>("전체");
 
+  const handleBackPress = () => {
+    if (router.canGoBack()) {
+      router.back();
+      return;
+    }
+
+    router.replace("/" as any);
+  };
+
   const filtered = React.useMemo(
     () =>
       filter === "전체"
@@ -78,12 +87,13 @@ export default function NotificationsScreen() {
       <View style={styles.headerRow}>
         <Pressable
           accessibilityRole="button"
-          onPress={() => router.back()}
+          onPress={handleBackPress}
           style={styles.backButton}
+          hitSlop={10}
         >
           <Ionicons name="chevron-back" size={28} color="#111827" />
         </Pressable>
-        <Text style={styles.headerTitle}>알림</Text>
+        <Text pointerEvents="none" style={styles.headerTitle}>알림</Text>
         <Pressable
           accessibilityRole="button"
           onPress={() => {}}
@@ -137,11 +147,11 @@ const styles = StyleSheet.create({
   },
 
   headerRow: {
+    height: 48,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 8,
-    paddingVertical: 8,
+    paddingHorizontal: 16,
   },
   backButton: {
     width: 40,
@@ -149,12 +159,18 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     alignItems: "center",
     justifyContent: "center",
+    zIndex: 1,
   },
   headerTitle: {
-    fontSize: 17,
-    fontWeight: "700",
+    position: "absolute",
+    left: 0,
+    right: 0,
+    alignSelf: "center",
+    fontSize: 20,
+    lineHeight: 28,
+    fontWeight: "800",
     color: "#111827",
-    letterSpacing: -0.41,
+    textAlign: "center",
   },
   markAllButton: {
     flexDirection: "row",
@@ -162,6 +178,7 @@ const styles = StyleSheet.create({
     gap: 4,
     paddingHorizontal: 8,
     height: 40,
+    zIndex: 1,
   },
   markAllText: {
     fontSize: 15,
