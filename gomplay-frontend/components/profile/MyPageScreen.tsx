@@ -203,14 +203,7 @@ export default function MyPageScreen() {
     router.replace("/login");
   };
 
-  const handleBackPress = () => {
-    if (router.canGoBack()) {
-      router.back();
-      return;
-    }
 
-    router.replace("/" as any);
-  };
 
   const profileImageSource = React.useMemo(() => {
     const url = normalizeImageUrl(profile?.profileImageUrl);
@@ -289,14 +282,7 @@ export default function MyPageScreen() {
     >
       <View style={styles.topSection}>
         <View style={styles.headerRow}>
-          <Pressable
-            accessibilityRole="button"
-            onPress={handleBackPress}
-            style={styles.iconButton}
-            hitSlop={10}
-          >
-            <Ionicons name="chevron-back" size={28} color="#111111" />
-          </Pressable>
+          <View style={styles.iconButton} />
           <Text pointerEvents="none" style={styles.headerTitle}>마이페이지</Text>
           <Pressable
             accessibilityRole="button"

@@ -14,7 +14,8 @@ export default function TabsLayout() {
     () => chatRooms.reduce((sum, room) => sum + room.unreadMessageCount, 0),
     [chatRooms],
   );
-  const chatBadge = totalUnread > 0 ? (totalUnread > 99 ? "99+" : totalUnread) : undefined;
+  const chatBadge =
+    totalUnread > 0 ? (totalUnread > 99 ? "99+" : totalUnread) : undefined;
 
   const screenOptions = React.useCallback(
     ({ route }: { route: { name: string } }) => ({
@@ -30,7 +31,15 @@ export default function TabsLayout() {
         fontSize: 12,
         marginBottom: 2,
       },
-      tabBarIcon: ({ color, size, focused }: { color: string; size: number; focused: boolean }) => {
+      tabBarIcon: ({
+        color,
+        size,
+        focused,
+      }: {
+        color: string;
+        size: number;
+        focused: boolean;
+      }) => {
         let iconName: keyof typeof Ionicons.glyphMap;
 
         if (route.name === "index") {
@@ -40,12 +49,18 @@ export default function TabsLayout() {
         } else if (route.name === "chat") {
           iconName = focused ? "chatbubble" : "chatbubble-outline";
         } else if (route.name === "partner") {
-          iconName = focused ? "list" : "list-outline";
+          iconName = focused ? "compass" : "compass-outline";
         } else {
           iconName = "ellipse";
         }
 
-        return <Ionicons name={iconName} size={size} color={color} />;
+        return (
+          <Ionicons
+            name={iconName}
+            size={route.name === "partner" ? size + 4 : size}
+            color={color}
+          />
+        );
       },
     }),
     [insets.bottom],
@@ -55,9 +70,12 @@ export default function TabsLayout() {
     <View style={{ flex: 1 }}>
       <Tabs screenOptions={screenOptions}>
         <Tabs.Screen name="index" options={{ title: "홈" }} />
-        <Tabs.Screen name="partner" options={{ title: "모집" }} />
+        <Tabs.Screen name="partner" options={{ title: "탐색" }} />
         <Tabs.Screen name="match" options={{ title: "매칭현황" }} />
-        <Tabs.Screen name="chat" options={{ title: "채팅", tabBarBadge: chatBadge }} />
+        <Tabs.Screen
+          name="chat"
+          options={{ title: "채팅", tabBarBadge: chatBadge }}
+        />
       </Tabs>
       <MatchRequestToast />
     </View>

@@ -15,7 +15,7 @@ type TutorialScreenContentProps = {
   selectedOptionId: string | null;
   centeredOptions?: boolean;
   onSelectOption: (value: string) => void;
-  onBack: () => void;
+  onBack?: () => void;
 };
 
 export default function TutorialScreenContent({
@@ -37,14 +37,18 @@ export default function TutorialScreenContent({
       showsVerticalScrollIndicator={false}
     >
       <View style={styles.header}>
-        <Pressable
-          accessibilityLabel={backLabel}
-          hitSlop={10}
-          onPress={onBack}
-          style={styles.backButton}
-        >
-          <Ionicons name="chevron-back" size={32} color="#111111" />
-        </Pressable>
+        {onBack ? (
+          <Pressable
+            accessibilityLabel={backLabel}
+            hitSlop={10}
+            onPress={onBack}
+            style={styles.backButton}
+          >
+            <Ionicons name="chevron-back" size={32} color="#111111" />
+          </Pressable>
+        ) : (
+          <View style={styles.backButton} />
+        )}
         <Text style={styles.headerTitle}>{headerTitle}</Text>
       </View>
 

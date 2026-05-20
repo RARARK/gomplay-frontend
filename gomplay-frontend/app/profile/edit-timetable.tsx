@@ -83,13 +83,7 @@ export default function EditTimetableRoute() {
   return (
     <SafeAreaView edges={["top", "bottom"]} style={styles.safe}>
       <View style={styles.header}>
-        <Pressable
-          accessibilityRole="button"
-          onPress={() => router.back()}
-          style={styles.backButton}
-        >
-          <Ionicons name="chevron-back" size={28} color="#111111" />
-        </Pressable>
+        <View style={styles.backButton} />
         <Text style={styles.headerTitle}>시간표 수정</Text>
         <View style={styles.headerSpacer} />
       </View>

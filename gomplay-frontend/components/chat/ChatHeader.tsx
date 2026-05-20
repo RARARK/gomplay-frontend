@@ -1,6 +1,6 @@
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { Color } from "../GlobalStyles";
 
@@ -8,12 +8,14 @@ type ChatHeaderProps = {
   title?: string;
   onBackPress?: () => void;
   showBackButton?: boolean;
+  onPressMenu?: () => void;
 };
 
 export default function ChatHeader({
   title = "Chat Room",
   onBackPress,
   showBackButton = true,
+  onPressMenu,
 }: ChatHeaderProps) {
   const handleBackPress = () => {
     if (onBackPress) {
@@ -49,12 +51,12 @@ export default function ChatHeader({
           {title}
         </Text>
         <Pressable
-          accessibilityLabel="Open profile"
+          accessibilityLabel="Open chat menu"
           accessibilityRole="button"
-          onPress={() => router.push("/mypage" as any)}
-          style={styles.myButton}
+          onPress={onPressMenu}
+          style={styles.menuButton}
         >
-          <Text style={styles.myButtonText}>MY</Text>
+          <Ionicons name="menu-outline" size={28} color="#111827" />
         </Pressable>
       </View>
     </View>
@@ -96,17 +98,11 @@ const styles = StyleSheet.create({
     color: "#111827",
     textAlign: "center",
   },
-  myButton: {
+  menuButton: {
     width: 48,
     height: 48,
     alignItems: "center",
     justifyContent: "center",
     zIndex: 1,
-  },
-  myButtonText: {
-    fontSize: 16,
-    lineHeight: 18,
-    color: "#111111",
-    fontWeight: "900",
   },
 });

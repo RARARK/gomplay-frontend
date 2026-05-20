@@ -26,7 +26,7 @@ export default function SignupVerificationScreen() {
     try {
       await verifyEmail(token);
       router.push({
-        pathname: "/tutorial",
+        pathname: "/signup-profile",
         params: { email },
       });
     } catch (error) {

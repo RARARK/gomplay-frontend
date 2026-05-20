@@ -132,7 +132,6 @@ export default function EditPersonalityRoute() {
           options={SPORTS_STEP.options}
           selectedOptionIds={selectedSports}
           onSelectOption={isSaving ? () => {} : handleSportToggle}
-          onBack={handleBack}
         />
       </SafeAreaView>
     );
@@ -156,7 +155,6 @@ export default function EditPersonalityRoute() {
         selectedOptionId={selectedQuestionOptions[currentStep]}
         centeredOptions={currentConfig.centeredOptions}
         onSelectOption={handleSelectOption}
-        onBack={handleBack}
       />
     </SafeAreaView>
   );

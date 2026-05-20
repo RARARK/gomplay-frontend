@@ -25,6 +25,7 @@ import Svg, {
 } from "react-native-svg";
 import DEFAULT_BACKGROUND_IMAGE from "../../../assets/home/PartnerCardBackground.png";
 import DEFAULT_PROFILE_IMAGE from "../../../assets/home/PartnerProfileImage.png";
+import PartnerProfileModal from "./PartnerProfileModal";
 
 export type { PartnerCardProps } from "@/types/ui/homeCards";
 
@@ -281,6 +282,7 @@ const PartnerCard = ({
 }: PartnerCardProps) => {
   const hasMeta = Boolean(department || studentId);
   const [infoExpanded, setInfoExpanded] = React.useState(false);
+  const [showProfile, setShowProfile] = React.useState(false);
 
   return (
     <View style={[S.card, width != null && { width }]}>
@@ -295,14 +297,18 @@ const PartnerCard = ({
         <View style={S.photoStage}>
           <ConfettiBurst />
           <View style={S.photoGlow} />
-          <View style={S.photoRing}>
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => setShowProfile(true)}
+            style={S.photoRing}
+          >
             <Image
               source={profileImageSource}
               style={S.photo}
               contentFit="cover"
               placeholder={DEFAULT_PROFILE_IMAGE}
             />
-          </View>
+          </Pressable>
         </View>
 
         {hasMeta && (
@@ -448,6 +454,20 @@ const PartnerCard = ({
           </View>
         </View>
       )}
+
+      <PartnerProfileModal
+        visible={showProfile}
+        onClose={() => setShowProfile(false)}
+        profileImageSource={profileImageSource}
+        name={name}
+        department={department}
+        studentId={studentId}
+        matchScore={matchScore}
+        partnerStyle={partnerStyle}
+        exerciseIntensity={exerciseIntensity}
+        exerciseReason={exerciseReason}
+        exerciseTypes={exerciseTypes}
+      />
     </View>
   );
 };

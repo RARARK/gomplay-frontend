@@ -13,7 +13,7 @@ type TutorialSportsScreenContentProps = {
   options: TutorialOption[];
   selectedOptionIds: string[];
   onSelectOption: (value: string) => void;
-  onBack: () => void;
+  onBack?: () => void;
 };
 
 export default function TutorialSportsScreenContent({
@@ -33,14 +33,18 @@ export default function TutorialSportsScreenContent({
       showsVerticalScrollIndicator={false}
     >
       <View style={styles.header}>
-        <Pressable
-          accessibilityLabel="튜토리얼 이전 단계"
-          hitSlop={10}
-          onPress={onBack}
-          style={styles.backButton}
-        >
-          <Ionicons name="chevron-back" size={32} color="#111111" />
-        </Pressable>
+        {onBack ? (
+          <Pressable
+            accessibilityLabel="튜토리얼 이전 단계"
+            hitSlop={10}
+            onPress={onBack}
+            style={styles.backButton}
+          >
+            <Ionicons name="chevron-back" size={32} color="#111111" />
+          </Pressable>
+        ) : (
+          <View style={styles.backButton} />
+        )}
         <Text style={styles.headerTitle}>{headerTitle}</Text>
       </View>
 

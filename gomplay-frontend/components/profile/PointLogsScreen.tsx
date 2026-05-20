@@ -273,26 +273,13 @@ export default function PointLogsScreen() {
 
   const displayed = showAll ? filtered : filtered.slice(0, 6);
 
-  const handleBackPress = () => {
-    if (router.canGoBack()) {
-      router.back();
-      return;
-    }
 
-    router.replace("/" as any);
-  };
 
   return (
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <Pressable
-          onPress={handleBackPress}
-          hitSlop={12}
-          style={styles.backBtn}
-        >
-          <Ionicons name="chevron-back" size={24} color="#111827" />
-        </Pressable>
+        <View style={styles.backBtn} />
         <Text style={styles.headerTitle}>포인트 내역</Text>
         <Pressable hitSlop={8} style={styles.guideBtn} onPress={() => setShowGuide(true)}>
           <Text style={styles.guideText}>포인트 가이드</Text>

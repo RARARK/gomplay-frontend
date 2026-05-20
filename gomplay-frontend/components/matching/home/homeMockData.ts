@@ -1,3 +1,5 @@
+import { router } from "expo-router";
+
 import type {
   ModernMatchCardProps,
   PartnerCardProps,
@@ -8,8 +10,8 @@ import type { Banner } from "@/types/ui/homeBanner";
 export const homeBanners: Banner[] = [
   {
     id: "banner-hero",
-    image: require("../../../assets/home/HeroBanner.png"),
-    text: "내 시간표에 맞는\n운동 메이트 찾기",
+    image: require("../../../assets/home/herobannermain.png"),
+    onPress: () => router.push("/posts" as any),
   },
   {
     id: "banner-ad-gym",

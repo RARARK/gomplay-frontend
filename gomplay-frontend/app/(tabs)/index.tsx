@@ -1,11 +1,7 @@
 import * as React from "react";
-import { Ionicons } from "@expo/vector-icons";
-import { router, useFocusEffect } from "expo-router";
+import { useFocusEffect } from "expo-router";
 import { Alert, ScrollView, StyleSheet, Pressable, Text, View } from "react-native";
-import {
-  SafeAreaView,
-  useSafeAreaInsets,
-} from "react-native-safe-area-context";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 import HomeHeader from "@/components/matching/home/HomeHeader";
 import HeroBanner from "@/components/matching/home/HeroBanner";
@@ -32,8 +28,6 @@ import type { PartnerCardProps } from "@/types/ui/homeCards";
 import type { HomeStatusVariant } from "@/types/ui/homeStatus";
 
 export default function HomePage() {
-  const insets = useSafeAreaInsets();
-
   const storedMatching = useAuthStore((s) => s.matching);
   const setMatching = useAuthStore((s) => s.setMatching);
 
@@ -102,10 +96,6 @@ export default function HomePage() {
 
   const isMatched = forceMatchedContent;
   const isMatchedNew = forceMatchedContentNew;
-
-  const FAB_SIZE = 56;
-  const FAB_OFFSET = 20;
-  const FAB_EXTRA_SPACE = 12;
 
   const getHomeStatusVariant = (): HomeStatusVariant => {
     if (isMatchedNew) return "MatchedNew";
@@ -221,79 +211,50 @@ export default function HomePage() {
     }
   }, [setMatching, setCandidates]);
 
-  const handleCreatePostPress = React.useCallback(() => {
-    router.push("/posts/create");
-  }, []);
-
   return (
     <SafeAreaView edges={["top"]} style={styles.safeArea}>
-      <>
-        <ScrollView
-          style={styles.homeScreen}
-          contentContainerStyle={[
-            styles.scrollViewContent,
-            {
-              paddingBottom:
-                FAB_SIZE + FAB_OFFSET + FAB_EXTRA_SPACE + insets.bottom,
-            },
-          ]}
-          showsVerticalScrollIndicator={false}
-          scrollEventThrottle={16}
-        >
-          <HomeHeader />
-          <View style={styles.testButtonRow}>
-            <Pressable
-              accessibilityRole="button"
-              style={styles.testButton}
-              onPress={() => setForceMatchedContent((value) => !value)}
-            >
-              <Text style={styles.testButtonText}>
-                {forceMatchedContent ? "기존 끄기" : "기존 카드"}
-              </Text>
-            </Pressable>
-            <Pressable
-              accessibilityRole="button"
-              style={[styles.testButton, styles.testButtonNew]}
-              onPress={() => setForceMatchedContentNew((value) => !value)}
-            >
-              <Text style={[styles.testButtonText, styles.testButtonNewText]}>
-                {forceMatchedContentNew ? "새 카드 끄기" : "새 카드 (New)"}
-              </Text>
-            </Pressable>
-          </View>
-          <HeroBanner banners={banners} />
+      <ScrollView
+        style={styles.homeScreen}
+        contentContainerStyle={styles.scrollViewContent}
+        showsVerticalScrollIndicator={false}
+        scrollEventThrottle={16}
+      >
+        <HomeHeader />
+        <View style={styles.testButtonRow}>
+          <Pressable
+            accessibilityRole="button"
+            style={styles.testButton}
+            onPress={() => setForceMatchedContent((value) => !value)}
+          >
+            <Text style={styles.testButtonText}>
+              {forceMatchedContent ? "기존 끄기" : "기존 카드"}
+            </Text>
+          </Pressable>
+          <Pressable
+            accessibilityRole="button"
+            style={[styles.testButton, styles.testButtonNew]}
+            onPress={() => setForceMatchedContentNew((value) => !value)}
+          >
+            <Text style={[styles.testButtonText, styles.testButtonNewText]}>
+              {forceMatchedContentNew ? "새 카드 끄기" : "새 카드 (New)"}
+            </Text>
+          </Pressable>
+        </View>
+        <HeroBanner banners={banners} />
 
-          <View style={styles.sectionTitle}>
-            <Text style={styles.sectionTitleText}>오늘 운동 파트너를 찾아보세요</Text>
-            <Text style={styles.sectionTitleSub}>나에게 맞는 운동 파트너를 매칭해드려요</Text>
-          </View>
 
-          <HomeStatusSection
-            state={currentState}
-            isQuickMatchOn={isQuickMatchOn}
-            onToggleQuickMatch={handleToggleQuickMatch}
-            candidates={mappedCandidates}
-            isToggleDisabled={hasTimetable === false}
-            noMoreCandidates={noMoreCandidates}
-          />
 
-          <MatchSection />
-        </ScrollView>
+        <HomeStatusSection
+          state={currentState}
+          isQuickMatchOn={isQuickMatchOn}
+          onToggleQuickMatch={handleToggleQuickMatch}
+          candidates={mappedCandidates}
+          isToggleDisabled={hasTimetable === false}
+          noMoreCandidates={noMoreCandidates}
+        />
 
-        <Pressable
-          onPress={handleCreatePostPress}
-          style={[
-            styles.fab,
-            {
-              right: 20,
-              bottom: 20 + insets.bottom,
-            },
-          ]}
-          hitSlop={10}
-        >
-          <Ionicons name="add" size={34} color="#FFFFFF" />
-        </Pressable>
-      </>
+        <MatchSection />
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -362,22 +323,5 @@ const styles = StyleSheet.create({
     lineHeight: 18,
     fontWeight: "500",
     color: "#9CA3AF",
-  },
-  fab: {
-    position: "absolute",
-    right: 20,
-    bottom: 24,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: "#4C5BE2",
-    alignItems: "center",
-    justifyContent: "center",
-    zIndex: 999,
-    elevation: 10,
-    shadowColor: "#4C5BE2",
-    shadowOffset: { width: 0, height: 5 },
-    shadowOpacity: 0.28,
-    shadowRadius: 10,
   },
 });

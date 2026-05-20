@@ -9,6 +9,7 @@ type AuthState = {
   refreshToken: string | null;
   matching: boolean;
   pendingCredentials: { schoolEmail: string; password: string } | null;
+  pendingProfileImageUri: string | null;
 
   setAuth: (params: {
     userId: number;
@@ -20,6 +21,7 @@ type AuthState = {
   clearAuth: () => void;
   getAuthorizationHeader: () => string | null;
   setPendingCredentials: (creds: { schoolEmail: string; password: string } | null) => void;
+  setPendingProfileImageUri: (uri: string | null) => void;
 };
 
 export const useAuthStore = create<AuthState>((set, get) => ({
@@ -29,6 +31,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   refreshToken: null,
   matching: false,
   pendingCredentials: null,
+  pendingProfileImageUri: null,
 
   setAuth: ({ userId, accessToken, refreshToken, matching }) =>
     set({
@@ -58,4 +61,5 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   setPendingCredentials: (creds) => set({ pendingCredentials: creds }),
+  setPendingProfileImageUri: (uri) => set({ pendingProfileImageUri: uri }),
 }));

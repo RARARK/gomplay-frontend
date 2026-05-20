@@ -5,10 +5,11 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import TutorialCompleteScreen from "@/components/auth/tutorial/TutorialCompleteScreen";
 import { login } from "@/services/auth/authService";
+import { uploadProfileImage } from "@/services/user/userService";
 import { useAuthStore } from "@/stores/auth/authStore";
 
 export default function TutorialCompleteRoute() {
-  const { pendingCredentials, setAuth, setPendingCredentials } = useAuthStore();
+  const { pendingCredentials, setAuth, setPendingCredentials, setPendingProfileImageUri } = useAuthStore();
 
   const handlePressCta = async () => {
     if (pendingCredentials) {
@@ -23,6 +24,11 @@ export default function TutorialCompleteRoute() {
           refreshToken: data.refreshToken,
           matching: data.matching,
         });
+        const pendingUri = useAuthStore.getState().pendingProfileImageUri;
+        if (pendingUri) {
+          await uploadProfileImage(pendingUri).catch(() => {});
+          setPendingProfileImageUri(null);
+        }
         setPendingCredentials(null);
         router.replace("/(tabs)");
         return;

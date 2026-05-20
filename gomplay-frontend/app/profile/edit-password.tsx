@@ -71,13 +71,7 @@ export default function EditPasswordRoute() {
         >
           {/* 헤더 */}
           <View style={styles.headerRow}>
-            <Pressable
-              accessibilityRole="button"
-              onPress={() => router.back()}
-              style={styles.backButton}
-            >
-              <Ionicons name="chevron-back" size={28} color="#111111" />
-            </Pressable>
+            <View style={styles.backButton} />
             <Text style={styles.headerTitle}>비밀번호 변경</Text>
             <View style={styles.headerSpacer} />
           </View>

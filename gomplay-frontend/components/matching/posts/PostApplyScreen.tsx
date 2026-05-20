@@ -100,6 +100,7 @@ export default function PostApplyScreen({ postId }: PostApplyScreenProps) {
   }, [postId]);
 
   const isOwner = userId !== null && post?.hostId === userId;
+  console.log("userId:", userId, "hostId:", post?.hostId, "isOwner:", isOwner);
   const canEdit = isOwner && post?.status === POST_STATUS.OPEN;
   const canApply = !isOwner && post?.status === POST_STATUS.OPEN;
   const canComplete =

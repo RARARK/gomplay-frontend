@@ -281,18 +281,7 @@ export default function PostListScreen({
     <>
       <View style={styles.screen}>
         <View style={styles.header}>
-          {showBackButton ? (
-            <Pressable
-              accessibilityRole="button"
-              onPress={handleBackPress}
-              style={styles.backButton}
-              hitSlop={10}
-            >
-              <Ionicons name="chevron-back" size={28} color="#111111" />
-            </Pressable>
-          ) : (
-            <View style={styles.backButton} />
-          )}
+          <View style={styles.backButton} />
 
           <Text pointerEvents="none" style={styles.title} numberOfLines={1}>매칭 리스트</Text>
 

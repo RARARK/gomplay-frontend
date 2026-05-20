@@ -85,14 +85,7 @@ export default function MatchHistoryScreen() {
       showsVerticalScrollIndicator={false}
     >
       <View style={styles.headerRow}>
-        <Pressable
-          accessibilityRole="button"
-          onPress={handleBackPress}
-          style={styles.backButton}
-          hitSlop={10}
-        >
-          <Ionicons name="chevron-back" size={28} color="#111111" />
-        </Pressable>
+        <View style={styles.backButton} />
         <Text pointerEvents="none" style={styles.headerTitle}>매치 히스토리</Text>
         <View style={styles.headerSpacer} />
       </View>

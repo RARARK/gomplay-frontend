@@ -67,9 +67,10 @@ const styles = StyleSheet.create({
   },
   content: {
     flexGrow: 1,
+    justifyContent: "center",
     paddingHorizontal: 20,
-    paddingTop: 12,
-    paddingBottom: 64,
+    paddingTop: 72,
+    paddingBottom: 96,
   },
   section: {
     width: "100%",
