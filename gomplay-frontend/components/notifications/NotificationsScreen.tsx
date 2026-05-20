@@ -3,6 +3,7 @@ import { Image } from "expo-image";
 import { router } from "expo-router";
 import React from "react";
 import {
+  ActivityIndicator,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -10,48 +11,36 @@ import {
   View,
 } from "react-native";
 
-type NotificationType = "파트너" | "일반";
-type FilterType = "전체" | NotificationType;
+import { getNotifications, markAllNotificationsRead } from "@/services/notification/notificationService";
+import type { NotificationItem, NotificationTab } from "@/types/domain/notification";
 
-type NotificationItem = {
-  id: string;
-  type: NotificationType;
-  message: string;
-  date: string;
-  isRead: boolean;
-};
+type FilterOption = { label: string; tab: NotificationTab };
 
-const MOCK_NOTIFICATIONS: NotificationItem[] = [
-  { id: "1", type: "파트너", message: "나에게 파트너 신청을 보낸 친구가 있어요!", date: "2026년 4월 25일", isRead: false },
-  { id: "2", type: "파트너", message: "나에게 파트너 신청을 보낸 친구가 있어요!", date: "2026년 4월 25일", isRead: false },
-  { id: "3", type: "파트너", message: "나에게 파트너 신청을 보낸 친구가 있어요!", date: "2026년 4월 25일", isRead: false },
-  { id: "4", type: "일반", message: "내가 신청한 운동 매칭이 성사되었어요!", date: "2026년 4월 25일", isRead: false },
-  { id: "5", type: "파트너", message: "나에게 파트너 신청을 보낸 친구가 있어요!", date: "2026년 4월 25일", isRead: true },
-  { id: "6", type: "일반", message: "내가 신청한 운동 매칭이 성사되었어요!", date: "2026년 4월 25일", isRead: true },
-  { id: "7", type: "일반", message: "내 운동 매칭에 신청을 보낸 친구가 있어요!", date: "2026년 4월 25일", isRead: true },
-  { id: "8", type: "파트너", message: "내가 신청한 파트너 매칭이 성사되었어요!", date: "2026년 4월 25일", isRead: true },
-];
-
-const FILTERS: { label: string; value: FilterType }[] = [
-  { label: "전체", value: "전체" },
-  { label: "파트너", value: "파트너" },
-  { label: "일반", value: "일반" },
+const FILTERS: FilterOption[] = [
+  { label: "전체", tab: "all" },
+  { label: "파트너", tab: "partner" },
+  { label: "일반", tab: "general" },
 ];
 
 const PROFILE_IMAGE = require("../../assets/chat/Profileimage.png");
 
+function formatDate(iso: string) {
+  const d = new Date(iso);
+  return `${d.getFullYear()}년 ${d.getMonth() + 1}월 ${d.getDate()}일`;
+}
+
 function NotificationRow({ item }: { item: NotificationItem }) {
   return (
     <View>
-      <View style={[styles.row, !item.isRead && styles.rowUnread]}>
+      <View style={[styles.row, !item.read && styles.rowUnread]}>
         <Image source={PROFILE_IMAGE} style={styles.avatar} contentFit="cover" />
         <View style={styles.rowText}>
-          <Text style={[styles.message, !item.isRead && styles.messageUnread]}>
-            {item.message}
+          <Text style={[styles.message, !item.read && styles.messageUnread]}>
+            {item.body}
           </Text>
-          <Text style={styles.date}>{item.date}</Text>
+          <Text style={styles.date}>{formatDate(item.createdAt)}</Text>
         </View>
-        {!item.isRead && <View style={styles.unreadDot} />}
+        {!item.read && <View style={styles.unreadDot} />}
       </View>
       <View style={styles.divider} />
     </View>
@@ -59,24 +48,48 @@ function NotificationRow({ item }: { item: NotificationItem }) {
 }
 
 export default function NotificationsScreen() {
-  const [filter, setFilter] = React.useState<FilterType>("전체");
+  const [activeTab, setActiveTab] = React.useState<NotificationTab>("all");
+  const [notifications, setNotifications] = React.useState<NotificationItem[]>([]);
+  const [isLoading, setIsLoading] = React.useState(true);
+  const [error, setError] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    let isMounted = true;
+    setIsLoading(true);
+    setError(null);
+
+    getNotifications(activeTab)
+      .then((data) => {
+        if (isMounted) setNotifications(data);
+      })
+      .catch((err) => {
+        if (isMounted) {
+          setNotifications([]);
+          setError(err instanceof Error ? err.message : "알림을 불러오지 못했어요.");
+        }
+      })
+      .finally(() => {
+        if (isMounted) setIsLoading(false);
+      });
+
+    return () => { isMounted = false; };
+  }, [activeTab]);
+
+  const handleMarkAllRead = React.useCallback(() => {
+    markAllNotificationsRead()
+      .then(() => {
+        setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+      })
+      .catch(() => {});
+  }, []);
 
   const handleBackPress = () => {
     if (router.canGoBack()) {
       router.back();
       return;
     }
-
     router.replace("/" as any);
   };
-
-  const filtered = React.useMemo(
-    () =>
-      filter === "전체"
-        ? MOCK_NOTIFICATIONS
-        : MOCK_NOTIFICATIONS.filter((n) => n.type === filter),
-    [filter],
-  );
 
   return (
     <ScrollView
@@ -96,7 +109,7 @@ export default function NotificationsScreen() {
         <Text pointerEvents="none" style={styles.headerTitle}>알림</Text>
         <Pressable
           accessibilityRole="button"
-          onPress={() => {}}
+          onPress={handleMarkAllRead}
           style={styles.markAllButton}
         >
           <Ionicons name="checkmark-done-outline" size={18} color="#4C5BE2" />
@@ -106,12 +119,12 @@ export default function NotificationsScreen() {
 
       <View style={styles.filterRow}>
         {FILTERS.map((f) => {
-          const selected = filter === f.value;
+          const selected = activeTab === f.tab;
           return (
             <Pressable
-              key={f.value}
+              key={f.tab}
               accessibilityRole="button"
-              onPress={() => setFilter(f.value)}
+              onPress={() => setActiveTab(f.tab)}
               style={[styles.filterChip, selected && styles.filterChipActive]}
             >
               <Text style={[styles.filterText, selected && styles.filterTextActive]}>
@@ -122,9 +135,17 @@ export default function NotificationsScreen() {
         })}
       </View>
 
-      {filtered.length > 0 ? (
+      {isLoading ? (
+        <View style={styles.stateBox}>
+          <ActivityIndicator color="#4C5BE2" />
+        </View>
+      ) : error ? (
+        <View style={styles.stateBox}>
+          <Text style={styles.emptyText}>{error}</Text>
+        </View>
+      ) : notifications.length > 0 ? (
         <View>
-          {filtered.map((item) => (
+          {notifications.map((item) => (
             <NotificationRow key={item.id} item={item} />
           ))}
         </View>
@@ -262,6 +283,10 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
   },
 
+  stateBox: {
+    alignItems: "center",
+    paddingTop: 80,
+  },
   empty: {
     alignItems: "center",
     paddingTop: 80,
