@@ -10,6 +10,7 @@ import type {
   GatheringHistoryItem,
   GatheringListQuery,
   GatheringListResponse,
+  GatheringParticipant,
   GatheringPostDetailResponse,
   GatheringRecommendItem,
   JoinGatheringResponse,
@@ -277,6 +278,43 @@ export async function completeGathering(gatheringId: number): Promise<void> {
     }
 
     throw new ApiError("운동 완료 처리에 실패했습니다.");
+  }
+}
+
+export async function getGatheringParticipants(
+  gatheringId: number,
+): Promise<GatheringParticipant[]> {
+  try {
+    const res = await apiClient.get<GatheringParticipant[]>(
+      `/api/gathering/${gatheringId}/participants`,
+    );
+    return res.data;
+  } catch (error) {
+    if (error instanceof ApiError) throw error;
+
+    if (isAxiosError(error)) {
+      const errorBody = getBackendErrorBody(error.response?.data);
+
+      if (error.response?.status === 403) {
+        throw new ApiError(
+          errorBody?.message ?? "신청자 목록을 조회할 권한이 없습니다.",
+        );
+      }
+
+      if (error.response?.status === 404) {
+        throw new ApiError(errorBody?.message ?? "모집글을 찾을 수 없습니다.");
+      }
+
+      if (error.response?.status === 500) {
+        throw new ApiError("서버 내부 오류", "Internal server error");
+      }
+
+      if (errorBody?.message) {
+        throw new ApiError(errorBody.message);
+      }
+    }
+
+    throw new ApiError("신청자 목록을 불러올 수 없습니다.");
   }
 }
 

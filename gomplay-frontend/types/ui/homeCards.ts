@@ -18,6 +18,9 @@ export type PartnerCardProps = {
   tags?: string[];
   matchScore?: number;
   matchInsight?: string;
+  preferredPartnerLabel?: string;
+  exerciseStyleLabel?: string;
+  freeTimeLabel?: string;
   rejectLabel?: string;
   acceptLabel?: string;
   width?: number;

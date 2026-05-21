@@ -82,6 +82,7 @@ export default function CreatePostScreen() {
   const [isExercisePickerVisible, setIsExercisePickerVisible] =
     React.useState(false);
   const [hasSubmitted, setHasSubmitted] = React.useState(false);
+  const [timePickerTouched, setTimePickerTouched] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [isLocationLoading, setIsLocationLoading] = React.useState(false);
   const [locationCoords, setLocationCoords] = React.useState<Coords | null>({
@@ -194,6 +195,7 @@ export default function CreatePostScreen() {
       scheduledStartAt: nextStartAt,
       scheduledEndAt: nextEndAt,
     }));
+    setTimePickerTouched(true);
   };
 
   const handleUseCurrentLocation = async () => {
@@ -422,14 +424,14 @@ export default function CreatePostScreen() {
               />
             </View>
 
-            {visibleErrors.scheduledStartAt ? (
+            {(timePickerTouched || hasSubmitted) && validationErrors.scheduledStartAt ? (
               <Text style={styles.errorText}>
-                {visibleErrors.scheduledStartAt}
+                {validationErrors.scheduledStartAt}
               </Text>
             ) : null}
-            {!visibleErrors.scheduledStartAt && visibleErrors.scheduledEndAt ? (
+            {(timePickerTouched || hasSubmitted) && !validationErrors.scheduledStartAt && validationErrors.scheduledEndAt ? (
               <Text style={styles.errorText}>
-                {visibleErrors.scheduledEndAt}
+                {validationErrors.scheduledEndAt}
               </Text>
             ) : null}
             {visibleErrors.difficulty ? (

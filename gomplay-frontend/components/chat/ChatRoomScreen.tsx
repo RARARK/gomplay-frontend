@@ -1,8 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Image,
+  KeyboardAvoidingView,
   Modal,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -12,7 +14,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 
 import ChatHeader from "./ChatHeader";
 import PostMatchReviewCard from "./PostMatchReviewCard";
@@ -30,8 +32,10 @@ import type { ChatMessage } from "@/types/domain/chatMessage";
 import {
   CHAT_ROOM_STATUS,
   getChatRoomParticipantDisplayName,
+  getChatRoomPrimaryParticipant,
   type ChatRoomParticipant,
 } from "@/types/domain/chatRoom";
+import { normalizeImageUrl } from "@/lib/utils/imageUrl";
 import { MATCH_STATUS } from "@/types/domain/match";
 
 const PARTNER_IMAGE = require("../../assets/chat/Profileimage.png");
@@ -68,28 +72,12 @@ const EMPTY_SCHEDULE_DRAFT: ChatScheduleItem = {
   ...SCHEDULE_FALLBACK,
 };
 
-const INITIAL_NOTICES: ChatNoticeItem[] = [
-  {
-    id: 1,
-    title: "운동 전 준비 안내",
-    content:
-      "오늘 운동 전 10분 일찍 도착해서 준비운동하고 시작해요. 물은 각자 챙기고, 장소가 헷갈리면 채팅으로 바로 공유해주세요.",
-    createdAtLabel: "오늘",
-    isPinned: true,
-  },
-];
+const INITIAL_NOTICES: ChatNoticeItem[] = [];
 
-const INITIAL_SCHEDULES: ChatScheduleItem[] = [
-  {
-    id: 1,
-    dateLabel: "오늘",
-    timeRangeLabel: "7:00 PM - 8:00 PM",
-    locationName: "OO Park",
-    sportName: "Futsal",
-  },
-];
+const INITIAL_SCHEDULES: ChatScheduleItem[] = [];
 
 export default function ChatRoomScreen() {
+  const insets = useSafeAreaInsets();
   const params = useLocalSearchParams<{ chatRoomId?: string | string[] }>();
   const chatRoomId = parseChatRoomId(params.chatRoomId);
 
@@ -103,6 +91,8 @@ export default function ChatRoomScreen() {
   const appendMessage = useChatStore((state) => state.appendMessage);
   const draftsByRoomId = useChatStore((state) => state.draftsByRoomId);
   const setDraft = useChatStore((state) => state.setDraft);
+
+  const scrollViewRef = useRef<ScrollView>(null);
 
   const [isLoading, setIsLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
@@ -137,6 +127,12 @@ export default function ChatRoomScreen() {
         : "Chat Room",
     [chatRoom],
   );
+  const partnerAvatarSource = useMemo(() => {
+    if (!chatRoom) return PARTNER_IMAGE;
+    const partner = getChatRoomPrimaryParticipant(chatRoom.participants);
+    const url = normalizeImageUrl(partner?.profileImageUrl);
+    return url ? { uri: url } : PARTNER_IMAGE;
+  }, [chatRoom]);
   const messages = messagesByRoomId[chatRoomId] ?? [];
   const draft = draftsByRoomId[chatRoomId] ?? "";
   const isReadOnly = chatRoom?.status === CHAT_ROOM_STATUS.READ_ONLY;
@@ -426,12 +422,16 @@ export default function ChatRoomScreen() {
   return (
     <SafeAreaView
       style={styles.safeArea}
-      edges={["top", "left", "right", "bottom"]}
+      edges={["top", "left", "right"]}
     >
-      <View style={styles.container}>
+      <KeyboardAvoidingView
+        style={[styles.container, { paddingBottom: insets.bottom }]}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={Platform.OS === "ios" ? insets.bottom : 0}
+      >
         <ChatHeader
           title={displayRoomTitle}
-          onBackPress={() => router.replace("/(tabs)/chat")}
+          showBackButton={false}
           onPressMenu={() => setIsMenuOpen(true)}
         />
 
@@ -443,8 +443,11 @@ export default function ChatRoomScreen() {
         ) : null}
 
         <ScrollView
+          ref={scrollViewRef}
+          style={styles.messageScrollView}
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
+          onContentSizeChange={() => scrollViewRef.current?.scrollToEnd({ animated: false })}
         >
           <View style={styles.messageList}>
             {messages.map((message) => (
@@ -452,20 +455,24 @@ export default function ChatRoomScreen() {
                 key={message.id}
                 message={message}
                 partnerName={partnerDisplayName}
+                partnerAvatar={partnerAvatarSource}
               />
             ))}
           </View>
         </ScrollView>
 
         <PostMatchReviewCard
-          showReviewPrompt={chatRoom.matchStatus === MATCH_STATUS.COMPLETED}
+          showReviewPrompt={chatRoom.matchStatus === MATCH_STATUS.COMPLETED && !chatRoom.reviewCompleted}
           title="Workout finished!"
           description="How was the session today? Please leave a review for your partner."
           buttonLabel="Leave review"
           onPressReview={() => {
-            const opponent = chatRoom.participants[0];
+            const opponent = getChatRoomPrimaryParticipant(chatRoom.participants);
+            console.log("[review] matchId:", chatRoom.matchId, "opponent:", JSON.stringify(opponent));
+            const name = encodeURIComponent(opponent?.name ?? "");
+            const img = encodeURIComponent(opponent?.profileImageUrl ?? "");
             router.push(
-              `/review/${chatRoom.matchId}?revieweeId=${opponent?.id ?? ""}` as any,
+              `/review/${chatRoom.matchId}?revieweeId=${opponent?.id ?? ""}&partnerName=${name}&partnerProfileImageUrl=${img}` as any,
             );
           }}
           inputPlaceholder={
@@ -534,7 +541,7 @@ export default function ChatRoomScreen() {
           onCancelEdit={() => setIsScheduleDetailEditing(false)}
           onSave={handleSaveSchedule}
         />
-      </View>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
@@ -542,6 +549,7 @@ export default function ChatRoomScreen() {
 type MessageRowProps = {
   message: ChatMessage;
   partnerName: string;
+  partnerAvatar: React.ComponentProps<typeof Image>["source"];
 };
 
 type ChatNoticeProps = {
@@ -611,6 +619,7 @@ function ChatRoomSideMenu({
     <Modal
       visible={visible}
       animationType="slide"
+      statusBarTranslucent
       onRequestClose={onClose}
     >
       <SafeAreaView edges={["top", "left", "right", "bottom"]} style={styles.drawer}>
@@ -1085,7 +1094,7 @@ function DetailMenuAction({ label, onPress, danger = false }: DetailMenuActionPr
   );
 }
 
-function MessageRow({ message, partnerName }: MessageRowProps) {
+function MessageRow({ message, partnerName, partnerAvatar }: MessageRowProps) {
   if (message.type === "SYSTEM") {
     return (
       <View style={styles.systemMessageWrapper}>
@@ -1110,7 +1119,7 @@ function MessageRow({ message, partnerName }: MessageRowProps) {
   return (
     <View style={styles.partnerMessageSection}>
       <View style={styles.partnerHeaderRow}>
-        <Image source={PARTNER_IMAGE} style={styles.partnerAvatar} />
+        <Image source={partnerAvatar} style={styles.partnerAvatar} />
         <Text style={styles.partnerName}>{partnerName}</Text>
       </View>
       <View style={styles.partnerBubbleRow}>
@@ -1151,6 +1160,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: Color.colorWhite,
+  },
+  messageScrollView: {
+    flex: 1,
   },
   scrollContent: {
     paddingTop: 20,

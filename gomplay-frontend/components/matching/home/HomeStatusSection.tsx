@@ -1,11 +1,11 @@
 import * as React from "react";
-import { Animated, Easing, StyleSheet, View } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { Animated, Easing, StyleSheet, Text, View } from "react-native";
 import QuickMatchToggleNew from "./QuickMatchToggleNew";
 import { HomeLayout } from "@/constants/locofyHomeStyles";
 import type { HomeStatusVariant } from "@/types/ui/homeStatus";
 import type { PartnerCardProps } from "@/types/ui/homeCards";
 import DefaultMatchContent from "./DefaultMatchContent";
-import MatchedContent from "./MatchedContent";
 import MatchedContentNew from "./MatchedContentNew";
 import MatchingContent from "./MatchingContent";
 import NoScheduleContent from "./NoScheduleContent";
@@ -15,6 +15,7 @@ type Props = {
   isQuickMatchOn?: boolean;
   onToggleQuickMatch?: (value: boolean) => void;
   candidates?: PartnerCardProps[];
+  newCardPartners?: PartnerCardProps[];
   isToggleDisabled?: boolean;
   noMoreCandidates?: boolean;
 };
@@ -41,13 +42,14 @@ const STATUS_SLOT_HEIGHT =
 function renderContent(
   state: HomeStatusVariant,
   candidates: PartnerCardProps[],
+  newCardPartners: PartnerCardProps[] | undefined,
   noMoreCandidates: boolean,
 ) {
   switch (state) {
     case "Matched":
-      return <MatchedContent partners={candidates.length > 0 ? candidates : undefined} />;
+      return <MatchedContentNew partners={candidates.length > 0 ? candidates : undefined} />;
     case "MatchedNew":
-      return <MatchedContentNew />;
+      return <MatchedContentNew partners={newCardPartners} />;
     case "Matching":
       return (
         <MatchingContent
@@ -69,6 +71,7 @@ const HomeStatusSection = React.memo(function HomeStatusSection({
   isQuickMatchOn,
   onToggleQuickMatch,
   candidates = [],
+  newCardPartners,
   isToggleDisabled,
   noMoreCandidates = false,
 }: Props) {
@@ -76,9 +79,10 @@ const HomeStatusSection = React.memo(function HomeStatusSection({
   const fadeAnim = React.useRef(new Animated.Value(1)).current;
   const prevState = React.useRef(state);
   const content = React.useMemo(
-    () => renderContent(state, candidates, noMoreCandidates),
-    [state, candidates, noMoreCandidates],
+    () => renderContent(state, candidates, newCardPartners, noMoreCandidates),
+    [state, candidates, newCardPartners, noMoreCandidates],
   );
+  const freeNowCount = newCardPartners?.length ?? candidates.length;
 
   React.useEffect(() => {
     if (prevState.current === state) return;
@@ -103,6 +107,19 @@ const HomeStatusSection = React.memo(function HomeStatusSection({
           disabled={isToggleDisabled}
         />
       </View>
+
+      {state === "MatchedNew" && (
+        <View style={styles.discoveryBanner}>
+          <View style={styles.discoveryIcon}>
+            <Ionicons name="flash" size={23} color="#FFFFFF" />
+          </View>
+          <Text style={styles.discoveryText}>
+            현재 공강 중인 사람{" "}
+            <Text style={styles.discoveryCount}>{freeNowCount}명</Text>
+            {" "}발견!
+          </Text>
+        </View>
+      )}
 
       <View
         style={[
@@ -131,6 +148,44 @@ const styles = StyleSheet.create({
   toggleWrapper: {
     width: "100%",
     paddingHorizontal: 16,
+  },
+  discoveryBanner: {
+    width: "92%",
+    minHeight: 54,
+    borderRadius: 999,
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#ECECF6",
+    paddingLeft: 13,
+    paddingRight: 18,
+    marginTop: 4,
+    marginBottom: -4,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 11,
+    shadowColor: "#111827",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.08,
+    shadowRadius: 18,
+    elevation: 4,
+  },
+  discoveryIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "#5B5EF2",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  discoveryText: {
+    flex: 1,
+    fontSize: 15,
+    lineHeight: 21,
+    fontWeight: "900",
+    color: "#67677F",
+  },
+  discoveryCount: {
+    color: "#5B5EF2",
   },
   contentViewport: {
     width: "100%",

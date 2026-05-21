@@ -3,7 +3,7 @@ import { Pressable, StyleSheet, View, type LayoutChangeEvent } from "react-nativ
 import PreviousButton from "@/assets/home/PreviousButton.svg";
 import { HomeLayout } from "@/constants/locofyHomeStyles";
 import type { PartnerCardProps } from "@/types/ui/homeCards";
-import PartnerCard from "./PartnerCard";
+import PartnerCard from "../../../drafts/PartnerCard";
 
 export type PartnerCarouselProps = {
   partners?: PartnerCardProps[];

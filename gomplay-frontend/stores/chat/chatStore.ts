@@ -5,6 +5,7 @@ import type { ChatRoom } from "@/types/domain/chatRoom";
 
 type ChatState = {
   chatRooms: ChatRoom[];
+  reviewedMatchIds: number[];
   selectedChatRoomId: number | null;
   messagesByRoomId: Record<number, ChatMessage[]>;
   draftsByRoomId: Record<number, string>;
@@ -13,6 +14,7 @@ type ChatState = {
 
   setChatRooms: (chatRooms: ChatRoom[]) => void;
   upsertChatRoom: (chatRoom: ChatRoom) => void;
+  markReviewCompleted: (matchId: number) => void;
   setSelectedChatRoomId: (chatRoomId: number | null) => void;
   setMessages: (chatRoomId: number, messages: ChatMessage[]) => void;
   prependMessages: (
@@ -38,6 +40,7 @@ type ChatState = {
 
 export const useChatStore = create<ChatState>((set) => ({
   chatRooms: [],
+  reviewedMatchIds: [],
   selectedChatRoomId: null,
   messagesByRoomId: {},
   draftsByRoomId: {},
@@ -45,18 +48,35 @@ export const useChatStore = create<ChatState>((set) => ({
   connectionStatusByRoomId: {},
 
   setChatRooms: (chatRooms) =>
-    set({
-      chatRooms,
-    }),
+    set((state) => ({
+      chatRooms: chatRooms.map((room) =>
+        state.reviewedMatchIds.includes(room.matchId)
+          ? { ...room, reviewCompleted: true }
+          : room,
+      ),
+    })),
+
+  markReviewCompleted: (matchId) =>
+    set((state) => ({
+      reviewedMatchIds: Array.from(new Set([...state.reviewedMatchIds, matchId])),
+      chatRooms: state.chatRooms.map((room) =>
+        room.matchId === matchId ? { ...room, reviewCompleted: true } : room,
+      ),
+    })),
 
   upsertChatRoom: (chatRoom) =>
     set((state) => {
-      const hasExistingRoom = state.chatRooms.some((item) => item.id === chatRoom.id);
+      const normalizedChatRoom = state.reviewedMatchIds.includes(chatRoom.matchId)
+        ? { ...chatRoom, reviewCompleted: true }
+        : chatRoom;
+      const hasExistingRoom = state.chatRooms.some(
+        (item) => item.id === normalizedChatRoom.id,
+      );
       const nextChatRooms = hasExistingRoom
         ? state.chatRooms.map((item) =>
-            item.id === chatRoom.id ? chatRoom : item,
+            item.id === normalizedChatRoom.id ? normalizedChatRoom : item,
           )
-        : [...state.chatRooms, chatRoom];
+        : [...state.chatRooms, normalizedChatRoom];
 
       nextChatRooms.sort((left, right) => {
         const leftTime = new Date(left.lastMessageAt ?? left.createdAt).getTime();
@@ -184,6 +204,7 @@ export const useChatStore = create<ChatState>((set) => ({
   clearChatState: () =>
     set({
       chatRooms: [],
+      reviewedMatchIds: [],
       selectedChatRoomId: null,
       messagesByRoomId: {},
       draftsByRoomId: {},

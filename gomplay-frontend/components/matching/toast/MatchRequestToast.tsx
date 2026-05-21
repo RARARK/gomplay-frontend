@@ -15,7 +15,9 @@ import { normalizeImageUrl } from "@/lib/utils/imageUrl";
 import {
   acceptMatchRequest,
   rejectMatchRequest,
+  toggleMatching,
 } from "@/services/matching/matchingService";
+import { useAuthStore } from "@/stores/auth/authStore";
 import { useMatchingStore } from "@/stores/matching/matchingStore";
 
 const DEFAULT_AVATAR = require("../../../assets/match/Ellipse-12.png");
@@ -27,7 +29,9 @@ export default function MatchRequestToast() {
 
   const pendingMatchRequest = useMatchingStore((s) => s.pendingMatchRequest);
   const setPendingMatchRequest = useMatchingStore((s) => s.setPendingMatchRequest);
+  const setCandidates = useMatchingStore((s) => s.setCandidates);
   const candidates = useMatchingStore((s) => s.candidates);
+  const setMatching = useAuthStore((s) => s.setMatching);
 
   const translateY = React.useRef(new Animated.Value(-160)).current;
   const opacity = React.useRef(new Animated.Value(0)).current;
@@ -39,6 +43,7 @@ export default function MatchRequestToast() {
   const progressAnim = React.useRef<Animated.CompositeAnimation | null>(null);
   const dismissTimer = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   const requestIdRef = React.useRef<number | null>(null);
+  const candidateCacheRef = React.useRef<Map<number, { name: string; profileImageUrl: string | null }>>(new Map());
 
   const slideIn = React.useCallback(() => {
     setMounted(true);
@@ -60,6 +65,16 @@ export default function MatchRequestToast() {
       onDone?.();
     });
   }, [translateY, opacity]);
+
+  // Cache candidates so profile info survives after candidates list is cleared
+  React.useEffect(() => {
+    candidates.forEach((c) => {
+      candidateCacheRef.current.set(c.userProfileId, {
+        name: c.name,
+        profileImageUrl: c.profileImageUrl,
+      });
+    });
+  }, [candidates]);
 
   React.useEffect(() => {
     if (!pendingMatchRequest) {
@@ -95,6 +110,7 @@ export default function MatchRequestToast() {
 
     return () => {
       if (dismissTimer.current) clearTimeout(dismissTimer.current);
+      requestIdRef.current = null; // allow re-entry if effect re-runs (e.g. Strict Mode)
     };
   }, [pendingMatchRequest?.matchRequestId]);
 
@@ -103,12 +119,20 @@ export default function MatchRequestToast() {
 
     setIsAccepting(true);
     try {
-      await acceptMatchRequest(pendingMatchRequest.matchRequestId);
+      const res = await acceptMatchRequest(pendingMatchRequest.matchRequestId);
+      const roomId = res.data?.roomId;
+      setMatching(false);
+      setCandidates([]);
+      toggleMatching(false).catch(() => {});
       slideOut(() => {
         setPendingMatchRequest(null);
         setIsAccepting(false);
       });
-      router.push("/(tabs)/match");
+      if (roomId) {
+        router.push(`/chat/${encodeURIComponent(roomId)}`);
+      } else {
+        router.push("/(tabs)/chat");
+      }
     } catch (error) {
       setIsAccepting(false);
       Alert.alert(
@@ -143,13 +167,10 @@ export default function MatchRequestToast() {
 
   if (!mounted) return null;
 
-  const requester = candidates.find(
-    (c) => c.userProfileId === pendingMatchRequest?.opponentId,
-  );
-  const name = requester?.name ?? "누군가";
-  const avatarUri = requester?.profileImageUrl
-    ? normalizeImageUrl(requester.profileImageUrl)
-    : null;
+  const cachedOpponent = candidateCacheRef.current.get(pendingMatchRequest?.opponentId ?? -1);
+  const name = pendingMatchRequest?.name ?? cachedOpponent?.name ?? "누군가";
+  const rawImageUrl = pendingMatchRequest?.profileImageUrl ?? cachedOpponent?.profileImageUrl;
+  const avatarUri = rawImageUrl ? normalizeImageUrl(rawImageUrl) : null;
   const avatarSource = avatarUri ? { uri: avatarUri } : DEFAULT_AVATAR;
 
   return (

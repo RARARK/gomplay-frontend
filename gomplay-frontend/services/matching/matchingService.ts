@@ -38,13 +38,23 @@ export async function toggleMatching(
 ): Promise<ToggleMatchingResponse> {
   const body: ToggleMatchingRequest = { isMatching };
 
+  console.log("[toggleMatching] 요청:", body);
+
   try {
     const res = await apiClient.patch<ToggleMatchingResponse>(
       "/api/match/toggle",
       body,
     );
+    console.log("[toggleMatching] 성공 응답:", JSON.stringify(res.data));
     return res.data;
   } catch (error) {
+    if (isAxiosError(error)) {
+      console.log("[toggleMatching] 에러 status:", error.response?.status);
+      console.log("[toggleMatching] 에러 body:", JSON.stringify(error.response?.data));
+    } else {
+      console.log("[toggleMatching] 에러:", error);
+    }
+
     if (error instanceof ApiError) throw error;
 
     if (isAxiosError(error)) {
@@ -109,12 +119,21 @@ export async function requestPartnerMatch(
 export async function acceptMatchRequest(
   matchRequestId: number,
 ): Promise<AcceptMatchRequestResponse> {
+  console.log("[acceptMatchRequest] 요청 matchRequestId:", matchRequestId);
   try {
     const res = await apiClient.patch<AcceptMatchRequestResponse>(
       `/api/match/request/${matchRequestId}/accept`,
     );
+    console.log("[acceptMatchRequest] 성공 응답:", JSON.stringify(res.data));
     return res.data;
   } catch (error) {
+    if (isAxiosError(error)) {
+      console.log("[acceptMatchRequest] 에러 status:", error.response?.status);
+      console.log("[acceptMatchRequest] 에러 body:", JSON.stringify(error.response?.data));
+    } else {
+      console.log("[acceptMatchRequest] 에러:", error);
+    }
+
     if (error instanceof ApiError) throw error;
 
     if (isAxiosError(error)) {

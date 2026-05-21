@@ -23,9 +23,9 @@ import Svg, {
   Stop,
   LinearGradient as SvgLinearGradient,
 } from "react-native-svg";
-import DEFAULT_BACKGROUND_IMAGE from "../../../assets/home/PartnerCardBackground.png";
-import DEFAULT_PROFILE_IMAGE from "../../../assets/home/PartnerProfileImage.png";
-import PartnerProfileModal from "./PartnerProfileModal";
+import DEFAULT_BACKGROUND_IMAGE from "../assets/home/PartnerCardBackground.png";
+import DEFAULT_PROFILE_IMAGE from "../assets/home/PartnerProfileImage.png";
+import PartnerProfileModal from "../components/matching/home/PartnerProfileModal";
 
 export type { PartnerCardProps } from "@/types/ui/homeCards";
 

@@ -8,6 +8,7 @@ export const VISIBLE_CANDIDATE_LIMIT = 3;
 type ResolvedMatchRequest = {
   matchRequestId: number;
   accepted: boolean;
+  roomId?: number;
 };
 
 type MatchingState = {
@@ -43,7 +44,7 @@ type MatchingState = {
   resetDisconnectedCandidates: () => void;
 
   setPendingMatchRequest: (request: WsMatchRequestData | null) => void;
-  resolveMatchRequest: (matchRequestId: number, accepted: boolean) => void;
+  resolveMatchRequest: (matchRequestId: number, accepted: boolean, roomId?: number) => void;
   clearLastResolvedMatchRequest: () => void;
   setWsConnected: (connected: boolean) => void;
 };
@@ -145,8 +146,8 @@ export const useMatchingStore = create<MatchingState>((set, get) => ({
   resetDisconnectedCandidates: () => set({ disconnectedCandidateIds: [] }),
 
   setPendingMatchRequest: (request) => set({ pendingMatchRequest: request }),
-  resolveMatchRequest: (matchRequestId, accepted) =>
-    set({ lastResolvedMatchRequest: { matchRequestId, accepted } }),
+  resolveMatchRequest: (matchRequestId, accepted, roomId) =>
+    set({ lastResolvedMatchRequest: { matchRequestId, accepted, roomId } }),
   clearLastResolvedMatchRequest: () =>
     set({ lastResolvedMatchRequest: null }),
   setWsConnected: (connected) => set({ wsConnected: connected }),

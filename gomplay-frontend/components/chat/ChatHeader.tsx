@@ -9,6 +9,7 @@ type ChatHeaderProps = {
   onBackPress?: () => void;
   showBackButton?: boolean;
   onPressMenu?: () => void;
+  showMenuButton?: boolean;
 };
 
 export default function ChatHeader({
@@ -16,6 +17,7 @@ export default function ChatHeader({
   onBackPress,
   showBackButton = true,
   onPressMenu,
+  showMenuButton = true,
 }: ChatHeaderProps) {
   const handleBackPress = () => {
     if (onBackPress) {
@@ -50,14 +52,18 @@ export default function ChatHeader({
         <Text pointerEvents="none" numberOfLines={1} style={styles.title}>
           {title}
         </Text>
-        <Pressable
-          accessibilityLabel="Open chat menu"
-          accessibilityRole="button"
-          onPress={onPressMenu}
-          style={styles.menuButton}
-        >
-          <Ionicons name="menu-outline" size={28} color="#111827" />
-        </Pressable>
+        {showMenuButton ? (
+          <Pressable
+            accessibilityLabel="Open chat menu"
+            accessibilityRole="button"
+            onPress={onPressMenu}
+            style={styles.menuButton}
+          >
+            <Ionicons name="menu-outline" size={28} color="#111827" />
+          </Pressable>
+        ) : (
+          <View style={styles.menuButton} />
+        )}
       </View>
     </View>
   );

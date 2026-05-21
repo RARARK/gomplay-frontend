@@ -5,9 +5,6 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import TutorialAnalyzingScreen from "@/components/auth/tutorial/TutorialAnalyzingScreen";
 import { TUTORIAL_ANALYZING_DELAY_MS } from "@/components/auth/tutorial/tutorialSteps";
-import { submitSchedule } from "@/services/schedule/scheduleService";
-import { submitSurvey } from "@/services/survey/surveyService";
-import { useSurveyStore } from "@/stores/survey/surveyStore";
 
 export default function TutorialAnalyzingRoute() {
   const params = useLocalSearchParams<{
@@ -15,23 +12,8 @@ export default function TutorialAnalyzingRoute() {
     nickname?: string;
     studentId?: string;
   }>();
-  const pendingSurvey = useSurveyStore((s) => s.pendingSurvey);
-  const pendingSchedule = useSurveyStore((s) => s.pendingSchedule);
-  const setPendingSurvey = useSurveyStore((s) => s.setPendingSurvey);
-  const setPendingSchedule = useSurveyStore((s) => s.setPendingSchedule);
 
   React.useEffect(() => {
-    if (pendingSurvey) {
-      submitSurvey(pendingSurvey)
-        .then(() => setPendingSurvey(null))
-        .catch(() => {});
-    }
-    if (pendingSchedule) {
-      submitSchedule(pendingSchedule)
-        .then(() => setPendingSchedule(null))
-        .catch(() => {});
-    }
-
     const timeoutId = setTimeout(() => {
       router.replace({
         pathname: "/tutorial-result",

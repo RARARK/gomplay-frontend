@@ -26,19 +26,25 @@ import {
 import CreatePostDetailCard from "@/components/matching/create-post/CreatePostDetailCard";
 import CreatePostLocationCard from "@/components/matching/create-post/CreatePostLocationCard";
 import CreatePostTagSelector from "@/components/matching/create-post/CreatePostTagSelector";
+import ApplicantPanel from "@/components/matching/status/ApplicantPanel";
+import type { Applicant } from "@/components/matching/status/ApplicantPanel";
+import WorkoutCompleteModal from "@/components/matching/WorkoutCompleteModal";
 import {
   formatCreatePostDayLabel,
   formatCreatePostTimeRangeLabel,
 } from "@/components/matching/create-post/createPostUtils";
 import {
+  acceptParticipant,
   completeGathering,
   deleteGathering,
   getGatheringDetail,
+  getGatheringParticipants,
   joinGathering,
+  rejectParticipant,
   updateGathering,
 } from "@/services/gathering/gatheringService";
 import { useAuthStore } from "@/stores/auth/authStore";
-import type { GatheringPostDetailResponse } from "@/types/domain/gathering";
+import type { GatheringParticipant, GatheringPostDetailResponse } from "@/types/domain/gathering";
 import { POST_STATUS } from "@/types/domain/post";
 
 const BIO_MAX_LENGTH = 200;
@@ -66,6 +72,10 @@ export default function PostApplyScreen({ postId }: PostApplyScreenProps) {
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [isSaving, setIsSaving] = React.useState(false);
   const [isCompleting, setIsCompleting] = React.useState(false);
+  const [isCompletePromptVisible, setIsCompletePromptVisible] =
+    React.useState(false);
+  const [participants, setParticipants] = React.useState<GatheringParticipant[]>([]);
+  const [isApplicantPanelOpen, setIsApplicantPanelOpen] = React.useState(false);
 
   const [editTitle, setEditTitle] = React.useState("");
   const [editTags, setEditTags] = React.useState<string[]>([]);
@@ -100,13 +110,77 @@ export default function PostApplyScreen({ postId }: PostApplyScreenProps) {
   }, [postId]);
 
   const isOwner = userId !== null && post?.hostId === userId;
+
+  React.useEffect(() => {
+    if (!isOwner || !post) return;
+    let isMounted = true;
+    console.log("[participants] fetching for gatheringId:", post.id);
+    getGatheringParticipants(post.id)
+      .then((data) => {
+        console.log("[participants] response:", JSON.stringify(data));
+        if (isMounted) setParticipants(data);
+      })
+      .catch((err) => {
+        console.log("[participants] error:", err?.message ?? err);
+      });
+    return () => { isMounted = false; };
+  }, [isOwner, post?.id]);
   console.log("userId:", userId, "hostId:", post?.hostId, "isOwner:", isOwner);
   const canEdit = isOwner && post?.status === POST_STATUS.OPEN;
   const canApply = !isOwner && post?.status === POST_STATUS.OPEN;
+  const hasAcceptedParticipant = participants.some((p) => p.status === "ACCEPTED");
   const canComplete =
     post?.status !== POST_STATUS.CANCELLED &&
     post?.status !== POST_STATUS.COMPLETED &&
-    (isOwner || !canApply);
+    (isOwner ? hasAcceptedParticipant : !canApply);
+
+  const toApplicants = (list: GatheringParticipant[]): Applicant[] =>
+    list.map((p) => ({
+      id: String(p.id),
+      name: p.userName,
+      department: "",
+      studentNumber: "",
+      tags: [],
+      trustScore: 0,
+      status:
+        p.status === "ACCEPTED"
+          ? "accepted"
+          : p.status === "REJECTED"
+            ? "rejected"
+            : "pending",
+    }));
+
+  const handleAcceptApplicant = async (applicantId: string) => {
+    if (!post) return;
+    const id = Number(applicantId);
+    setParticipants((prev) =>
+      prev.map((p) => (p.id === id ? { ...p, status: "ACCEPTED" as const } : p)),
+    );
+    try {
+      await acceptParticipant(post.id, id);
+    } catch {
+      setParticipants((prev) =>
+        prev.map((p) => (p.id === id ? { ...p, status: "PENDING" as const } : p)),
+      );
+      Alert.alert("수락 실패", "다시 시도해주세요.");
+    }
+  };
+
+  const handleRejectApplicant = async (applicantId: string) => {
+    if (!post) return;
+    const id = Number(applicantId);
+    setParticipants((prev) =>
+      prev.map((p) => (p.id === id ? { ...p, status: "REJECTED" as const } : p)),
+    );
+    try {
+      await rejectParticipant(post.id, id);
+    } catch {
+      setParticipants((prev) =>
+        prev.map((p) => (p.id === id ? { ...p, status: "PENDING" as const } : p)),
+      );
+      Alert.alert("거절 실패", "다시 시도해주세요.");
+    }
+  };
 
   const handleToggleTag = (tag: string) => {
     setEditTags((prev) => {
@@ -178,33 +252,24 @@ export default function PostApplyScreen({ postId }: PostApplyScreenProps) {
     }
   };
 
-  const handleComplete = () => {
+  const handleComplete = async () => {
     if (!post || isCompleting) return;
 
-    Alert.alert("운동 완료하기", "이번 모집 운동을 완료 처리할까요?", [
-      { text: "취소", style: "cancel" },
-      {
-        text: "완료하기",
-        onPress: async () => {
-          if (!post) return;
-          setIsCompleting(true);
-          try {
-            await completeGathering(post.id);
-            setPost((prev) =>
-              prev ? { ...prev, status: POST_STATUS.COMPLETED } : prev,
-            );
-            Alert.alert("완료 처리됨", "내 운동 완료 상태가 반영됐어요.");
-          } catch (error) {
-            Alert.alert(
-              "완료 처리 실패",
-              error instanceof Error ? error.message : "다시 시도해주세요.",
-            );
-          } finally {
-            setIsCompleting(false);
-          }
-        },
-      },
-    ]);
+    setIsCompleting(true);
+    try {
+      await completeGathering(post.id);
+      setPost((prev) =>
+        prev ? { ...prev, status: POST_STATUS.COMPLETED } : prev,
+      );
+      setIsCompletePromptVisible(true);
+    } catch (error) {
+      Alert.alert(
+        "완료 처리 실패",
+        error instanceof Error ? error.message : "다시 시도해주세요.",
+      );
+    } finally {
+      setIsCompleting(false);
+    }
   };
 
   if (isLoading) {
@@ -227,18 +292,19 @@ export default function PostApplyScreen({ postId }: PostApplyScreenProps) {
   const scheduledEndAt = toDate(post.scheduledEndAt);
 
   return (
-    <KeyboardAvoidingView
-      style={styles.flex}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-    >
-      <ScrollView
-        contentContainerStyle={[
-          styles.scrollContent,
-          { paddingBottom: 28 + insets.bottom },
-        ]}
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
+    <>
+      <KeyboardAvoidingView
+        style={styles.flex}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
+        <ScrollView
+          contentContainerStyle={[
+            styles.scrollContent,
+            { paddingBottom: 28 + insets.bottom },
+          ]}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
         <View style={styles.headerRow}>
           <Pressable
             accessibilityRole="button"
@@ -425,6 +491,24 @@ export default function PostApplyScreen({ postId }: PostApplyScreenProps) {
           )}
         </View>
 
+        {isOwner ? (
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => setIsApplicantPanelOpen(true)}
+            style={styles.applicantButton}
+          >
+            <Ionicons name="people-outline" size={20} color="#4C5BE2" />
+            <Text style={styles.applicantButtonText}>신청자 목록</Text>
+            {participants.filter((p) => p.status === "PENDING").length > 0 ? (
+              <View style={styles.applicantBadge}>
+                <Text style={styles.applicantBadgeText}>
+                  {participants.filter((p) => p.status === "PENDING").length}
+                </Text>
+              </View>
+            ) : null}
+          </Pressable>
+        ) : null}
+
         {canEdit ? (
           <>
             <View style={styles.ownerButtonRow}>
@@ -505,8 +589,36 @@ export default function PostApplyScreen({ postId }: PostApplyScreenProps) {
             </Text>
           </View>
         )}
-      </ScrollView>
-    </KeyboardAvoidingView>
+        </ScrollView>
+      </KeyboardAvoidingView>
+      <WorkoutCompleteModal
+        visible={isCompletePromptVisible}
+        onLaterPress={() => setIsCompletePromptVisible(false)}
+        onReviewPress={() => {
+          setIsCompletePromptVisible(false);
+          const name = encodeURIComponent(post.hostName ?? "");
+          const img = encodeURIComponent(post.hostProfileImageUrl ?? "");
+          const startAt = toDate(post.scheduledAt);
+          const endAt = toDate(post.scheduledEndAt);
+          const exerciseTypes = encodeURIComponent(
+            `${post.sportType ?? ""} · ${post.venue ?? ""}`
+          );
+          const time = encodeURIComponent(
+            `${formatCreatePostDayLabel(startAt)} ${formatCreatePostTimeRangeLabel(startAt, endAt)}`
+          );
+          router.push(
+            `/review/${post.id}?type=gathering&partnerName=${name}&partnerProfileImageUrl=${img}&exerciseTypes=${exerciseTypes}&scheduledTime=${time}` as any,
+          );
+        }}
+      />
+      <ApplicantPanel
+        visible={isApplicantPanelOpen}
+        applicants={toApplicants(participants)}
+        onClose={() => setIsApplicantPanelOpen(false)}
+        onAccept={handleAcceptApplicant}
+        onReject={handleRejectApplicant}
+      />
+    </>
   );
 }
 
@@ -774,6 +886,39 @@ const styles = StyleSheet.create({
     color: "#9CA3AF",
     fontWeight: "500",
     textAlign: "right",
+  },
+  applicantButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    minHeight: 52,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: "#4C5BE2",
+    paddingHorizontal: 16,
+    backgroundColor: "#F5F6FF",
+  },
+  applicantButtonText: {
+    flex: 1,
+    fontSize: 15,
+    lineHeight: 20,
+    color: "#4C5BE2",
+    fontWeight: "700",
+  },
+  applicantBadge: {
+    minWidth: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: "#4C5BE2",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 6,
+  },
+  applicantBadgeText: {
+    fontSize: 11,
+    lineHeight: 14,
+    color: "#FFFFFF",
+    fontWeight: "800",
   },
   ownerButtonRow: {
     flexDirection: "row",

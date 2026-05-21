@@ -1,13 +1,14 @@
 import * as React from "react";
-import { useFocusEffect } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import { Alert, ScrollView, StyleSheet, Pressable, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import HomeHeader from "@/components/matching/home/HomeHeader";
 import HeroBanner from "@/components/matching/home/HeroBanner";
-import { homeBanners } from "@/components/matching/home/homeMockData";
+import { homeBanners, matchedPartners } from "@/components/matching/home/homeMockData";
 import HomeStatusSection from "@/components/matching/home/HomeStatusSection";
 import MatchSection from "@/components/matching/home/MatchSection";
+import WorkoutCompleteModal from "@/components/matching/WorkoutCompleteModal";
 
 import { Color } from "@/constants/locofyHomeStyles";
 import {
@@ -15,21 +16,29 @@ import {
   getSchedule,
   setHasScheduleCache,
 } from "@/services/schedule/scheduleService";
+import { getSurvey } from "@/services/survey/surveyService";
 import {
   passCandidate,
   requestPartnerMatch,
   toggleMatching,
 } from "@/services/matching/matchingService";
 import { normalizeImageUrl } from "@/lib/utils/imageUrl";
+import { getMyProfile } from "@/services/user/userService";
 import { useAuthStore } from "@/stores/auth/authStore";
 import { useMatchingStore } from "@/stores/matching/matchingStore";
+import { useUserStore } from "@/stores/user/userStore";
+import { createNewCardPreviewPartners } from "@/utils/homeNewCard";
 import type { Banner } from "@/types/ui/homeBanner";
 import type { PartnerCardProps } from "@/types/ui/homeCards";
 import type { HomeStatusVariant } from "@/types/ui/homeStatus";
+import type { Survey } from "@/types/domain/survey";
+import type { UserTimetableRange } from "@/types/domain/user";
 
 export default function HomePage() {
   const storedMatching = useAuthStore((s) => s.matching);
   const setMatching = useAuthStore((s) => s.setMatching);
+  const userProfile = useUserStore((s) => s.profile);
+  const setUserProfile = useUserStore((s) => s.setProfile);
 
   const candidates = useMatchingStore((s) => s.candidates);
   const disconnectedCandidateIds = useMatchingStore((s) => s.disconnectedCandidateIds);
@@ -46,8 +55,12 @@ export default function HomePage() {
   const [isQuickMatchOn, setIsQuickMatchOn] = React.useState(storedMatching);
   const [forceMatchedContent, setForceMatchedContent] = React.useState(false);
   const [forceMatchedContentNew, setForceMatchedContentNew] = React.useState(false);
+  const [isWorkoutCompleteTestVisible, setIsWorkoutCompleteTestVisible] =
+    React.useState(false);
   const [banners] = React.useState<Banner[]>(homeBanners);
   const [noMoreCandidates, setNoMoreCandidates] = React.useState(false);
+  const [survey, setSurvey] = React.useState<Survey | null>(null);
+  const [scheduleRanges, setScheduleRanges] = React.useState<UserTimetableRange[]>([]);
   const isTogglingRef = React.useRef(false);
 
   const [hasTimetable, setHasTimetable] = React.useState<boolean | null>(
@@ -66,23 +79,38 @@ export default function HomePage() {
   // Show alert when the opponent accepts or rejects our match request via WS
   React.useEffect(() => {
     if (!lastResolvedMatchRequest) return;
-    const { accepted } = lastResolvedMatchRequest;
-    Alert.alert(
-      accepted ? "매칭 성사!" : "매칭 거절",
-      accepted
-        ? "상대방이 매칭을 수락했어요. 운동을 즐겨보세요!"
-        : "상대방이 매칭을 거절했어요.",
-    );
+    const { accepted, roomId } = lastResolvedMatchRequest;
+    console.log("[index] lastResolvedMatchRequest:", JSON.stringify(lastResolvedMatchRequest));
     clearLastResolvedMatchRequest();
-  }, [lastResolvedMatchRequest, clearLastResolvedMatchRequest]);
+    if (accepted && roomId) {
+      setIsQuickMatchOn(false);
+      setMatching(false);
+      setCandidates([]);
+      toggleMatching(false).catch(() => {});
+      router.push(`/chat/${encodeURIComponent(roomId)}`);
+    } else if (!accepted) {
+      Alert.alert("매칭 거절", "상대방이 매칭을 거절했어요.");
+    }
+  }, [lastResolvedMatchRequest, clearLastResolvedMatchRequest, setCandidates, setMatching]);
 
   useFocusEffect(
     React.useCallback(() => {
       setHasTimetable(getHasScheduleCache());
 
+      if (!useUserStore.getState().profile) {
+        getMyProfile()
+          .then(setUserProfile)
+          .catch(() => {});
+      }
+
+      getSurvey()
+        .then(setSurvey)
+        .catch(() => {});
+
       getSchedule()
         .then((ranges) => {
           const has = ranges.length > 0;
+          setScheduleRanges(ranges);
           setHasScheduleCache(has);
           setHasTimetable(has);
         })
@@ -91,7 +119,7 @@ export default function HomePage() {
             setHasTimetable(false);
           }
         });
-    }, []),
+    }, [setUserProfile]),
   );
 
   const isMatched = forceMatchedContent;
@@ -108,6 +136,7 @@ export default function HomePage() {
   };
 
   const currentState = getHomeStatusVariant();
+  const reviewTestRoute = "/review-complete-test" as const;
 
   const handleMatchRequest = React.useCallback(async (opponentId: number) => {
     try {
@@ -179,6 +208,15 @@ export default function HomePage() {
     [candidates, disconnectedCandidateIds, handleMatchRequest, handlePass],
   );
 
+  const newCardPreviewPartners = React.useMemo(() => {
+    return createNewCardPreviewPartners({
+      basePartners: matchedPartners,
+      profile: userProfile,
+      survey,
+      scheduleRanges,
+    });
+  }, [scheduleRanges, survey, userProfile]);
+
   const handleToggleQuickMatch = React.useCallback(async (value: boolean) => {
     if (!value) {
       isTogglingRef.current = false;
@@ -195,6 +233,7 @@ export default function HomePage() {
 
     try {
       const res = await toggleMatching(true);
+      console.log("[handleToggleQuickMatch] 토글 결과 isMatching:", res.data.isMatching);
       if (!res.data.isMatching) {
         isTogglingRef.current = false;
         return;
@@ -204,6 +243,7 @@ export default function HomePage() {
       isTogglingRef.current = false;
     } catch (err) {
       isTogglingRef.current = false;
+      console.log("[handleToggleQuickMatch] 토글 실패:", err instanceof Error ? err.message : err);
       Alert.alert(
         "매칭 오류",
         err instanceof Error ? err.message : "다시 시도해주세요.",
@@ -239,6 +279,33 @@ export default function HomePage() {
               {forceMatchedContentNew ? "새 카드 끄기" : "새 카드 (New)"}
             </Text>
           </Pressable>
+          <Pressable
+            accessibilityRole="button"
+            style={[styles.testButton, styles.testButtonComplete]}
+            onPress={() => setIsWorkoutCompleteTestVisible(true)}
+          >
+            <Text style={[styles.testButtonText, styles.testButtonCompleteText]}>
+              완료 테스트
+            </Text>
+          </Pressable>
+          <Pressable
+            accessibilityRole="button"
+            style={[styles.testButton, styles.testButtonReview]}
+            onPress={() => router.push(reviewTestRoute as any)}
+          >
+            <Text style={[styles.testButtonText, styles.testButtonReviewText]}>
+              평가 테스트
+            </Text>
+          </Pressable>
+          <Pressable
+            accessibilityRole="button"
+            style={[styles.testButton, styles.testButtonReport]}
+            onPress={() => router.push("/tutorial-report-test" as any)}
+          >
+            <Text style={[styles.testButtonText, styles.testButtonReportText]}>
+              리포트 테스트
+            </Text>
+          </Pressable>
         </View>
         <HeroBanner banners={banners} />
 
@@ -249,12 +316,21 @@ export default function HomePage() {
           isQuickMatchOn={isQuickMatchOn}
           onToggleQuickMatch={handleToggleQuickMatch}
           candidates={mappedCandidates}
+          newCardPartners={newCardPreviewPartners}
           isToggleDisabled={hasTimetable === false}
           noMoreCandidates={noMoreCandidates}
         />
 
         <MatchSection />
       </ScrollView>
+      <WorkoutCompleteModal
+        visible={isWorkoutCompleteTestVisible}
+        onLaterPress={() => setIsWorkoutCompleteTestVisible(false)}
+        onReviewPress={() => {
+          setIsWorkoutCompleteTestVisible(false);
+          router.push(reviewTestRoute as any);
+        }}
+      />
     </SafeAreaView>
   );
 }
@@ -278,8 +354,10 @@ const styles = StyleSheet.create({
   },
   testButtonRow: {
     flexDirection: "row",
+    flexWrap: "wrap",
     justifyContent: "center",
     gap: 8,
+    paddingHorizontal: 16,
     marginTop: -42,
     marginBottom: -42,
   },
@@ -304,6 +382,24 @@ const styles = StyleSheet.create({
   },
   testButtonNewText: {
     color: "#E24CB5",
+  },
+  testButtonComplete: {
+    borderColor: "#16A34A",
+  },
+  testButtonCompleteText: {
+    color: "#16A34A",
+  },
+  testButtonReview: {
+    borderColor: "#7C3AED",
+  },
+  testButtonReviewText: {
+    color: "#7C3AED",
+  },
+  testButtonReport: {
+    borderColor: "#25258F",
+  },
+  testButtonReportText: {
+    color: "#25258F",
   },
   sectionTitle: {
     paddingHorizontal: 20,

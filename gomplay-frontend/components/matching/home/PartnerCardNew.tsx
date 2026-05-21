@@ -1,139 +1,84 @@
 import { Ionicons } from "@expo/vector-icons";
-import { Image } from "expo-image";
+import { LinearGradient } from "expo-linear-gradient";
 import * as React from "react";
 import {
+  Animated,
+  ImageBackground,
   Pressable,
   StyleSheet,
   Text,
   View,
   type ImageSourcePropType,
 } from "react-native";
-import Svg, {
-  Circle,
-  Defs,
-  LinearGradient,
-  Rect,
-  Stop,
-} from "react-native-svg";
 
-import { HomeLayout } from "@/constants/locofyHomeStyles";
 import type { PartnerCardProps } from "@/types/ui/homeCards";
 
-const DEFAULT_AVATAR = require("../../../assets/match/Ellipse-12.png");
+const DEFAULT_PROFILE_IMAGE = require("../../../assets/home/PartnerProfileImage.png");
+const CARD_RADIUS = 28;
 
-const CARD_RADIUS = 24;
-const RING_SIZE = 100;
-const RING_STROKE = 9;
-const RING_RADIUS = (RING_SIZE - RING_STROKE) / 2;
-const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
-
-const SPORT_TAGS = new Set([
-  "테니스", "배드민턴", "농구", "러닝", "축구", "풋살", "헬스", "수영",
-]);
-const STYLE_TAGS = new Set(["같이", "각자", "Together", "Solo"]);
-const INTENSITY_TAGS = new Set([
-  "가볍게", "적당히", "제대로", "한계까지", "Light", "Moderate",
-]);
-const GOAL_TAGS = new Set([
-  "스트레스", "체력", "경쟁", "친목", "Stress relief",
-]);
-
-type InfoBlock = {
-  color: string;
-  textColor: string;
-  icon: keyof typeof Ionicons.glyphMap;
-  label: string;
-  values: string[];
+type StoryPartnerCardProps = PartnerCardProps & {
+  activeIndex?: number;
+  totalCount?: number;
 };
 
-const getFirstKnown = (tags: string[], known: Set<string>, fallback: string) =>
-  tags.find((tag) => known.has(tag)) ?? fallback;
-
-const getSports = (tags: string[]) => {
-  const sports = tags.filter((tag) => SPORT_TAGS.has(tag)).slice(0, 2);
-  return sports.length > 0 ? sports : ["테니스", "배드민턴"];
-};
-
-const getAvatarSource = (
+const getHeroSource = (
   profileImageSource?: ImageSourcePropType,
   imageSource?: ImageSourcePropType,
-) => profileImageSource ?? imageSource ?? DEFAULT_AVATAR;
+) => profileImageSource ?? imageSource ?? DEFAULT_PROFILE_IMAGE;
 
-function CardGradient() {
+const compactStudentId = (studentId?: string) => {
+  if (!studentId) return "21";
+  const match = studentId.match(/\d+/);
+  if (!match) return studentId;
+  const digits = match[0];
+  const year = digits.length >= 4 ? digits.slice(2, 4) : digits;
+  return `${year}학번`;
+};
+
+const getSports = (exerciseTypes?: string[], tags?: string[]) => {
+  const merged = [...(exerciseTypes ?? []), ...(tags ?? [])]
+    .filter(Boolean)
+    .filter((item, index, arr) => arr.indexOf(item) === index);
+
+  return merged.length > 0 ? merged.slice(0, 3) : ["풋살", "배드민턴", "러닝"];
+};
+
+function SportChip({ label, icon }: { label: string; icon: keyof typeof Ionicons.glyphMap }) {
   return (
-    <Svg height="100%" width="100%" style={StyleSheet.absoluteFill}>
-      <Defs>
-        <LinearGradient id="cardGradient" x1="0" y1="0" x2="1" y2="1">
-          <Stop offset="0" stopColor="#D9F0FF" />
-          <Stop offset="0.5" stopColor="#EAF0FF" />
-          <Stop offset="1" stopColor="#DCD7FF" />
-        </LinearGradient>
-      </Defs>
-      <Rect width="100%" height="100%" rx={CARD_RADIUS} fill="url(#cardGradient)" />
-    </Svg>
-  );
-}
-
-function MatchRing({ score }: { score: number }) {
-  const normalized = Math.max(0, Math.min(score, 100));
-  const dashOffset = RING_CIRCUMFERENCE * (1 - normalized / 100);
-
-  return (
-    <View style={styles.matchRing}>
-      <Svg width={RING_SIZE} height={RING_SIZE}>
-        <Defs>
-          <LinearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1">
-            <Stop offset="0" stopColor="#7C6FF7" />
-            <Stop offset="1" stopColor="#4F46E5" />
-          </LinearGradient>
-        </Defs>
-        <Circle
-          cx={RING_SIZE / 2} cy={RING_SIZE / 2} r={RING_RADIUS}
-          stroke="#E7E9FF" strokeWidth={RING_STROKE} fill="#FFFFFF"
-        />
-        <Circle
-          cx={RING_SIZE / 2} cy={RING_SIZE / 2} r={RING_RADIUS}
-          stroke="url(#ringGrad)" strokeWidth={RING_STROKE} fill="transparent"
-          strokeLinecap="round"
-          strokeDasharray={`${RING_CIRCUMFERENCE} ${RING_CIRCUMFERENCE}`}
-          strokeDashoffset={dashOffset}
-          transform={`rotate(-90 ${RING_SIZE / 2} ${RING_SIZE / 2})`}
-        />
-      </Svg>
-      <View style={styles.matchRingLabel}>
-        <Text style={styles.matchPercent}>{normalized}%</Text>
-        <Text style={styles.matchText}>MATCH</Text>
-      </View>
+    <View style={styles.sportChip}>
+      <Ionicons name={icon} size={17} color="#FFFFFF" />
+      <Text style={styles.sportChipText} numberOfLines={1}>
+        {label}
+      </Text>
     </View>
   );
 }
 
-function ButtonGradient() {
+function DetailItem({
+  icon,
+  label,
+  value,
+  accent,
+}: {
+  icon: keyof typeof Ionicons.glyphMap;
+  label: string;
+  value: string;
+  accent?: boolean;
+}) {
   return (
-    <Svg height="100%" width="100%" style={StyleSheet.absoluteFill}>
-      <Defs>
-        <LinearGradient id="btnGrad" x1="0" y1="0" x2="1" y2="0">
-          <Stop offset="0" stopColor="#7C6FF7" />
-          <Stop offset="1" stopColor="#4F46E5" />
-        </LinearGradient>
-      </Defs>
-      <Rect width="100%" height="100%" rx={22} fill="url(#btnGrad)" />
-    </Svg>
-  );
-}
-
-function InfoRow({ block }: { block: InfoBlock }) {
-  return (
-    <View style={styles.infoRow}>
-      <View style={styles.infoLeft}>
-        <Ionicons name={block.icon} size={20} color={block.textColor} />
-        <Text style={[styles.infoLabel, { color: "#374151" }]}>{block.label}</Text>
-      </View>
-      <View style={[styles.valuePill, { backgroundColor: block.color }]}>
-        <Text numberOfLines={1} style={[styles.infoValue, { color: block.textColor }]}>
-          {block.values.join("  ")}
+    <View style={styles.detailItem}>
+      <View style={styles.detailLabelRow}>
+        <Ionicons name={icon} size={19} color="#FFFFFF" />
+        <Text style={styles.detailLabel} numberOfLines={2}>
+          {label}
         </Text>
       </View>
+      <Text
+        style={[styles.detailValue, accent && styles.detailValueAccent]}
+        numberOfLines={2}
+      >
+        {value}
+      </Text>
     </View>
   );
 }
@@ -141,431 +86,568 @@ function InfoRow({ block }: { block: InfoBlock }) {
 export default function PartnerCardNew({
   imageSource,
   profileImageSource,
-  name = "Minjun Kim",
-  age = 21,
-  department = "컴퓨터공학과",
-  studentId = "22학번",
-  description = "가벼운 주말 운동 파트너를 찾고 있어요!",
-  tags = ["테니스", "배드민턴", "같이", "가볍게", "스트레스"],
-  matchScore = 87,
-  rejectLabel = "Pass",
-  acceptLabel = "Match Now",
+  name = "김단국",
+  age,
+  description,
+  department,
+  studentId,
+  partnerStyle,
+  exerciseReason,
+  preferredPartnerLabel,
+  exerciseStyleLabel,
+  freeTimeLabel,
+  exerciseTypes,
+  tags,
+  matchScore,
+  matchInsight,
   width,
-  disconnected = false,
+  activeIndex = 0,
+  totalCount = 4,
   onReject,
   onAccept,
-}: PartnerCardProps) {
-  const isOnline = !disconnected;
-  const sports = getSports(tags);
-  const style = getFirstKnown(tags, STYLE_TAGS, "같이");
-  const intensity = getFirstKnown(tags, INTENSITY_TAGS, "가볍게");
-  const goal = getFirstKnown(tags, GOAL_TAGS, "스트레스");
+}: StoryPartnerCardProps) {
+  const [isInsightOpen, setIsInsightOpen] = React.useState(false);
+  const insightProgress = React.useRef(new Animated.Value(0)).current;
+  const sports = getSports(exerciseTypes, tags);
+  const shownAge = age ?? compactStudentId(studentId);
+  const partnerLabel = preferredPartnerLabel ?? partnerStyle ?? "함께 즐기는 파트너";
+  const styleLabel = exerciseStyleLabel ?? exerciseReason ?? "가볍게 즐겨요";
+  const progressCount = Math.max(totalCount, sports.length, 4);
+  const insightText =
+    matchInsight ??
+    "운동 스타일과 강도가 잘 맞고, 선호하는 종목도 겹쳐요. 함께라면 꾸준히 운동할 수 있을 거예요.";
 
-  const infoBlocks: InfoBlock[] = [
-    {
-      label: "운동 종목",
-      values: sports,
-      icon: "footsteps-outline",
-      color: "#EAF3FF",
-      textColor: "#1D4ED8",
-    },
-    {
-      label: "운동 스타일",
-      values: [style === "같이" ? "같이 하는 스타일" : style],
-      icon: "people",
-      color: "#F0ECFF",
-      textColor: "#6D5DF6",
-    },
-    {
-      label: "운동 강도",
-      values: [intensity],
-      icon: "flame",
-      color: "#FFF1E6",
-      textColor: "#F97316",
-    },
-    {
-      label: "운동 목적",
-      values: [goal === "스트레스" ? "스트레스 해소" : goal],
-      icon: "heart",
-      color: "#EAFBF3",
-      textColor: "#16A34A",
-    },
-  ];
+  React.useEffect(() => {
+    Animated.timing(insightProgress, {
+      toValue: isInsightOpen ? 1 : 0,
+      duration: 240,
+      useNativeDriver: true,
+    }).start();
+  }, [insightProgress, isInsightOpen]);
+
+  const insightTranslateX = insightProgress.interpolate({
+    inputRange: [0, 1],
+    outputRange: [120, 0],
+  });
+  const insightOpacity = insightProgress.interpolate({
+    inputRange: [0, 0.3, 1],
+    outputRange: [0, 0.9, 1],
+  });
+  const closedMatchOpacity = insightProgress.interpolate({
+    inputRange: [0, 0.5, 1],
+    outputRange: [1, 0, 0],
+  });
+  const expandedMatchOpacity = insightProgress.interpolate({
+    inputRange: [0, 0.45, 1],
+    outputRange: [0, 0, 1],
+  });
+  const expandedMatchTranslateX = insightProgress.interpolate({
+    inputRange: [0, 1],
+    outputRange: [36, 0],
+  });
 
   return (
-    <View style={[styles.card, width != null && { width }]}>
-      {/* Gradient top area */}
-      <View style={styles.topArea}>
-        <CardGradient />
-        <View style={styles.profileRow}>
-          {/* Avatar */}
-          <View style={styles.avatarWrap}>
-            <Image
-              source={getAvatarSource(profileImageSource, imageSource)}
-              style={styles.avatar}
-              contentFit="cover"
-            />
+    <View style={[styles.stage, width != null && { width }]}>
+      <View style={styles.shadowFrame}>
+        <ImageBackground
+          source={getHeroSource(profileImageSource, imageSource)}
+          resizeMode="cover"
+          style={styles.card}
+          imageStyle={styles.cardImage}
+        >
+        <LinearGradient
+          pointerEvents="none"
+          colors={[
+            "rgba(18, 36, 59, 0.14)",
+            "rgba(4, 8, 12, 0.08)",
+            "rgba(2, 5, 4, 0.72)",
+            "rgba(1, 3, 2, 0.96)",
+          ]}
+          locations={[0, 0.36, 0.72, 1]}
+          style={StyleSheet.absoluteFill}
+        />
+
+        <View style={styles.progressRow}>
+          {Array.from({ length: progressCount }).map((_, index) => (
             <View
+              key={index}
               style={[
-                styles.onlineBadge,
-                isOnline ? styles.onlineBadgeActive : styles.onlineBadgeInactive,
+                styles.progressTrack,
+                index === activeIndex && styles.progressTrackActive,
               ]}
             />
-          </View>
-
-          {/* Name / dept / active */}
-          <View style={styles.profileInfo}>
-            <View style={styles.nameRow}>
-              <Text numberOfLines={1} style={styles.name}>{name}</Text>
-              <Text style={styles.age}>{age}</Text>
-            </View>
-            <View style={styles.deptPill}>
-              <Text numberOfLines={1} style={styles.deptText}>
-                {department} · {studentId}
-              </Text>
-            </View>
-            <View style={styles.activeRow}>
-              <View
-                style={[
-                  styles.activeDot,
-                  isOnline ? styles.activeDotActive : styles.activeDotInactive,
-                ]}
-              />
-              <Text
-                style={[
-                  styles.activeText,
-                  isOnline ? styles.activeTextActive : styles.activeTextInactive,
-                ]}
-              >
-                {isOnline ? "Active now" : "Offline"}
-              </Text>
-            </View>
-          </View>
-
-          {/* Match ring */}
-          <MatchRing score={matchScore} />
-        </View>
-      </View>
-
-      {/* White body */}
-      <View style={styles.body}>
-        {/* One-line summary */}
-        <View style={styles.summary}>
-          <Text style={styles.quoteMark}>{"“"}</Text>
-          <View style={styles.summaryText}>
-            <Text numberOfLines={1} style={styles.summaryTitle}>
-              Weekend morning · Light workout
-            </Text>
-            <Text numberOfLines={2} style={styles.summaryDesc}>
-              {description}
-            </Text>
-          </View>
-        </View>
-
-        {/* Tag groups */}
-        <View style={styles.infoList}>
-          {infoBlocks.map((block) => (
-            <InfoRow key={block.label} block={block} />
           ))}
         </View>
 
-        <View style={styles.divider} />
+        {matchScore != null && (
+          <>
+            <Animated.View style={[styles.matchCorner, { opacity: closedMatchOpacity }]}>
+              <Pressable
+                accessibilityRole="button"
+                onPress={() => setIsInsightOpen(true)}
+                style={styles.matchPressArea}
+              >
+                <Text style={styles.matchCornerValue}>{matchScore}%</Text>
+                <Text style={styles.matchCornerLabel}>MATCH</Text>
+              </Pressable>
+            </Animated.View>
+            <Animated.View
+              style={[
+                styles.matchExpanded,
+                {
+                  opacity: expandedMatchOpacity,
+                  transform: [{ translateX: expandedMatchTranslateX }],
+                },
+              ]}
+            >
+              <Pressable
+                accessibilityRole="button"
+                onPress={() => setIsInsightOpen(false)}
+                style={styles.matchPressArea}
+              >
+                <Text style={styles.matchExpandedValue}>{matchScore}%</Text>
+                <Text style={styles.matchExpandedLabel}>match</Text>
+              </Pressable>
+            </Animated.View>
+          </>
+        )}
 
-        {/* Buttons */}
-        <View style={styles.buttonRow}>
-          <Pressable
-            accessibilityRole="button"
-            onPress={onReject}
-            style={styles.passButton}
-          >
-            <Ionicons name="close" size={24} color="#6B7280" />
-            <Text style={styles.passLabel}>{rejectLabel}</Text>
-          </Pressable>
+        <Animated.View
+          pointerEvents={isInsightOpen ? "auto" : "none"}
+          style={[
+            styles.inlineInsightPanel,
+            {
+              opacity: insightOpacity,
+              transform: [{ translateX: insightTranslateX }],
+            },
+          ]}
+        >
+          <Text style={styles.inlineInsightTitle}>설명</Text>
+          <Text style={styles.inlineInsightText} numberOfLines={3}>
+            {insightText}
+          </Text>
+        </Animated.View>
 
-          <Pressable
-            accessibilityRole="button"
-            onPress={onAccept}
-            style={styles.matchButton}
-          >
-            <ButtonGradient />
-            <Ionicons name="checkmark" size={22} color="#FFFFFF" />
-            <Text style={styles.matchLabel}>{acceptLabel}</Text>
-            <Ionicons name="arrow-forward" size={20} color="#FFFFFF" />
-          </Pressable>
+        <View style={styles.content}>
+          <View style={styles.identityBlock}>
+            <View style={styles.nameRow}>
+              <Text style={styles.name} numberOfLines={1}>
+                {name}
+              </Text>
+              <Text style={styles.age}>{shownAge}</Text>
+            </View>
+
+            <View style={styles.sportRow}>
+              <SportChip label={sports[0] ?? "풋살"} icon="football-outline" />
+              <SportChip label={sports[1] ?? "배드민턴"} icon="tennisball-outline" />
+              <SportChip label={sports[2] ?? "러닝"} icon="walk-outline" />
+            </View>
+
+            {description ? (
+              <Text style={styles.quote} numberOfLines={2}>
+                {description}
+              </Text>
+            ) : null}
+          </View>
+
+          <View style={styles.glassPanel}>
+            <DetailItem
+              icon="time"
+              label="공강 시간"
+              value={freeTimeLabel ?? "공강 없음"}
+              accent
+            />
+            <View style={styles.panelDivider} />
+            <DetailItem
+              icon="people"
+              label={"선호 운동\n파트너"}
+              value={partnerLabel}
+            />
+            <View style={styles.panelDivider} />
+            <DetailItem
+              icon="heart"
+              label="운동 스타일"
+              value={styleLabel}
+              accent
+            />
+          </View>
+
+          <View style={styles.actionRow}>
+            <Pressable
+              accessibilityRole="button"
+              onPress={onReject}
+              style={styles.skipButton}
+            >
+              <Ionicons name="close" size={19} color="#6B7280" />
+              <Text style={styles.skipButtonText}>스킵</Text>
+            </Pressable>
+            <Pressable
+              accessibilityRole="button"
+              onPress={onAccept}
+              style={styles.matchButton}
+            >
+              <LinearGradient
+                colors={["#8B7CF6", "#5B4FF0"]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.matchButtonGradient}
+              >
+                <Ionicons name="sparkles" size={17} color="#FFFFFF" />
+                <Text style={styles.matchButtonText}>매칭 신청</Text>
+                <Ionicons name="arrow-forward" size={18} color="#FFFFFF" />
+              </LinearGradient>
+            </Pressable>
+          </View>
         </View>
+        </ImageBackground>
       </View>
+
+      <Animated.View
+        pointerEvents={isInsightOpen ? "auto" : "none"}
+        style={[
+          styles.sideInsightPanel,
+          {
+            opacity: insightOpacity,
+            transform: [{ translateX: insightTranslateX }],
+          },
+        ]}
+      >
+        <View style={styles.sideInsightHeader}>
+          <Ionicons name="sparkles" size={18} color="#8B7CFF" />
+          <Text style={styles.sideInsightTitle}>추천하는 이유</Text>
+        </View>
+        <Text style={styles.sideInsightText}>{insightText}</Text>
+      </Animated.View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  card: {
+  stage: {
     width: "100%",
-    minHeight: HomeLayout.partnerCardMinHeight,
+    minHeight: 560,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  shadowFrame: {
+    width: "100%",
     borderRadius: CARD_RADIUS,
-    backgroundColor: "#FFFFFF",
-    shadowColor: "#1F2937",
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.12,
+    backgroundColor: "#111827",
+    shadowColor: "#0F172A",
+    shadowOffset: { width: 0, height: 16 },
+    shadowOpacity: 0.2,
     shadowRadius: 24,
-    elevation: 8,
+    elevation: 12,
+  },
+  card: {
+    minHeight: 560,
+    borderRadius: CARD_RADIUS,
     overflow: "hidden",
+    backgroundColor: "#0F172A",
   },
-
-  // ── Top gradient area ──────────────────────────────────────────
-  topArea: {
-    height: HomeLayout.partnerCardVisualHeight,
-    paddingHorizontal: 20,
-    justifyContent: "center",
-    overflow: "hidden",
+  cardImage: {
+    borderRadius: CARD_RADIUS,
   },
-  profileRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-  },
-  avatarWrap: {
-    width: 88,
-    height: 88,
-    borderRadius: 44,
-    backgroundColor: "#FFFFFF",
-    alignItems: "center",
-    justifyContent: "center",
-    shadowColor: "#111827",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  avatar: {
-    width: 78,
-    height: 78,
-    borderRadius: 39,
-  },
-  onlineBadge: {
+  progressRow: {
     position: "absolute",
-    right: 4,
-    bottom: 8,
-    width: 20,
-    height: 20,
-    borderRadius: 10,
+    top: 22,
+    left: "29%",
+    right: "29%",
+    height: 8,
+    flexDirection: "row",
+    gap: 6,
+    zIndex: 2,
+  },
+  progressTrack: {
+    flex: 1,
+    height: 5,
+    borderRadius: 999,
+    backgroundColor: "rgba(255, 255, 255, 0.28)",
+  },
+  progressTrackActive: {
+    backgroundColor: "#FFFFFF",
+  },
+  infoButton: {
+    position: "absolute",
+    top: 58,
+    right: 24,
+    width: 46,
+    height: 46,
+    borderRadius: 23,
     borderWidth: 3,
     borderColor: "#FFFFFF",
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 3,
   },
-  onlineBadgeActive: {
-    backgroundColor: "#22C55E",
+  matchCorner: {
+    position: "absolute",
+    top: 56,
+    right: 24,
+    alignItems: "center",
+    zIndex: 3,
   },
-  onlineBadgeInactive: {
-    backgroundColor: "#EF4444",
+  matchPressArea: {
+    alignItems: "center",
   },
-  profileInfo: {
+  matchCornerValue: {
+    fontSize: 30,
+    lineHeight: 34,
+    fontWeight: "900",
+    color: "#FFFFFF",
+  },
+  matchCornerLabel: {
+    fontSize: 11,
+    lineHeight: 14,
+    fontWeight: "900",
+    color: "#8B7CFF",
+  },
+  matchExpanded: {
+    position: "absolute",
+    top: 56,
+    left: 14,
+    width: 70,
+    minHeight: 78,
+    borderRadius: 20,
+    backgroundColor: "rgba(7, 10, 18, 0.36)",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.14)",
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 5,
+  },
+  matchExpandedValue: {
+    fontSize: 27,
+    lineHeight: 31,
+    fontWeight: "900",
+    color: "#FFFFFF",
+  },
+  matchExpandedLabel: {
+    fontSize: 12,
+    lineHeight: 15,
+    fontWeight: "800",
+    color: "#A9A1FF",
+    textTransform: "uppercase",
+  },
+  inlineInsightPanel: {
+    position: "absolute",
+    top: 56,
+    left: 94,
+    right: 18,
+    minHeight: 112,
+    borderRadius: 22,
+    backgroundColor: "rgba(255, 255, 255, 0.78)",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.34)",
+    paddingHorizontal: 18,
+    paddingVertical: 14,
+    zIndex: 4,
+    shadowColor: "#0F172A",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.12,
+    shadowRadius: 18,
+  },
+  inlineInsightTitle: {
+    fontSize: 18,
+    lineHeight: 24,
+    fontWeight: "900",
+    color: "#17171F",
+    marginBottom: 6,
+  },
+  inlineInsightText: {
+    fontSize: 12,
+    lineHeight: 18,
+    fontWeight: "700",
+    color: "#3F3F46",
+  },
+  content: {
     flex: 1,
-    minWidth: 0,
-    gap: 6,
+    justifyContent: "flex-end",
+    paddingHorizontal: 20,
+    paddingBottom: 24,
+    gap: 18,
+  },
+  identityBlock: {
+    gap: 12,
   },
   nameRow: {
     flexDirection: "row",
     alignItems: "flex-end",
-    gap: 6,
+    gap: 10,
   },
   name: {
     flexShrink: 1,
-    fontSize: 22,
-    lineHeight: 28,
-    color: "#111827",
+    fontSize: 38,
+    lineHeight: 44,
     fontWeight: "900",
+    color: "#FFFFFF",
   },
   age: {
-    fontSize: 16,
-    lineHeight: 24,
-    color: "#4B5563",
-    fontWeight: "500",
-    paddingBottom: 1,
+    fontSize: 24,
+    lineHeight: 34,
+    fontWeight: "800",
+    color: "#FFFFFF",
+    opacity: 0.94,
   },
-  deptPill: {
-    alignSelf: "flex-start",
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 12,
-    backgroundColor: "rgba(255,255,255,0.5)",
+  verifiedBadge: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: "#4F6CFF",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 3,
   },
-  deptText: {
-    fontSize: 12,
-    lineHeight: 16,
-    color: "#374151",
-    fontWeight: "600",
+  metaText: {
+    maxWidth: "48%",
+    fontSize: 17,
+    lineHeight: 23,
+    fontWeight: "700",
+    color: "#FFFFFF",
   },
-  activeRow: {
+  sportRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 9,
+  },
+  sportChip: {
+    minHeight: 42,
+    maxWidth: "48%",
+    borderRadius: 999,
+    paddingHorizontal: 14,
     flexDirection: "row",
     alignItems: "center",
+    gap: 8,
+    backgroundColor: "rgba(255, 255, 255, 0.22)",
+  },
+  sportChipText: {
+    flexShrink: 1,
+    fontSize: 16,
+    lineHeight: 21,
+    fontWeight: "800",
+    color: "#FFFFFF",
+  },
+  actionRow: {
+    flexDirection: "row",
+    gap: 10,
+    paddingHorizontal: 4,
+  },
+  skipButton: {
+    flex: 1,
+    height: 50,
+    borderRadius: 999,
+    borderWidth: 1.5,
+    borderColor: "#D1D5DB",
+    backgroundColor: "#FFFFFF",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     gap: 6,
   },
-  activeDot: {
-    width: 9,
-    height: 9,
-    borderRadius: 5,
-  },
-  activeDotActive: {
-    backgroundColor: "#22C55E",
-  },
-  activeDotInactive: {
-    backgroundColor: "#EF4444",
-  },
-  activeText: {
-    fontSize: 13,
-    lineHeight: 18,
-    fontWeight: "700",
-  },
-  activeTextActive: {
-    color: "#16A34A",
-  },
-  activeTextInactive: {
-    color: "#DC2626",
-  },
-
-  // ── Match ring ─────────────────────────────────────────────────
-  matchRing: {
-    width: RING_SIZE,
-    height: RING_SIZE,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  matchRingLabel: {
-    position: "absolute",
-    alignItems: "center",
-  },
-  matchPercent: {
-    fontSize: 22,
-    lineHeight: 26,
-    color: "#111827",
-    fontWeight: "900",
-  },
-  matchText: {
-    fontSize: 10,
-    lineHeight: 14,
-    color: "#6D5DF6",
-    fontWeight: "900",
-    letterSpacing: 0.5,
-  },
-
-  // ── Body ───────────────────────────────────────────────────────
-  body: {
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 20,
-    backgroundColor: "#FFFFFF",
-    gap: 0,
-  },
-
-  // ── Summary ────────────────────────────────────────────────────
-  summary: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    marginBottom: 20,
-    gap: 4,
-  },
-  quoteMark: {
-    fontSize: 56,
-    lineHeight: 52,
-    color: "#DDD8FF",
-    fontWeight: "900",
-    marginTop: -4,
-    width: 40,
-  },
-  summaryText: {
-    flex: 1,
-    paddingTop: 4,
-  },
-  summaryTitle: {
-    fontSize: 18,
-    lineHeight: 24,
-    color: "#111827",
-    fontWeight: "900",
-  },
-  summaryDesc: {
-    marginTop: 4,
-    fontSize: 13,
-    lineHeight: 19,
+  skipButtonText: {
+    fontSize: 15,
+    lineHeight: 20,
+    fontWeight: "600",
     color: "#6B7280",
-    fontWeight: "500",
-  },
-
-  // ── Info rows ──────────────────────────────────────────────────
-  infoList: {
-    gap: 8,
-  },
-  infoRow: {
-    height: 52,
-    borderRadius: 16,
-    backgroundColor: "#F8FAFC",
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 14,
-  },
-  infoLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  infoLabel: {
-    fontSize: 14,
-    lineHeight: 18,
-    fontWeight: "800",
-  },
-  valuePill: {
-    paddingHorizontal: 14,
-    paddingVertical: 7,
-    borderRadius: 14,
-    maxWidth: "58%",
-  },
-  infoValue: {
-    fontSize: 13,
-    lineHeight: 17,
-    fontWeight: "700",
-  },
-
-  // ── Divider + buttons ──────────────────────────────────────────
-  divider: {
-    height: 1,
-    backgroundColor: "#F3F4F6",
-    marginTop: 20,
-    marginBottom: 16,
-  },
-  buttonRow: {
-    flexDirection: "row",
-    gap: 12,
-  },
-  passButton: {
-    flex: 0.8,
-    height: 58,
-    borderRadius: 20,
-    backgroundColor: "#F3F4F6",
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-  },
-  passLabel: {
-    fontSize: 17,
-    lineHeight: 22,
-    color: "#374151",
-    fontWeight: "700",
   },
   matchButton: {
-    flex: 1.4,
-    height: 58,
-    borderRadius: 20,
+    flex: 2,
+    height: 50,
+    borderRadius: 999,
     overflow: "hidden",
+  },
+  matchButtonGradient: {
+    flex: 1,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: 8,
+    gap: 7,
   },
-  matchLabel: {
-    fontSize: 17,
-    lineHeight: 22,
+  matchButtonText: {
+    fontSize: 15,
+    lineHeight: 20,
+    fontWeight: "700",
     color: "#FFFFFF",
+  },
+  quote: {
+    fontSize: 18,
+    lineHeight: 25,
     fontWeight: "800",
+    color: "#FFFFFF",
+  },
+  glassPanel: {
+    minHeight: 128,
+    borderRadius: 22,
+    backgroundColor: "rgba(255, 255, 255, 0.14)",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.08)",
+    flexDirection: "row",
+    paddingVertical: 18,
+    paddingHorizontal: 12,
+    overflow: "hidden",
+  },
+  detailItem: {
+    flex: 1,
+    gap: 6,
+    paddingHorizontal: 6,
+  },
+  detailLabelRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 7,
+    minHeight: 34,
+  },
+  detailLabel: {
+    flexShrink: 1,
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: "800",
+    color: "#FFFFFF",
+  },
+  detailValue: {
+    fontSize: 17,
+    lineHeight: 23,
+    fontWeight: "900",
+    color: "#FFFFFF",
+  },
+  detailValueAccent: {
+    color: "#7376FF",
+  },
+  panelDivider: {
+    width: 1,
+    backgroundColor: "rgba(255, 255, 255, 0.22)",
+  },
+  sideInsightPanel: {
+    display: "none",
+    position: "absolute",
+    right: 0,
+    top: 126,
+    width: "43%",
+    borderRadius: 24,
+    backgroundColor: "rgba(18, 20, 30, 0.9)",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.16)",
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    gap: 12,
+    zIndex: 8,
+  },
+  sideInsightHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 7,
+  },
+  sideInsightTitle: {
+    flex: 1,
+    fontSize: 15,
+    lineHeight: 20,
+    fontWeight: "900",
+    color: "#FFFFFF",
+  },
+  sideInsightText: {
+    fontSize: 13,
+    lineHeight: 20,
+    fontWeight: "700",
+    color: "rgba(255, 255, 255, 0.86)",
   },
 });

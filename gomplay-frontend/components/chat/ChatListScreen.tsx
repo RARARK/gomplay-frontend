@@ -40,7 +40,7 @@ export default function ChatListScreen() {
   return (
     <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
       <View style={styles.container}>
-        <ChatHeader title="채팅" />
+        <ChatHeader title="채팅" showBackButton={false} />
         <View style={styles.listContainer}>
           {isLoading ? (
             <View style={styles.loadingContainer}>

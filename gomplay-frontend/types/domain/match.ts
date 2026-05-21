@@ -133,7 +133,9 @@ export type MatchRequestResponse = {
 export type AcceptMatchRequestResponse = {
   success: boolean;
   message: string;
-  data: null;
+  data: {
+    roomId: number;
+  } | null;
 };
 
 export type RejectMatchRequestResponse = AcceptMatchRequestResponse;

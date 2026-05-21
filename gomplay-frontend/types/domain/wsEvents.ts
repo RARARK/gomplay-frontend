@@ -5,6 +5,8 @@ export type WsMatchRequestData = {
   opponentId: number;
   status: "PENDING";
   expiresAt: string;
+  name?: string;
+  profileImageUrl?: string | null;
 };
 
 export type WsCandidatesUpdateEvent = {
@@ -29,7 +31,10 @@ export type WsMatchRequestEvent = {
 
 export type WsMatchAcceptedEvent = {
   type: "MATCH_ACCEPTED";
-  data: number;
+  data: {
+    matchRequestId: number;
+    roomId: number;
+  };
 };
 
 export type WsMatchRejectedEvent = {

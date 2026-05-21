@@ -79,12 +79,19 @@ export default function TutorialOnboardingCompleteScreen({
   return (
     <View style={styles.screen}>
       <View style={[styles.hero, { height: heroHeight }]}>
-        <Image
-          source={slide.heroImage}
-          style={styles.heroImage}
-          contentFit="cover"
-          transition={180}
-        />
+        {SLIDES.map((item, index) => (
+          <Image
+            key={item.id}
+            source={item.heroImage}
+            style={[
+              styles.heroImage,
+              index === activeIndex ? styles.heroImageActive : null,
+            ]}
+            contentFit="cover"
+            cachePolicy="memory-disk"
+            priority={index === 0 ? "high" : "normal"}
+          />
+        ))}
       </View>
 
       <View style={styles.content}>
@@ -129,8 +136,13 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   heroImage: {
+    ...StyleSheet.absoluteFillObject,
     width: "100%",
     height: "100%",
+    opacity: 0,
+  },
+  heroImageActive: {
+    opacity: 1,
   },
   phoneMock: {
     position: "absolute",

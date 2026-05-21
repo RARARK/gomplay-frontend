@@ -16,6 +16,7 @@ import ApplicantPanel, {
 import MatchStatusCard, {
   type MatchItem,
 } from "@/components/matching/status/MatchStatusCard";
+import WorkoutCompleteModal from "@/components/matching/WorkoutCompleteModal";
 import { completeGathering } from "@/services/gathering/gatheringService";
 
 const SOURCE_FILTERS = ["운동 모집", "파트너 모집"] as const;
@@ -120,6 +121,9 @@ export default function MatchStatusScreen({
   const [statusFilter, setStatusFilter] = React.useState<StatusFilter>(null);
   const [panelMatchId, setPanelMatchId] = React.useState<string | null>(null);
   const [matches, setMatches] = React.useState<MatchItem[]>(initialMatches);
+  const [completedGatheringId, setCompletedGatheringId] = React.useState<
+    string | null
+  >(null);
   const [applicantsByMatch, setApplicantsByMatch] = React.useState<
     Record<string, Applicant[]>
   >(initialApplicantsByMatch);
@@ -191,33 +195,23 @@ export default function MatchStatusScreen({
     router.replace("/" as any);
   };
 
-  const handleComplete = (item: MatchItem) => {
-    Alert.alert("운동 완료하기", "이번 운동을 완료 처리할까요?", [
-      { text: "취소", style: "cancel" },
-      {
-        text: "완료하기",
-        onPress: async () => {
-          try {
-            if (item.sourceType === "POST") {
-              await completeGathering(Number(item.id));
-            }
-            setMatches((prev) =>
-              prev.map((match) =>
-                match.id === item.id
-                  ? { ...match, status: "COMPLETED" }
-                  : match,
-              ),
-            );
-            Alert.alert("완료 처리됨", "내 운동 완료 상태가 반영됐어요.");
-          } catch (error) {
-            Alert.alert(
-              "완료 처리 실패",
-              error instanceof Error ? error.message : "다시 시도해주세요.",
-            );
-          }
-        },
-      },
-    ]);
+  const handleComplete = async (item: MatchItem) => {
+    try {
+      if (item.sourceType === "POST") {
+        await completeGathering(Number(item.id));
+      }
+      setMatches((prev) =>
+        prev.map((match) =>
+          match.id === item.id ? { ...match, status: "COMPLETED" } : match,
+        ),
+      );
+      setCompletedGatheringId(item.id);
+    } catch (error) {
+      Alert.alert(
+        "완료 처리 실패",
+        error instanceof Error ? error.message : "다시 시도해주세요.",
+      );
+    }
   };
 
   return (
@@ -342,6 +336,16 @@ export default function MatchStatusScreen({
         onClose={() => setPanelMatchId(null)}
         onAccept={handleAccept}
         onReject={handleReject}
+      />
+      <WorkoutCompleteModal
+        visible={completedGatheringId !== null}
+        onLaterPress={() => setCompletedGatheringId(null)}
+        onReviewPress={() => {
+          if (!completedGatheringId) return;
+          const targetId = completedGatheringId;
+          setCompletedGatheringId(null);
+          router.push(`/review/${targetId}?type=gathering` as any);
+        }}
       />
     </>
   );

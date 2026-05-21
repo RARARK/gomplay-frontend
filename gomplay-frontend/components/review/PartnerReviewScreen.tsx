@@ -15,7 +15,9 @@ import {
   View,
 } from "react-native";
 
+import ReviewCompleteScreen from "@/components/review/ReviewCompleteScreen";
 import { submitReview } from "@/services/review/reviewService";
+import { useChatStore } from "@/stores/chat/chatStore";
 
 
 const POSITIVE_TRAITS = [
@@ -43,21 +45,14 @@ const REPORT_REASONS = [
 
 const FIXED_TEMPERATURE = 36.5;
 
-// Mock — replace with API response keyed by matchId
-const MOCK_PARTNER = {
-  name: "김단국",
-  department: "컴퓨터공학과",
-  studentId: "23학번",
-  location: "체육관",
-  scheduledTime: "오늘 19:00 ~ 21:00",
-  difficulty: "초보자",
-  exerciseType: "풋살",
-};
-
 type Props = {
   matchResultId?: number | null;
   gatheringId?: number | null;
   revieweeId: number;
+  partnerName?: string;
+  partnerProfileImageUrl?: string | null;
+  exerciseTypes?: string;
+  scheduledTime?: string;
 };
 
 
@@ -91,7 +86,9 @@ function TraitCheckbox({
   );
 }
 
-export default function PartnerReviewScreen({ matchResultId, gatheringId, revieweeId }: Props) {
+export default function PartnerReviewScreen({ matchResultId, gatheringId, revieweeId, partnerName, partnerProfileImageUrl, exerciseTypes, scheduledTime }: Props) {
+  const markReviewCompleted = useChatStore((s) => s.markReviewCompleted);
+
   const [selectedTraits, setSelectedTraits] = React.useState<Set<string>>(
     new Set(),
   );
@@ -103,6 +100,7 @@ export default function PartnerReviewScreen({ matchResultId, gatheringId, review
   const [reportDescription, setReportDescription] = React.useState("");
   const [comment, setComment] = React.useState("");
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [isComplete, setIsComplete] = React.useState(false);
 
   const toggleTrait = (id: string) => {
     setSelectedTraits((prev) => {
@@ -150,13 +148,8 @@ export default function PartnerReviewScreen({ matchResultId, gatheringId, review
           : null,
       });
 
-      Alert.alert(
-        isReportExpanded ? "피드백 접수 완료" : "평가 완료",
-        isReportExpanded
-          ? "남겨주신 문제 내용을 확인하고 매칭 품질 개선에 반영할게요."
-          : "파트너 평가가 제출됐어요.",
-        [{ text: "확인", onPress: () => router.back() }],
-      );
+      if (matchResultId) markReviewCompleted(matchResultId);
+      setIsComplete(true);
     } catch (err) {
       Alert.alert(
         "제출 실패",
@@ -166,6 +159,17 @@ export default function PartnerReviewScreen({ matchResultId, gatheringId, review
       setIsSubmitting(false);
     }
   };
+
+  if (isComplete) {
+    return (
+      <ReviewCompleteScreen
+        partnerName={partnerName}
+        partnerProfileImageUrl={partnerProfileImageUrl}
+        exerciseTypes={exerciseTypes}
+        scheduledTime={scheduledTime}
+      />
+    );
+  }
 
   return (
     <KeyboardAvoidingView
@@ -193,47 +197,42 @@ export default function PartnerReviewScreen({ matchResultId, gatheringId, review
 
         {/* 파트너 정보 */}
         <View style={styles.partnerCard}>
-          {/* 상단: 아바타 + 이름/학과/뱃지 */}
           <View style={styles.partnerTop}>
             <Image
-              source={require("../../assets/match/Ellipse-12.png")}
+              source={
+                partnerProfileImageUrl
+                  ? { uri: partnerProfileImageUrl }
+                  : require("../../assets/match/Ellipse-12.png")
+              }
               style={styles.avatar}
               contentFit="cover"
             />
             <View style={styles.partnerMeta}>
               <View style={styles.nameRowNew}>
-                <Text style={styles.partnerName}>{MOCK_PARTNER.name}</Text>
+                <Text style={styles.partnerName}>{partnerName ?? "파트너"}</Text>
                 <View style={styles.completedBadge}>
                   <Ionicons name="checkmark" size={12} color="#4C5BE2" />
                   <Text style={styles.completedBadgeText}>운동 완료</Text>
                 </View>
               </View>
-              <Text style={styles.partnerDept}>
-                {MOCK_PARTNER.department} · {MOCK_PARTNER.studentId}
-              </Text>
-              <View style={styles.chipRow}>
-                <View style={styles.infoChip}>
-                  <Text style={styles.infoChipText}>⚽ {MOCK_PARTNER.exerciseType}</Text>
+              {exerciseTypes ? (
+                <View style={styles.chipRow}>
+                  <View style={styles.infoChip}>
+                    <Text style={styles.infoChipText}>{exerciseTypes}</Text>
+                  </View>
                 </View>
-                <View style={styles.infoChip}>
-                  <View style={styles.difficultyDot} />
-                  <Text style={styles.infoChipText}>{MOCK_PARTNER.difficulty}</Text>
-                </View>
-              </View>
+              ) : null}
             </View>
           </View>
 
-          {/* 하단: 장소 · 시간 */}
-          <View style={styles.partnerDetailCol}>
-            <View style={styles.partnerDetailRow}>
-              <Ionicons name="location" size={15} color="#EF4444" />
-              <Text style={styles.partnerDetailText}>{MOCK_PARTNER.location}</Text>
+          {scheduledTime ? (
+            <View style={styles.partnerDetailCol}>
+              <View style={styles.partnerDetailRow}>
+                <Ionicons name="time-outline" size={15} color="#6B7280" />
+                <Text style={styles.partnerDetailText}>{scheduledTime}</Text>
+              </View>
             </View>
-            <View style={styles.partnerDetailRow}>
-              <Ionicons name="time-outline" size={15} color="#6B7280" />
-              <Text style={styles.partnerDetailText}>{MOCK_PARTNER.scheduledTime}</Text>
-            </View>
-          </View>
+          ) : null}
         </View>
 
         {/* 매너온도 */}

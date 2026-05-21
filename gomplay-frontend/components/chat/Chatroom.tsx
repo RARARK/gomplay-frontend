@@ -12,10 +12,22 @@ export type ChatroomProps = {
   onPress?: (chatRoomId: number) => void;
 };
 
-export default function Chatroom({
-  chatRoom,
-  onPress,
-}: ChatroomProps) {
+type BadgeVariant = "outline-primary" | "filled-blue" | "filled-gray";
+
+type StatusBadge = {
+  label: string;
+  variant: BadgeVariant;
+};
+
+function getStatusBadge(chatRoom: ChatRoom): StatusBadge | null {
+  const { matchStatus, reviewCompleted } = chatRoom;
+  if (matchStatus === "COMPLETED" && !reviewCompleted) {
+    return { label: "평가 필요", variant: "outline-primary" };
+  }
+  return null;
+}
+
+export default function Chatroom({ chatRoom, onPress }: ChatroomProps) {
   const {
     id,
     participants,
@@ -24,15 +36,16 @@ export default function Chatroom({
     unreadMessageCount,
   } = chatRoom;
   const partnerDisplayName = getChatRoomParticipantDisplayName(participants);
+  const badge = getStatusBadge(chatRoom);
 
   const handlePress = () => {
     if (onPress) {
       onPress(id);
       return;
     }
-
     router.push(`/chat/${encodeURIComponent(id)}`);
   };
+
   return (
     <Pressable
       accessibilityLabel={`Open chat with ${partnerDisplayName}`}
@@ -47,9 +60,18 @@ export default function Chatroom({
         />
 
         <View style={styles.messageBlock}>
-          <Text numberOfLines={1} style={styles.name}>
-            {partnerDisplayName}
-          </Text>
+          <View style={styles.nameRow}>
+            <Text numberOfLines={1} style={styles.name}>
+              {partnerDisplayName}
+            </Text>
+            {badge ? (
+              <View style={[styles.statusBadge, statusBadgeContainer[badge.variant]]}>
+                <Text style={[styles.statusBadgeText, statusBadgeTextColor[badge.variant]]}>
+                  {badge.label}
+                </Text>
+              </View>
+            ) : null}
+          </View>
           <Text numberOfLines={1} style={styles.previewMessage}>
             {lastMessage ?? "No messages yet."}
           </Text>
@@ -69,9 +91,7 @@ export default function Chatroom({
 }
 
 function formatChatListTime(timestamp?: string) {
-  if (!timestamp) {
-    return "";
-  }
+  if (!timestamp) return "";
 
   const date = new Date(timestamp);
   const now = new Date();
@@ -81,31 +101,50 @@ function formatChatListTime(timestamp?: string) {
     date.getDate() === now.getDate();
 
   if (isSameDay) {
-    return date.toLocaleTimeString([], {
-      hour: "numeric",
-      minute: "2-digit",
-    });
+    return date.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
   }
 
-  return date.toLocaleDateString([], {
-    month: "short",
-    day: "numeric",
-  });
+  return date.toLocaleDateString([], { month: "short", day: "numeric" });
 }
+
+const statusBadgeContainer: Record<BadgeVariant, object> = {
+  "outline-primary": {
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1.5,
+    borderColor: "#4C5BE2",
+  },
+  "filled-blue": {
+    backgroundColor: "#4C5BE2",
+  },
+  "filled-gray": {
+    backgroundColor: "#E5E7EB",
+  },
+};
+
+const statusBadgeTextColor: Record<BadgeVariant, object> = {
+  "outline-primary": { color: "#4C5BE2" },
+  "filled-blue": { color: "#FFFFFF" },
+  "filled-gray": { color: "#6B7280" },
+};
 
 const styles = StyleSheet.create({
   card: {
     minHeight: 100,
     borderRadius: Border.br_8,
     borderWidth: 1,
-    borderColor: Color.colorSilver,
-    backgroundColor: Color.colorAliceblue,
+    borderColor: "#F0F0F5",
+    backgroundColor: "#FFFFFF",
     paddingHorizontal: 20,
     paddingVertical: 18,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     gap: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.07,
+    shadowRadius: 8,
+    elevation: 3,
   },
   cardPressed: {
     opacity: 0.88,
@@ -124,7 +163,13 @@ const styles = StyleSheet.create({
   },
   messageBlock: {
     flex: 1,
-    gap: 8,
+    gap: 6,
+  },
+  nameRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    flexWrap: "nowrap",
   },
   name: {
     fontSize: FontSize.fs_17,
@@ -132,6 +177,18 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     fontFamily: FontFamily.inter,
     color: Color.labelsPrimary,
+    flexShrink: 1,
+  },
+  statusBadge: {
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: 999,
+    flexShrink: 0,
+  },
+  statusBadgeText: {
+    fontSize: 11,
+    fontWeight: "600",
+    fontFamily: FontFamily.inter,
   },
   previewMessage: {
     fontSize: FontSize.fs_12,
