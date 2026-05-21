@@ -14,7 +14,56 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import MatchHistoryCard, {
   type MatchHistoryItem,
 } from "@/components/matching/history/MatchHistoryCard";
-import { getGatheringHistory } from "@/services/gathering/gatheringService";
+const MOCK_HISTORY: MatchHistoryItem[] = [
+  {
+    id: "1",
+    sourceType: "POST",
+    partnerName: "김단국",
+    partnerDepartment: "소프트웨어학과",
+    partnerStudentNumber: "20학번",
+    completedAt: "2026-04-04",
+    location: "체육관",
+    scheduledTime: "19:00 ~ 21:00",
+    difficulty: "초보자",
+    exerciseType: "풋살",
+    reviewed: false,
+    chatRoomId: 3,
+  },
+  {
+    id: "2",
+    sourceType: "PARTNER",
+    partnerName: "이서윤",
+    partnerDepartment: "체육교육과",
+    partnerStudentNumber: "21학번",
+    completedAt: "2026-04-04",
+    reviewed: true,
+    chatRoomId: 7,
+  },
+  {
+    id: "3",
+    sourceType: "POST",
+    partnerName: "박지훈",
+    partnerDepartment: "컴퓨터공학과",
+    partnerStudentNumber: "22학번",
+    completedAt: "2026-04-02",
+    location: "서양대 체육관",
+    scheduledTime: "18:30 ~ 20:00",
+    difficulty: "가볍게",
+    exerciseType: "배드민턴",
+    reviewed: true,
+    chatRoomId: 5,
+  },
+  {
+    id: "4",
+    sourceType: "PARTNER",
+    partnerName: "최민준",
+    partnerDepartment: "스포츠과학과",
+    partnerStudentNumber: "23학번",
+    completedAt: "2026-03-28",
+    reviewed: false,
+    chatRoomId: 9,
+  },
+];
 
 function formatDate(iso: string) {
   const d = new Date(iso);
@@ -36,38 +85,8 @@ function formatTimeRange(start: string, end: string) {
 
 export default function MatchHistoryScreen() {
   const insets = useSafeAreaInsets();
-  const [history, setHistory] = React.useState<MatchHistoryItem[]>([]);
-  const [isLoading, setIsLoading] = React.useState(true);
-
-  React.useEffect(() => {
-    let isMounted = true;
-
-    async function load() {
-      try {
-        const items = await getGatheringHistory();
-        if (!isMounted) return;
-        setHistory(
-          items.map((item) => ({
-            id: String(item.id),
-            sourceType: "POST" as const,
-            status: "COMPLETED" as const,
-            partnerName: item.title,
-            completedAt: formatDate(item.scheduledAt),
-            location: item.venue,
-            scheduledTime: formatTimeRange(item.scheduledAt, item.scheduledEndAt),
-            exerciseType: item.sportType,
-            reviewed: item.reviewed,
-            gatheringId: item.id,
-          })),
-        );
-      } finally {
-        if (isMounted) setIsLoading(false);
-      }
-    }
-
-    void load();
-    return () => { isMounted = false; };
-  }, []);
+  const [history, setHistory] = React.useState<MatchHistoryItem[]>(MOCK_HISTORY);
+  const [isLoading, setIsLoading] = React.useState(false);
 
   const handleBackPress = () => {
     if (router.canGoBack()) {

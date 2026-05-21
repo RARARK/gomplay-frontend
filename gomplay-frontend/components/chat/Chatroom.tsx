@@ -20,8 +20,8 @@ type StatusBadge = {
 };
 
 function getStatusBadge(chatRoom: ChatRoom): StatusBadge | null {
-  const { matchStatus, reviewCompleted } = chatRoom;
-  if (matchStatus === "COMPLETED" && !reviewCompleted) {
+  const { matchStatus, reviewed } = chatRoom;
+  if (matchStatus === "COMPLETED" && !reviewed) {
     return { label: "평가 필요", variant: "outline-primary" };
   }
   return null;

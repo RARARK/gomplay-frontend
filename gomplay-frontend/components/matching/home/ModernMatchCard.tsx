@@ -8,20 +8,10 @@ const CARD_WIDTH = 195;
 const IMAGE_HEIGHT = 160;
 const CARD_RADIUS = 18;
 
-const SPORT_ICONS: Partial<Record<string, keyof typeof Ionicons.glyphMap>> = {
-  Tennis: "tennisball-outline",
-  Basketball: "basketball-outline",
-  Football: "football-outline",
-  Futsal: "football-outline",
-  Badminton: "barbell-outline",
-  Running: "walk-outline",
-  Climbing: "triangle-outline",
-};
-
 const TAG_COLORS = [
-  { bg: "#EEF2FF", text: "#4338CA" },
-  { bg: "#ECFDF5", text: "#059669" },
-  { bg: "#FFF7ED", text: "#C2410C" },
+  { bg: "#EEF2FF", text: "#4C5BE2" },
+  { bg: "#E0E7FF", text: "#4338CA" },
+  { bg: "#DBEAFE", text: "#2563EB" },
 ];
 
 const ModernMatchCard = React.memo(function ModernMatchCard({
@@ -37,10 +27,6 @@ const ModernMatchCard = React.memo(function ModernMatchCard({
   maxParticipants,
   onPress,
 }: ModernMatchCardProps) {
-  const sportIcon =
-    (SPORT_ICONS[sport] as keyof typeof Ionicons.glyphMap | undefined) ??
-    "fitness-outline";
-
   return (
     <Pressable
       accessibilityRole="button"
@@ -70,7 +56,6 @@ const ModernMatchCard = React.memo(function ModernMatchCard({
       <View style={styles.infoArea}>
         {/* Sport name + icon */}
         <View style={styles.sportRow}>
-          <Ionicons name={sportIcon} size={20} color="#111827" />
           <Text style={styles.sportName}>{sport}</Text>
         </View>
 
@@ -195,7 +180,6 @@ const styles = StyleSheet.create({
   sportRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 7,
   },
   sportName: {
     fontSize: 20,

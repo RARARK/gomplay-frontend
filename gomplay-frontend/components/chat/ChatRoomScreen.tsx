@@ -462,13 +462,12 @@ export default function ChatRoomScreen() {
         </ScrollView>
 
         <PostMatchReviewCard
-          showReviewPrompt={chatRoom.matchStatus === MATCH_STATUS.COMPLETED && !chatRoom.reviewCompleted}
+          showReviewPrompt={chatRoom.matchStatus === MATCH_STATUS.COMPLETED && !chatRoom.reviewed}
           title="Workout finished!"
           description="How was the session today? Please leave a review for your partner."
           buttonLabel="Leave review"
           onPressReview={() => {
             const opponent = getChatRoomPrimaryParticipant(chatRoom.participants);
-            console.log("[review] matchId:", chatRoom.matchId, "opponent:", JSON.stringify(opponent));
             const name = encodeURIComponent(opponent?.name ?? "");
             const img = encodeURIComponent(opponent?.profileImageUrl ?? "");
             router.push(

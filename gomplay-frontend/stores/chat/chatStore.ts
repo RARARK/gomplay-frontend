@@ -51,7 +51,7 @@ export const useChatStore = create<ChatState>((set) => ({
     set((state) => ({
       chatRooms: chatRooms.map((room) =>
         state.reviewedMatchIds.includes(room.matchId)
-          ? { ...room, reviewCompleted: true }
+          ? { ...room, reviewed: true }
           : room,
       ),
     })),
@@ -60,14 +60,14 @@ export const useChatStore = create<ChatState>((set) => ({
     set((state) => ({
       reviewedMatchIds: Array.from(new Set([...state.reviewedMatchIds, matchId])),
       chatRooms: state.chatRooms.map((room) =>
-        room.matchId === matchId ? { ...room, reviewCompleted: true } : room,
+        room.matchId === matchId ? { ...room, reviewed: true } : room,
       ),
     })),
 
   upsertChatRoom: (chatRoom) =>
     set((state) => {
       const normalizedChatRoom = state.reviewedMatchIds.includes(chatRoom.matchId)
-        ? { ...chatRoom, reviewCompleted: true }
+        ? { ...chatRoom, reviewed: true }
         : chatRoom;
       const hasExistingRoom = state.chatRooms.some(
         (item) => item.id === normalizedChatRoom.id,

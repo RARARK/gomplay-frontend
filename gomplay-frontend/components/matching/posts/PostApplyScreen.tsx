@@ -114,18 +114,13 @@ export default function PostApplyScreen({ postId }: PostApplyScreenProps) {
   React.useEffect(() => {
     if (!isOwner || !post) return;
     let isMounted = true;
-    console.log("[participants] fetching for gatheringId:", post.id);
     getGatheringParticipants(post.id)
       .then((data) => {
-        console.log("[participants] response:", JSON.stringify(data));
         if (isMounted) setParticipants(data);
       })
-      .catch((err) => {
-        console.log("[participants] error:", err?.message ?? err);
-      });
+      .catch(() => {});
     return () => { isMounted = false; };
   }, [isOwner, post?.id]);
-  console.log("userId:", userId, "hostId:", post?.hostId, "isOwner:", isOwner);
   const canEdit = isOwner && post?.status === POST_STATUS.OPEN;
   const canApply = !isOwner && post?.status === POST_STATUS.OPEN;
   const hasAcceptedParticipant = participants.some((p) => p.status === "ACCEPTED");

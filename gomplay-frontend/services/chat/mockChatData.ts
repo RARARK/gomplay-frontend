@@ -21,7 +21,7 @@ export function createMockChatRooms(now = Date.now()): ChatRoom[] {
       lastMessageAt: minutesAgo(now, 8),
       unreadMessageCount: 2,
       completeButtonVisible: true,
-      reviewCompleted: false,
+      reviewed: false,
       createdAt: minutesAgo(now, 120),
     },
     {
@@ -34,7 +34,7 @@ export function createMockChatRooms(now = Date.now()): ChatRoom[] {
       lastMessageAt: minutesAgo(now, 52),
       unreadMessageCount: 0,
       completeButtonVisible: true,
-      reviewCompleted: false,
+      reviewed: false,
       createdAt: minutesAgo(now, 300),
     },
     {
@@ -48,7 +48,7 @@ export function createMockChatRooms(now = Date.now()): ChatRoom[] {
       unreadMessageCount: 0,
       matchCompletedAt: minutesAgo(now, 1380),
       completeButtonVisible: false,
-      reviewCompleted: false,
+      reviewed: false,
       createdAt: minutesAgo(now, 1800),
     },
   ];

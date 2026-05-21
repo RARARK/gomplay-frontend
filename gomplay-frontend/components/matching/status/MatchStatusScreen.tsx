@@ -19,7 +19,7 @@ import MatchStatusCard, {
 import WorkoutCompleteModal from "@/components/matching/WorkoutCompleteModal";
 import { completeGathering } from "@/services/gathering/gatheringService";
 
-const SOURCE_FILTERS = ["운동 모집", "파트너 모집"] as const;
+const SOURCE_FILTERS = ["일반 매칭", "퀵매칭"] as const;
 const STATUS_FILTERS = ["진행중", "수락 대기"] as const;
 
 type SourceFilter = (typeof SOURCE_FILTERS)[number] | null;
@@ -38,8 +38,10 @@ const MOCK_MATCHES: MatchItem[] = [
     role: "GUEST",
     partnerName: "김단국",
     partnerDepartment: "컴퓨터공학과",
+    partnerStudentNumber: "20학번",
     location: "체육관",
-    scheduledTime: "19:00",
+    scheduledTime: "19:00 ~ 21:00",
+    scheduledEndAt: new Date(Date.now() - 10 * 60 * 1000).toISOString(),
     difficulty: "초보자",
     exerciseType: "풋살",
   },
@@ -50,10 +52,8 @@ const MOCK_MATCHES: MatchItem[] = [
     role: "GUEST",
     partnerName: "김단국",
     partnerDepartment: "컴퓨터공학과",
-    location: "장소 협의",
-    scheduledTime: "시간 협의",
-    difficulty: "입문자",
-    exerciseType: "종목 협의",
+    partnerStudentNumber: "21학번",
+    matchedAt: new Date(Date.now() - 90 * 60 * 1000).toISOString(),
   },
   {
     id: "3",
@@ -62,22 +62,24 @@ const MOCK_MATCHES: MatchItem[] = [
     role: "GUEST",
     partnerName: "김단국",
     partnerDepartment: "컴퓨터공학과",
+    partnerStudentNumber: "20학번",
     location: "체육관",
-    scheduledTime: "19:00",
+    scheduledTime: "19:00 ~ 21:00",
     difficulty: "초보자",
     exerciseType: "풋살",
   },
   {
     id: "4",
-    sourceType: "PARTNER",
+    sourceType: "POST",
     status: "PENDING",
     role: "HOST",
     partnerName: "김단국",
     partnerDepartment: "컴퓨터공학과",
-    location: "장소 협의",
-    scheduledTime: "시간 협의",
-    difficulty: "입문자",
-    exerciseType: "종목 협의",
+    partnerStudentNumber: "22학번",
+    location: "체육관",
+    scheduledTime: "19:00 ~ 21:00",
+    difficulty: "초보자",
+    exerciseType: "풋살",
   },
 ];
 
@@ -147,14 +149,11 @@ export default function MatchStatusScreen({
   const filtered = React.useMemo(
     () =>
       matchesWithApplicantCount.filter((m) => {
-        if (sourceFilter === "운동 모집" && m.sourceType !== "POST")
-          return false;
-        if (sourceFilter === "파트너 모집" && m.sourceType !== "PARTNER")
-          return false;
-        if (statusFilter === "진행중" && m.status !== "IN_PROGRESS")
-          return false;
-        if (statusFilter === "수락 대기" && m.status !== "PENDING")
-          return false;
+        if (m.sourceType === "PARTNER" && m.status === "PENDING") return false;
+        if (sourceFilter === "일반 매칭" && m.sourceType !== "POST") return false;
+        if (sourceFilter === "퀵매칭" && m.sourceType !== "PARTNER") return false;
+        if (statusFilter === "진행중" && m.status !== "IN_PROGRESS") return false;
+        if (statusFilter === "수락 대기" && m.status !== "PENDING") return false;
         return true;
       }),
     [matchesWithApplicantCount, sourceFilter, statusFilter],

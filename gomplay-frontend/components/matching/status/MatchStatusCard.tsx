@@ -16,12 +16,17 @@ export type MatchItem = {
   status: MatchStatus;
   role: MatchRole;
   partnerName: string;
+  partnerProfileImageUrl?: string | null;
   partnerDepartment?: string;
+  partnerStudentNumber?: string;
   location?: string;
   scheduledTime?: string;
+  scheduledEndAt?: string;
+  matchedAt?: string;
   difficulty?: string;
   exerciseType?: string;
   applicantCount?: number;
+  chatRoomId?: number;
 };
 
 type MatchStatusCardProps = {
@@ -31,34 +36,39 @@ type MatchStatusCardProps = {
   onViewApplicants?: () => void;
 };
 
+const COMPLETE_DELAY_MS = 60 * 60 * 1000; // 1시간
+
 export default function MatchStatusCard({
   item,
   onComplete,
   onChat,
   onViewApplicants,
 }: MatchStatusCardProps) {
+  const [now, setNow] = React.useState(() => Date.now());
+
+  React.useEffect(() => {
+    if (item.status !== "IN_PROGRESS") return;
+    const interval = setInterval(() => setNow(Date.now()), 60_000);
+    return () => clearInterval(interval);
+  }, [item.status]);
+
   const isInProgress = item.status === "IN_PROGRESS";
   const isCompleted = item.status === "COMPLETED";
   const isHost = item.role === "HOST";
   const isPost = item.sourceType === "POST";
 
   const badgeColor = isPost ? "#C8960C" : "#4E9B6A";
-  const statusLabel = isCompleted
-    ? "완료"
-    : isInProgress
-      ? "진행중"
-      : "수락 대기";
+  const statusLabel = isCompleted ? "완료" : isInProgress ? "진행중" : "수락 대기";
 
-  const location = isPost ? item.location : (item.location ?? "장소 협의");
-  const scheduledTime = isPost
-    ? item.scheduledTime
-    : (item.scheduledTime ?? "시간 협의");
-  const difficulty = isPost
-    ? item.difficulty
-    : (item.difficulty ?? "입문자");
-  const exerciseType = isPost
-    ? item.exerciseType
-    : (item.exerciseType ?? "종목 협의");
+  const location = isPost ? (item.location ?? "") : "장소 협의";
+  const scheduledTime = isPost ? (item.scheduledTime ?? "") : "시간 협의";
+  const difficulty = isPost ? (item.difficulty ?? "") : "난이도 협의";
+  const exerciseType = isPost ? (item.exerciseType ?? "") : "종목 협의";
+
+  const postCompleteEnabled =
+    item.scheduledEndAt ? now > new Date(item.scheduledEndAt).getTime() : false;
+  const partnerCompleteEnabled =
+    item.matchedAt ? now > new Date(item.matchedAt).getTime() + COMPLETE_DELAY_MS : false;
 
   return (
     <View style={styles.container}>
@@ -69,23 +79,33 @@ export default function MatchStatusCard({
           <Ionicons name="people-outline" size={14} color="#FFFFFF" />
         )}
         <Text style={styles.badgeText} numberOfLines={1}>
-          {isPost ? "운동 모집" : "파트너 모집"}
+          {isPost ? "일반 매칭" : "퀵매칭"}
         </Text>
       </View>
 
       <View style={styles.card}>
         <Image
-          source={require("../../../assets/match/Ellipse-12.png")}
+          source={
+            item.partnerProfileImageUrl
+              ? { uri: item.partnerProfileImageUrl }
+              : require("../../../assets/match/Ellipse-12.png")
+          }
           style={styles.avatar}
           contentFit="cover"
         />
 
         <View style={styles.content}>
+          {/* 이름 · 학과 · 학번 */}
           <View style={styles.titleRow}>
             <View style={styles.nameBlock}>
               <Text style={styles.name} numberOfLines={1}>
                 {item.partnerName}
               </Text>
+              {item.partnerStudentNumber ? (
+                <Text style={styles.studentNumber} numberOfLines={1}>
+                  {item.partnerStudentNumber}
+                </Text>
+              ) : null}
               {item.partnerDepartment ? (
                 <Text style={styles.department} numberOfLines={1}>
                   {item.partnerDepartment}
@@ -99,8 +119,8 @@ export default function MatchStatusCard({
                   isCompleted
                     ? styles.statusPillCompleted
                     : isInProgress
-                    ? styles.statusPillActive
-                    : styles.statusPillPending,
+                      ? styles.statusPillActive
+                      : styles.statusPillPending,
                 ]}
               >
                 <Text
@@ -109,8 +129,8 @@ export default function MatchStatusCard({
                     isCompleted
                       ? styles.statusTextCompleted
                       : isInProgress
-                      ? styles.statusTextActive
-                      : styles.statusTextPending,
+                        ? styles.statusTextActive
+                        : styles.statusTextPending,
                   ]}
                 >
                   {statusLabel}
@@ -122,19 +142,16 @@ export default function MatchStatusCard({
             </View>
           </View>
 
+          {/* 장소 · 시간 · 난이도 · 종목 */}
           <View style={styles.detailBlock}>
             {location ? (
               <View style={[styles.detailItem, styles.locationItem]}>
                 <Ionicons name="location-sharp" size={16} color="#EF4444" />
-                <Text
-                  numberOfLines={2}
-                  style={[styles.detailText, styles.locationText]}
-                >
+                <Text numberOfLines={2} style={[styles.detailText, styles.locationText]}>
                   {location}
                 </Text>
               </View>
             ) : null}
-
             <View style={styles.detailRow}>
               {scheduledTime ? (
                 <View style={styles.detailItem}>
@@ -163,57 +180,61 @@ export default function MatchStatusCard({
             </View>
           </View>
 
+          {/* 액션 버튼 */}
           <View style={styles.actionRow}>
             {isCompleted ? (
               <View style={[styles.actionButton, styles.completedActionButton]}>
                 <Ionicons name="checkmark-circle" size={14} color="#16A34A" />
-                <Text style={[styles.actionText, styles.completedActionText]}>
-                  운동 완료
-                </Text>
+                <Text style={[styles.actionText, styles.completedActionText]}>운동 완료</Text>
               </View>
             ) : isInProgress ? (
-              <>
-                {onComplete ? (
-                  <Pressable
-                    style={[styles.actionButton, styles.primaryActionButton]}
-                    onPress={onComplete}
-                  >
-                    <Ionicons name="checkmark" size={14} color="#FFFFFF" />
-                    <Text style={styles.primaryActionText}>운동 완료하기</Text>
+              isPost ? (
+                <>
+                  {postCompleteEnabled && onComplete ? (
+                    <Pressable
+                      style={[styles.actionButton, styles.primaryActionButton]}
+                      onPress={onComplete}
+                    >
+                      <Ionicons name="checkmark" size={14} color="#FFFFFF" />
+                      <Text style={styles.primaryActionText}>운동 완료하기</Text>
+                    </Pressable>
+                  ) : null}
+                  <Pressable style={styles.actionButton} onPress={onChat}>
+                    <Ionicons name="chatbubble-outline" size={14} color="#4C5BE2" />
+                    <Text style={styles.actionText}>채팅</Text>
                   </Pressable>
-                ) : null}
-                <Pressable style={styles.actionButton} onPress={onChat}>
-                  <Ionicons
-                    name="chatbubble-outline"
-                    size={14}
-                    color="#4C5BE2"
-                  />
-                  <Text style={styles.actionText}>채팅</Text>
-                </Pressable>
-              </>
-            ) : isHost ? (
-              <>
-                <Pressable
-                  style={styles.actionButton}
-                  onPress={onViewApplicants}
-                >
-                  <Text style={styles.actionText}>
-                    신청 {item.applicantCount ?? 0}명
-                  </Text>
-                </Pressable>
-                <Pressable
-                  style={[styles.actionButton, styles.primaryActionButton]}
-                  onPress={onViewApplicants}
-                >
-                  <Text style={styles.primaryActionText}>신청자 보기</Text>
-                </Pressable>
-              </>
+                </>
+              ) : (
+                <>
+                  {partnerCompleteEnabled && onComplete ? (
+                    <Pressable
+                      style={[styles.actionButton, styles.primaryActionButton]}
+                      onPress={onComplete}
+                    >
+                      <Ionicons name="checkmark" size={14} color="#FFFFFF" />
+                      <Text style={styles.primaryActionText}>운동 완료하기</Text>
+                    </Pressable>
+                  ) : null}
+                  <Pressable style={styles.actionButton} onPress={onChat}>
+                    <Ionicons name="chatbubble-outline" size={14} color="#4C5BE2" />
+                    <Text style={styles.actionText}>채팅</Text>
+                  </Pressable>
+                </>
+              )
+            ) : isHost && isPost ? (
+              <Pressable
+                style={[styles.actionButton, styles.applicantButton]}
+                onPress={onViewApplicants}
+              >
+                <Ionicons name="people-outline" size={14} color="#4C5BE2" />
+                <Text style={styles.actionText}>
+                  신청 {item.applicantCount ?? 0}명 · 신청자 보기
+                </Text>
+              </Pressable>
             ) : (
               <View style={[styles.actionButton, styles.pendingActionButton]}>
                 <Ionicons name="time-outline" size={14} color="#9CA3AF" />
-                <Text style={[styles.actionText, styles.pendingActionText]}>
-                  수락 대기 중
-                </Text>
+                <Text style={[styles.actionText, styles.pendingActionText]}>수락 대기 중...</Text>
               </View>
             )}
           </View>
@@ -284,7 +305,8 @@ const styles = StyleSheet.create({
     minWidth: 0,
     flexDirection: "row",
     alignItems: "baseline",
-    gap: 6,
+    flexWrap: "wrap",
+    gap: 5,
   },
   name: {
     flexShrink: 0,
@@ -292,6 +314,13 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     color: "#070322",
     fontWeight: "800",
+  },
+  studentNumber: {
+    flexShrink: 1,
+    fontSize: 12,
+    lineHeight: 16,
+    color: "#9CA3AF",
+    fontWeight: "600",
   },
   department: {
     flexShrink: 1,
@@ -314,29 +343,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     flexShrink: 0,
   },
-  statusPillActive: {
-    backgroundColor: "#EEF2FF",
-  },
-  statusPillPending: {
-    backgroundColor: "#F3F4F6",
-  },
-  statusPillCompleted: {
-    backgroundColor: "#F0FDF4",
-  },
+  statusPillActive: { backgroundColor: "#EEF2FF" },
+  statusPillPending: { backgroundColor: "#F3F4F6" },
+  statusPillCompleted: { backgroundColor: "#F0FDF4" },
   statusText: {
     fontSize: 11,
     lineHeight: 14,
     fontWeight: "800",
   },
-  statusTextActive: {
-    color: "#4C5BE2",
-  },
-  statusTextPending: {
-    color: "#6B7280",
-  },
-  statusTextCompleted: {
-    color: "#16A34A",
-  },
+  statusTextActive: { color: "#4C5BE2" },
+  statusTextPending: { color: "#6B7280" },
+  statusTextCompleted: { color: "#16A34A" },
   openIndicator: {
     width: 24,
     height: 24,
@@ -372,9 +389,7 @@ const styles = StyleSheet.create({
     color: "#413F46",
     fontWeight: "600",
   },
-  locationText: {
-    flex: 1,
-  },
+  locationText: { flex: 1 },
   actionRow: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -396,6 +411,11 @@ const styles = StyleSheet.create({
   },
   primaryActionButton: {
     backgroundColor: "#4C5BE2",
+    borderColor: "#4C5BE2",
+  },
+  applicantButton: {
+    borderColor: "#4C5BE2",
+    backgroundColor: "#F5F6FF",
   },
   pendingActionButton: {
     borderColor: "#E5E7EB",
@@ -417,10 +437,6 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontWeight: "700",
   },
-  pendingActionText: {
-    color: "#9CA3AF",
-  },
-  completedActionText: {
-    color: "#16A34A",
-  },
+  pendingActionText: { color: "#9CA3AF" },
+  completedActionText: { color: "#16A34A" },
 });

@@ -1,11 +1,8 @@
 import * as React from "react";
 import { Pressable, Text, StyleSheet, View } from "react-native";
-import Frame1052 from "@/assets/home/Frame-1052.svg";
 import {
-  Width,
   Padding,
   Gap,
-  Height,
   FontSize,
   LetterSpacing,
   LineHeight,
@@ -32,11 +29,6 @@ const RecommendationSectionHeader = ({
         style={styles.titleRow}
       >
         <Text style={styles.text}>{title}</Text>
-        <Frame1052
-          style={styles.icon}
-          width={Width.width_24}
-          height={Height.height_24}
-        />
       </TitleContainer>
     </View>
   );
@@ -61,10 +53,6 @@ const styles = StyleSheet.create({
     fontFamily: FontFamily.inter,
     color: Color.labelsPrimary,
     textAlign: "left",
-  },
-  icon: {
-    height: Height.height_24,
-    width: Width.width_24,
   },
 });
 

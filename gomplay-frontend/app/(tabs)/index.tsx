@@ -80,7 +80,6 @@ export default function HomePage() {
   React.useEffect(() => {
     if (!lastResolvedMatchRequest) return;
     const { accepted, roomId } = lastResolvedMatchRequest;
-    console.log("[index] lastResolvedMatchRequest:", JSON.stringify(lastResolvedMatchRequest));
     clearLastResolvedMatchRequest();
     if (accepted && roomId) {
       setIsQuickMatchOn(false);
@@ -233,7 +232,6 @@ export default function HomePage() {
 
     try {
       const res = await toggleMatching(true);
-      console.log("[handleToggleQuickMatch] 토글 결과 isMatching:", res.data.isMatching);
       if (!res.data.isMatching) {
         isTogglingRef.current = false;
         return;
@@ -243,7 +241,6 @@ export default function HomePage() {
       isTogglingRef.current = false;
     } catch (err) {
       isTogglingRef.current = false;
-      console.log("[handleToggleQuickMatch] 토글 실패:", err instanceof Error ? err.message : err);
       Alert.alert(
         "매칭 오류",
         err instanceof Error ? err.message : "다시 시도해주세요.",

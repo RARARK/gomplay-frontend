@@ -9,15 +9,17 @@ import ExerciseIcon from "@/assets/match/fluent-run-16-filled.svg";
 export type MatchHistoryItem = {
   id: string;
   sourceType: "POST" | "PARTNER";
-  status: "COMPLETED" | "CANCELLED";
   partnerName: string;
+  partnerProfileImageUrl?: string | null;
   partnerDepartment?: string;
+  partnerStudentNumber?: string;
   completedAt: string;
   location?: string;
   scheduledTime?: string;
   difficulty?: string;
   exerciseType?: string;
   reviewed?: boolean;
+  chatRoomId?: number;
   gatheringId?: number;
 };
 
@@ -33,7 +35,6 @@ export default function MatchHistoryCard({
   onReview,
 }: MatchHistoryCardProps) {
   const isPost = item.sourceType === "POST";
-  const isCompleted = item.status === "COMPLETED";
   const badgeColor = isPost ? "#C8960C" : "#4E9B6A";
 
   const details = [
@@ -64,13 +65,17 @@ export default function MatchHistoryCard({
           <Ionicons name="people-outline" size={14} color="#FFFFFF" />
         )}
         <Text style={styles.badgeText}>
-          {isPost ? "운동 모집" : "파트너 모집"}
+          {isPost ? "일반 매칭" : "퀵매칭"}
         </Text>
       </View>
 
       <View style={styles.card}>
         <Image
-          source={require("../../../assets/match/Ellipse-12.png")}
+          source={
+            item.partnerProfileImageUrl
+              ? { uri: item.partnerProfileImageUrl }
+              : require("../../../assets/match/Ellipse-12.png")
+          }
           style={styles.avatar}
           contentFit="cover"
         />
@@ -81,6 +86,11 @@ export default function MatchHistoryCard({
               <Text style={styles.name} numberOfLines={1}>
                 {item.partnerName}
               </Text>
+              {item.partnerStudentNumber ? (
+                <Text style={styles.studentNumber} numberOfLines={1}>
+                  {item.partnerStudentNumber}
+                </Text>
+              ) : null}
               {item.partnerDepartment ? (
                 <Text style={styles.department} numberOfLines={1}>
                   {item.partnerDepartment}
@@ -95,9 +105,7 @@ export default function MatchHistoryCard({
             </View>
           </View>
 
-          <Text style={styles.statusText}>
-            {isCompleted ? "매칭 완료" : "매칭 취소"}
-          </Text>
+          <Text style={styles.statusText}>매칭 완료</Text>
 
           {details.length > 0 ? (
             <View style={styles.detailRow}>
@@ -113,37 +121,29 @@ export default function MatchHistoryCard({
           ) : null}
 
           <View style={styles.actionRow}>
-            {isCompleted ? (
-              <>
-                <Pressable
-                  accessibilityRole="button"
-                  onPress={onChat}
-                  style={styles.actionButton}
-                >
-                  <Ionicons
-                    name="chatbubble-outline"
-                    size={14}
-                    color="#4C5BE2"
-                  />
-                  <Text style={styles.actionText}>채팅 보기</Text>
-                </Pressable>
-                <Pressable
-                  accessibilityRole="button"
-                  onPress={item.reviewed ? undefined : onReview}
-                  disabled={item.reviewed}
-                  style={[styles.actionButton, item.reviewed && styles.actionButtonDone]}
-                >
-                  <Ionicons
-                    name={item.reviewed ? "star" : "star-outline"}
-                    size={14}
-                    color={item.reviewed ? "#9CA3AF" : "#4C5BE2"}
-                  />
-                  <Text style={[styles.actionText, item.reviewed && styles.actionTextDone]}>
-                    {item.reviewed ? "평가완료" : "평가하기"}
-                  </Text>
-                </Pressable>
-              </>
-            ) : null}
+            <Pressable
+              accessibilityRole="button"
+              onPress={onChat}
+              style={styles.actionButton}
+            >
+              <Ionicons name="chatbubble-outline" size={14} color="#4C5BE2" />
+              <Text style={styles.actionText}>채팅 보기</Text>
+            </Pressable>
+            <Pressable
+              accessibilityRole="button"
+              onPress={item.reviewed ? undefined : onReview}
+              disabled={item.reviewed}
+              style={[styles.actionButton, item.reviewed && styles.actionButtonDone]}
+            >
+              <Ionicons
+                name={item.reviewed ? "star" : "star-outline"}
+                size={14}
+                color={item.reviewed ? "#9CA3AF" : "#4C5BE2"}
+              />
+              <Text style={[styles.actionText, item.reviewed && styles.actionTextDone]}>
+                {item.reviewed ? "평가완료" : "평가하기"}
+              </Text>
+            </Pressable>
           </View>
         </View>
       </View>
@@ -214,6 +214,13 @@ const styles = StyleSheet.create({
     color: "#111827",
     fontWeight: "800",
     flexShrink: 0,
+  },
+  studentNumber: {
+    fontSize: 12,
+    lineHeight: 16,
+    color: "#9CA3AF",
+    fontWeight: "600",
+    flexShrink: 1,
   },
   department: {
     fontSize: 12,

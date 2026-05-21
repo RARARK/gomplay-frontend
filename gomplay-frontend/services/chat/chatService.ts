@@ -53,7 +53,6 @@ type ChatRoomApiItem = {
   lastMessageContent?: string | null;
   lastMessageAt?: string | null;
   completeButtonVisible: boolean;
-  reviewCompleted?: boolean;
   reviewed?: boolean;
 };
 
@@ -77,7 +76,7 @@ function mapApiChatRoom(item: ChatRoomApiItem): ChatRoom {
     lastMessageAt: item.lastMessageAt ?? undefined,
     unreadMessageCount: item.unreadCount,
     completeButtonVisible: item.completeButtonVisible,
-    reviewCompleted: item.reviewCompleted ?? item.reviewed ?? false,
+    reviewed: item.reviewed ?? false,
     createdAt: item.createdAt,
   };
 }

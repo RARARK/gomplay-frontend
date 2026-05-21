@@ -26,7 +26,7 @@ export type ChatRoom = {
   lastMessageAt?: string;
   unreadMessageCount: number;
   matchCompletedAt?: string;
-  reviewCompleted: boolean;
+  reviewed: boolean;
   completeButtonVisible?: boolean;
   createdAt: string;
 };
