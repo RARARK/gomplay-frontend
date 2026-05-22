@@ -88,6 +88,7 @@ const HeroBanner = React.memo(({ banners = [] }: HeroBannerProps) => {
     if (displayBanners.length <= 1 || bannerWidth <= 0) return;
 
     timerRef.current = setTimeout(() => {
+      timerRef.current = null;
       const current = indexRef.current;
       slideTo(current === displayBanners.length - 1 ? 0 : current + 1);
     }, AUTO_SLIDE_MS);
@@ -218,9 +219,6 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255,255,255,0.4)",
   },
   dotActive: {
-    width: 7,
-    height: 7,
-    borderRadius: 4,
     backgroundColor: "#4C5BE2",
   },
   adBadge: {
