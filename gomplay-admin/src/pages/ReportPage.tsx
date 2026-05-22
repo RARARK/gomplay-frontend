@@ -43,17 +43,20 @@ const MOCK_REPORTS: Report[] = [
 ];
 
 export default function ReportPage() {
+  const [history, setHistory] = useState<Report[]>(MOCK_REPORTS);
   const [selected, setSelected] = useState<Report | null>(MOCK_REPORTS[0]);
   const [selectedCategory, setSelectedCategory] = useState<string>("욕설·괴롭힘");
   const [statusFilter, setStatusFilter] = useState("전체");
   const [categoryFilter, setCategoryFilter] = useState("전체");
   const [search, setSearch] = useState("");
   const [sanctionReason, setSanctionReason] = useState("");
+  const [selectedSanction, setSelectedSanction] = useState<string | null>(null);
+  const [applySuccess, setApplySuccess] = useState(false);
   const [page, setPage] = useState(1);
   const pageSize = 10;
   const totalPages = 16;
 
-  const filtered = MOCK_REPORTS.filter((r) => {
+  const filtered = history.filter((r) => {
     if (statusFilter !== "전체" && r.status !== statusFilter) return false;
     if (categoryFilter !== "전체" && r.category !== categoryFilter) return false;
     if (search && !r.reporter.includes(search) && !r.reportee.includes(search) && !r.id.includes(search)) return false;
@@ -139,7 +142,7 @@ export default function ReportPage() {
                       ...s.tr,
                       backgroundColor: selected?.id === r.id ? "#EFF6FF" : "#ffffff",
                     }}
-                    onClick={() => { setSelected(r); setSelectedCategory(r.category); setSanctionReason(""); }}
+                    onClick={() => { setSelected(r); setSelectedCategory(r.category); setSanctionReason(""); setSelectedSanction(null); setApplySuccess(false); }}
                   >
                     <td style={{ ...s.td, color: "#6B7280", fontSize: 12 }}>{r.reportedAt}</td>
                     <td style={s.td}>{r.reporter}</td>
@@ -266,37 +269,69 @@ export default function ReportPage() {
               {/* Sanction actions */}
               <div style={s.sectionCard}>
                 <div style={s.sectionLabel}>제재 조치</div>
-                <div style={s.sanctionBtns}>
-                  {(["기각", "경고 발송", "7일 정지", "30일 정지", "영구 정지"] as const).map((label) => (
-                    <button
-                      key={label}
-                      style={{
-                        ...s.sanctionBtn,
-                        ...(label === "기각" ? s.sanctionBtnGray : {}),
-                        ...(label === "경고 발송" ? s.sanctionBtnYellow : {}),
-                        ...(label === "7일 정지" ? s.sanctionBtnOrange : {}),
-                        ...(label === "30일 정지" ? s.sanctionBtnRed : {}),
-                        ...(label === "영구 정지" ? s.sanctionBtnDarkRed : {}),
-                      }}
-                    >
-                      {label}
-                    </button>
-                  ))}
-                </div>
-                <textarea
-                  style={s.textarea}
-                  placeholder="제재 사유를 입력하세요..."
-                  rows={3}
-                  value={sanctionReason}
-                  onChange={(e) => setSanctionReason(e.target.value)}
-                />
-                <div style={s.actionRow}>
-                  <button style={s.cancelBtn} onClick={() => setSelected(null)}>취소</button>
-                  <button style={s.applyBtn}>
-                    <AlertTriangle size={14} />
-                    제재 적용
-                  </button>
-                </div>
+                {applySuccess ? (
+                  <div style={s.successBanner}>
+                    ✓ 제재가 적용되었습니다.
+                  </div>
+                ) : (
+                  <>
+                    <div style={s.sanctionBtns}>
+                      {(["기각", "경고 발송", "7일 정지", "30일 정지", "영구 정지"] as const).map((label) => {
+                        const variantStyle =
+                          label === "기각" ? s.sanctionBtnGray :
+                          label === "경고 발송" ? s.sanctionBtnYellow :
+                          label === "7일 정지" ? s.sanctionBtnOrange :
+                          label === "30일 정지" ? s.sanctionBtnRed :
+                          s.sanctionBtnDarkRed;
+                        const isSelected = selectedSanction === label;
+                        return (
+                          <button
+                            key={label}
+                            style={{
+                              ...s.sanctionBtn,
+                              ...variantStyle,
+                              ...(isSelected ? s.sanctionBtnSelected : {}),
+                            }}
+                            onClick={() => setSelectedSanction(label)}
+                          >
+                            {label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <textarea
+                      style={s.textarea}
+                      placeholder="제재 사유를 입력하세요..."
+                      rows={3}
+                      value={sanctionReason}
+                      onChange={(e) => setSanctionReason(e.target.value)}
+                    />
+                    <div style={s.actionRow}>
+                      <button style={s.cancelBtn} onClick={() => setSelected(null)}>취소</button>
+                      <button
+                        style={{
+                          ...s.applyBtn,
+                          ...(!selectedSanction || !sanctionReason.trim() ? s.applyBtnDisabled : {}),
+                        }}
+                        disabled={!selectedSanction || !sanctionReason.trim()}
+                        onClick={() => {
+                          if (!selected || !selectedSanction || !sanctionReason.trim()) return;
+                          const nextStatus: Report["status"] =
+                            selectedSanction === "기각" ? "기각" :
+                            selectedSanction === "경고 발송" ? "경고" : "정지";
+                          setHistory((prev) =>
+                            prev.map((r) => r.id === selected.id ? { ...r, status: nextStatus } : r)
+                          );
+                          setSelected((prev) => prev ? { ...prev, status: nextStatus } : prev);
+                          setApplySuccess(true);
+                        }}
+                      >
+                        <AlertTriangle size={14} />
+                        제재 적용
+                      </button>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -625,6 +660,7 @@ const s: Record<string, React.CSSProperties> = {
   sanctionBtnOrange: { backgroundColor: "#FFF7ED", color: "#C2410C", border: "1px solid #FED7AA" },
   sanctionBtnRed: { backgroundColor: "#FFF1F2", color: "#BE123C", border: "1px solid #FECDD3" },
   sanctionBtnDarkRed: { backgroundColor: "#7F1D1D", color: "#ffffff", border: "1px solid #7F1D1D" },
+  sanctionBtnSelected: { boxShadow: "0 0 0 2px #111827", transform: "scale(1.04)" },
   textarea: {
     width: "100%",
     padding: "10px 12px",
@@ -652,6 +688,20 @@ const s: Record<string, React.CSSProperties> = {
     fontSize: 13,
     fontWeight: 600,
     cursor: "pointer",
+  },
+  applyBtnDisabled: {
+    backgroundColor: "#D1D5DB",
+    cursor: "not-allowed",
+    opacity: 0.6,
+  },
+  successBanner: {
+    padding: "12px 16px",
+    borderRadius: 8,
+    backgroundColor: "#F0FDF4",
+    border: "1px solid #BBF7D0",
+    color: "#15803D",
+    fontSize: 13,
+    fontWeight: 700,
   },
   applyBtn: {
     display: "flex",

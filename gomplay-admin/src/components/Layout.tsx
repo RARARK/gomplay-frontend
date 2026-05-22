@@ -1,30 +1,19 @@
 import {
-  Activity,
-  BarChart2,
   Bell,
   ChevronDown,
   ExternalLink,
-  FileText,
   HelpCircle,
   LayoutDashboard,
   LogOut,
-  Megaphone,
-  Settings,
   ShieldAlert,
   Users,
-  Zap,
 } from "lucide-react";
+import maintypo from "../../assets/maintypo.png";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 
 const NAV_ITEMS = [
   { to: "/", label: "대시보드", icon: LayoutDashboard, exact: true },
   { to: "/reports", label: "신고 관리", icon: ShieldAlert },
-  { to: "/users", label: "사용자 관리", icon: Users },
-  { to: "/matches", label: "매칭 관리", icon: Activity },
-  { to: "/contents", label: "콘텐츠 관리", icon: FileText },
-  { to: "/stats", label: "통계", icon: BarChart2 },
-  { to: "/notices", label: "공지 관리", icon: Megaphone },
-  { to: "/settings", label: "설정", icon: Settings },
 ];
 
 export default function Layout() {
@@ -41,10 +30,7 @@ export default function Layout() {
       <aside style={s.sidebar}>
         {/* Logo */}
         <div style={s.logoRow}>
-          <div style={s.logoIcon}>
-            <Zap size={16} color="#ffffff" />
-          </div>
-          <span style={s.logoText}>Gomplay Admin</span>
+          <img src={maintypo} style={s.logoImg} alt="Gomplay" />
         </div>
 
         {/* Nav */}
@@ -146,20 +132,9 @@ const s: Record<string, React.CSSProperties> = {
     padding: "20px 20px 20px",
     borderBottom: "1px solid #1e293b",
   },
-  logoIcon: {
-    width: 30,
-    height: 30,
-    borderRadius: 8,
-    backgroundColor: "#4C5BE2",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    flexShrink: 0,
-  },
-  logoText: {
-    fontSize: 15,
-    fontWeight: 800,
-    color: "#ffffff",
+  logoImg: {
+    height: 40,
+    objectFit: "contain" as const,
   },
   nav: {
     display: "flex",
