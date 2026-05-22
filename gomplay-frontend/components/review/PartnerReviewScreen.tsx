@@ -51,6 +51,8 @@ type Props = {
   revieweeId: number;
   partnerName?: string;
   partnerProfileImageUrl?: string | null;
+  partnerDepartment?: string;
+  partnerStudentId?: string;
   exerciseTypes?: string;
   scheduledTime?: string;
 };
@@ -86,7 +88,7 @@ function TraitCheckbox({
   );
 }
 
-export default function PartnerReviewScreen({ matchResultId, gatheringId, revieweeId, partnerName, partnerProfileImageUrl, exerciseTypes, scheduledTime }: Props) {
+export default function PartnerReviewScreen({ matchResultId, gatheringId, revieweeId, partnerName, partnerProfileImageUrl, partnerDepartment, partnerStudentId, exerciseTypes, scheduledTime }: Props) {
   const markReviewCompleted = useChatStore((s) => s.markReviewCompleted);
 
   const [selectedTraits, setSelectedTraits] = React.useState<Set<string>>(
@@ -165,6 +167,8 @@ export default function PartnerReviewScreen({ matchResultId, gatheringId, review
       <ReviewCompleteScreen
         partnerName={partnerName}
         partnerProfileImageUrl={partnerProfileImageUrl}
+        partnerDepartment={partnerDepartment}
+        partnerStudentId={partnerStudentId}
         exerciseTypes={exerciseTypes}
         scheduledTime={scheduledTime}
       />

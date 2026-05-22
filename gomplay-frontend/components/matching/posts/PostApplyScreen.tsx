@@ -182,6 +182,8 @@ export default function PostApplyScreen({ postId }: PostApplyScreenProps) {
     );
     try {
       await acceptParticipant(post.id, id);
+      const updatedPost = await getGatheringDetail(post.id);
+      setPost(updatedPost);
     } catch {
       setParticipants((prev) =>
         prev.map((p) => (p.id === id ? { ...p, status: "PENDING" as const } : p)),

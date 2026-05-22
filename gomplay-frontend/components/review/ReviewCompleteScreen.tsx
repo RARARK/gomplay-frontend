@@ -26,6 +26,8 @@ const CONFETTI = [
 type ReviewCompleteScreenProps = {
   partnerName?: string;
   partnerProfileImageUrl?: string | null;
+  partnerDepartment?: string;
+  partnerStudentId?: string;
   exerciseTypes?: string;
   scheduledTime?: string;
 };
@@ -33,6 +35,8 @@ type ReviewCompleteScreenProps = {
 export default function ReviewCompleteScreen({
   partnerName = "파트너",
   partnerProfileImageUrl,
+  partnerDepartment,
+  partnerStudentId,
   exerciseTypes,
   scheduledTime,
 }: ReviewCompleteScreenProps) {
@@ -183,6 +187,11 @@ export default function ReviewCompleteScreen({
               <Text style={styles.partnerName}>{partnerName}</Text>
               <Ionicons name="checkmark-circle" size={15} color="#4C5BE2" />
             </View>
+            {(partnerDepartment || partnerStudentId) ? (
+              <Text style={styles.partnerSubInfo} numberOfLines={1}>
+                {[partnerDepartment, partnerStudentId].filter(Boolean).join(" · ")}
+              </Text>
+            ) : null}
             {exerciseTypes ? (
               <Text style={styles.partnerMeta} numberOfLines={1}>
                 {exerciseTypes}
@@ -353,6 +362,12 @@ const styles = StyleSheet.create({
     lineHeight: 19,
     color: "#111827",
     fontWeight: "900",
+  },
+  partnerSubInfo: {
+    fontSize: 12,
+    lineHeight: 17,
+    color: "#4C5BE2",
+    fontWeight: "700",
   },
   partnerMeta: {
     fontSize: 12,

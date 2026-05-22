@@ -6,12 +6,14 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import PartnerReviewScreen from "@/components/review/PartnerReviewScreen";
 
 export default function ReviewRoute() {
-  const { matchId, revieweeId, type, partnerName, partnerProfileImageUrl, exerciseTypes, scheduledTime } = useLocalSearchParams<{
+  const { matchId, revieweeId, type, partnerName, partnerProfileImageUrl, partnerDepartment, partnerStudentId, exerciseTypes, scheduledTime } = useLocalSearchParams<{
     matchId: string;
     revieweeId?: string;
     type?: string;
     partnerName?: string;
     partnerProfileImageUrl?: string;
+    partnerDepartment?: string;
+    partnerStudentId?: string;
     exerciseTypes?: string;
     scheduledTime?: string;
   }>();
@@ -26,6 +28,8 @@ export default function ReviewRoute() {
         revieweeId={Number(revieweeId) || 0}
         partnerName={partnerName}
         partnerProfileImageUrl={partnerProfileImageUrl || null}
+        partnerDepartment={partnerDepartment}
+        partnerStudentId={partnerStudentId}
         exerciseTypes={exerciseTypes}
         scheduledTime={scheduledTime}
       />
