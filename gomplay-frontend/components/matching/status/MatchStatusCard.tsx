@@ -57,7 +57,7 @@ export default function MatchStatusCard({
   const isHost = item.role === "HOST";
   const isPost = item.sourceType === "POST";
 
-  const badgeColor = isPost ? "#C8960C" : "#4E9B6A";
+  const badgeColor = isPost ? "#10B981" : "#4C5BE2";
   const statusLabel = isCompleted ? "완료" : isInProgress ? "진행중" : "수락 대기";
 
   const location = isPost ? (item.location ?? "") : "장소 협의";
@@ -83,7 +83,7 @@ export default function MatchStatusCard({
         </Text>
       </View>
 
-      <View style={styles.card}>
+      <View style={[styles.card, { borderLeftColor: badgeColor }]}>
         <Image
           source={
             item.partnerProfileImageUrl
@@ -273,6 +273,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 0,
     borderWidth: 1,
     borderColor: "#E3E5EC",
+    borderLeftWidth: 4,
     backgroundColor: "#FFFFFF",
     paddingHorizontal: 12,
     paddingVertical: 14,

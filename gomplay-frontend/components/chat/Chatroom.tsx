@@ -6,6 +6,7 @@ import {
   getChatRoomParticipantDisplayName,
   type ChatRoom,
 } from "@/types/domain/chatRoom";
+import { MATCH_STATUS } from "@/types/domain/match";
 
 export type ChatroomProps = {
   chatRoom: ChatRoom;
@@ -21,8 +22,11 @@ type StatusBadge = {
 
 function getStatusBadge(chatRoom: ChatRoom): StatusBadge | null {
   const { matchStatus, reviewed } = chatRoom;
-  if (matchStatus === "COMPLETED" && !reviewed) {
+  if (matchStatus === MATCH_STATUS.COMPLETED && !reviewed) {
     return { label: "평가 필요", variant: "outline-primary" };
+  }
+  if (matchStatus === MATCH_STATUS.COMPLETED && reviewed) {
+    return { label: "운동 완료", variant: "filled-gray" };
   }
   return null;
 }
@@ -117,7 +121,9 @@ const statusBadgeContainer: Record<BadgeVariant, object> = {
     backgroundColor: "#4C5BE2",
   },
   "filled-gray": {
-    backgroundColor: "#E5E7EB",
+    backgroundColor: "#F3F4F6",
+    borderWidth: 1,
+    borderColor: "#D1D5DB",
   },
 };
 

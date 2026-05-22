@@ -344,11 +344,16 @@ export default function MatchStatusScreen({
           </Pressable>
           {SOURCE_FILTERS.map((f) => {
             const selected = sourceFilter === f;
+            const isMint = f === "일반 매칭";
             return (
               <Pressable
                 key={f}
                 accessibilityRole="button"
-                style={[styles.filterChip, selected && styles.filterChipActive]}
+                style={[
+                  styles.filterChip,
+                  isMint ? styles.filterChipMint : null,
+                  selected && (isMint ? styles.filterChipActiveMint : styles.filterChipActive),
+                ]}
                 onPress={() => setSourceFilter(selected ? null : f)}
               >
                 <Text
@@ -512,6 +517,12 @@ const styles = StyleSheet.create({
   },
   filterChipActive: {
     backgroundColor: "#4C5BE2",
+  },
+  filterChipMint: {
+    borderColor: "#10B981",
+  },
+  filterChipActiveMint: {
+    backgroundColor: "#10B981",
   },
   filterChipText: {
     fontSize: 12,

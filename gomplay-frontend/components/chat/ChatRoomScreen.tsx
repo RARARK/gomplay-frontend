@@ -28,7 +28,12 @@ import {
   subscribeToChatRoomEvents,
 } from "@/services/chat/chatService";
 import { useChatStore } from "@/stores/chat/chatStore";
-import type { ChatMessage } from "@/types/domain/chatMessage";
+import {
+  CHAT_MESSAGE_STATUS,
+  CHAT_MESSAGE_TYPE,
+  CHAT_SYSTEM_EVENT,
+  type ChatMessage,
+} from "@/types/domain/chatMessage";
 import {
   CHAT_ROOM_STATUS,
   getChatRoomParticipantDisplayName,
@@ -78,6 +83,7 @@ const INITIAL_SCHEDULES: ChatScheduleItem[] = [];
 
 export default function ChatRoomScreen() {
   const insets = useSafeAreaInsets();
+  const inputBottomPadding = Math.max(insets.bottom - 12, 8);
   const params = useLocalSearchParams<{ chatRoomId?: string | string[] }>();
   const chatRoomId = parseChatRoomId(params.chatRoomId);
 
@@ -134,9 +140,40 @@ export default function ChatRoomScreen() {
     const url = normalizeImageUrl(partner?.profileImageUrl);
     return url ? { uri: url } : PARTNER_IMAGE;
   }, [chatRoom]);
-  const messages = messagesByRoomId[chatRoomId] ?? [];
+  const messages = useMemo(
+    () => messagesByRoomId[chatRoomId] ?? [],
+    [chatRoomId, messagesByRoomId],
+  );
   const draft = draftsByRoomId[chatRoomId] ?? "";
   const isReadOnly = chatRoom?.status === CHAT_ROOM_STATUS.READ_ONLY;
+  const displayMessages = useMemo(() => {
+    if (chatRoom?.matchStatus !== MATCH_STATUS.COMPLETED) {
+      return messages;
+    }
+
+    const hasCompletedSystemMessage = messages.some(
+      (message) =>
+        message.systemEvent === CHAT_SYSTEM_EVENT.MATCH_COMPLETED ||
+        message.message === "운동이 완료되었습니다.",
+    );
+
+    if (hasCompletedSystemMessage) {
+      return messages;
+    }
+
+    const completedMessage: ChatMessage = {
+      id: -chatRoom.id,
+      chatRoomId: chatRoom.id,
+      message: "운동이 완료되었습니다.",
+      type: CHAT_MESSAGE_TYPE.SYSTEM,
+      status: CHAT_MESSAGE_STATUS.SENT,
+      systemEvent: CHAT_SYSTEM_EVENT.MATCH_COMPLETED,
+      createdAt:
+        chatRoom.matchCompletedAt ?? chatRoom.lastMessageAt ?? chatRoom.createdAt,
+    };
+
+    return [...messages, completedMessage];
+  }, [chatRoom, messages]);
   const displayRoomTitle = roomTitle.trim() || partnerDisplayName;
   const primaryNotice = notices.find((notice) => notice.isPinned) ?? null;
   const selectedNotice =
@@ -428,7 +465,7 @@ export default function ChatRoomScreen() {
       edges={["top", "left", "right"]}
     >
       <KeyboardAvoidingView
-        style={[styles.container, { paddingBottom: insets.bottom }]}
+        style={[styles.container, { paddingBottom: inputBottomPadding }]}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         keyboardVerticalOffset={Platform.OS === "ios" ? insets.bottom : 0}
       >
@@ -453,7 +490,7 @@ export default function ChatRoomScreen() {
           onContentSizeChange={() => scrollViewRef.current?.scrollToEnd({ animated: false })}
         >
           <View style={styles.messageList}>
-            {messages.map((message) => (
+            {displayMessages.map((message) => (
               <MessageRow
                 key={message.id}
                 message={message}

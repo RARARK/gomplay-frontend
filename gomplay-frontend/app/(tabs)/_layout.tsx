@@ -1,15 +1,17 @@
 import { Ionicons } from "@expo/vector-icons";
-import { Tabs } from "expo-router";
+import { router, Tabs } from "expo-router";
 import React from "react";
-import { AppState, type AppStateStatus, View } from "react-native";
+import { Alert, AppState, type AppStateStatus, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import MatchRequestToast from "@/components/matching/toast/MatchRequestToast";
 import { addChatEventHandler } from "@/lib/ws/chatWsClient";
 import { connectChatWs, getChatRooms } from "@/services/chat/chatService";
+import { toggleMatching } from "@/services/matching/matchingService";
 import { getNotifications } from "@/services/notification/notificationService";
 import { useAuthStore } from "@/stores/auth/authStore";
 import { useChatStore } from "@/stores/chat/chatStore";
+import { useMatchingStore } from "@/stores/matching/matchingStore";
 import { useNotificationStore } from "@/stores/notification/notificationStore";
 import {
   CHAT_MESSAGE_STATUS,
@@ -49,6 +51,25 @@ export default function TabsLayout() {
   const chatRooms = useChatStore((state) => state.chatRooms);
   const setChatRooms = useChatStore((state) => state.setChatRooms);
   const handledMessageIdsRef = React.useRef(new Set<number>());
+
+  const lastResolvedMatchRequest = useMatchingStore((s) => s.lastResolvedMatchRequest);
+  const clearLastResolvedMatchRequest = useMatchingStore((s) => s.clearLastResolvedMatchRequest);
+  const setCandidates = useMatchingStore((s) => s.setCandidates);
+  const setMatching = useAuthStore((s) => s.setMatching);
+
+  React.useEffect(() => {
+    if (!lastResolvedMatchRequest) return;
+    const { accepted, roomId } = lastResolvedMatchRequest;
+    clearLastResolvedMatchRequest();
+    if (accepted && roomId) {
+      setMatching(false);
+      setCandidates([]);
+      toggleMatching(false).catch(() => {});
+      router.push(`/chat/${encodeURIComponent(roomId)}`);
+    } else if (!accepted) {
+      Alert.alert("매칭 거절", "상대방이 매칭을 거절했어요.");
+    }
+  }, [lastResolvedMatchRequest, clearLastResolvedMatchRequest, setCandidates, setMatching]);
 
   useSyncNotificationUnread();
 

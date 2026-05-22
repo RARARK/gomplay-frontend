@@ -90,7 +90,7 @@ export default function PostMatchReviewCard({
 const styles = StyleSheet.create({
   wrapper: {
     paddingHorizontal: 15,
-    paddingBottom: 16,
+    paddingBottom: 8,
     gap: 20,
   },
   card: {

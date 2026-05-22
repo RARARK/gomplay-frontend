@@ -48,8 +48,6 @@ export default function HomePage() {
   const popFromBuffer = useMatchingStore((s) => s.popFromBuffer);
   const seenCandidateIds = useMatchingStore((s) => s.seenCandidateIds);
   const addSeenIds = useMatchingStore((s) => s.addSeenIds);
-  const lastResolvedMatchRequest = useMatchingStore((s) => s.lastResolvedMatchRequest);
-  const clearLastResolvedMatchRequest = useMatchingStore((s) => s.clearLastResolvedMatchRequest);
   const wsConnected = useMatchingStore((s) => s.wsConnected);
 
   const [isQuickMatchOn, setIsQuickMatchOn] = React.useState(storedMatching);
@@ -74,23 +72,12 @@ export default function HomePage() {
     toggleMatching(true).catch(() => {});
   }, [wsConnected]);
 
-  // Match request notifications are handled by MatchRequestToast in (tabs)/_layout.tsx
+  // Match accepted/rejected handling is in (tabs)/_layout.tsx (always mounted)
 
-  // Show alert when the opponent accepts or rejects our match request via WS
+  // Sync local toggle state when matching is turned off externally (e.g. after match accepted)
   React.useEffect(() => {
-    if (!lastResolvedMatchRequest) return;
-    const { accepted, roomId } = lastResolvedMatchRequest;
-    clearLastResolvedMatchRequest();
-    if (accepted && roomId) {
-      setIsQuickMatchOn(false);
-      setMatching(false);
-      setCandidates([]);
-      toggleMatching(false).catch(() => {});
-      router.push(`/chat/${encodeURIComponent(roomId)}`);
-    } else if (!accepted) {
-      Alert.alert("매칭 거절", "상대방이 매칭을 거절했어요.");
-    }
-  }, [lastResolvedMatchRequest, clearLastResolvedMatchRequest, setCandidates, setMatching]);
+    setIsQuickMatchOn(storedMatching);
+  }, [storedMatching]);
 
   useFocusEffect(
     React.useCallback(() => {
