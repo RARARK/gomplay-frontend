@@ -1,10 +1,10 @@
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import DifficultyIcon from "@/assets/match/heroicons-chart-bar-16-solid.svg";
-import ExerciseIcon from "@/assets/match/fluent-run-16-filled.svg";
+import { getSportIcon } from "@/lib/utils/sportIconMap";
 
 export type MatchHistoryItem = {
   id: string;
@@ -21,55 +21,36 @@ export type MatchHistoryItem = {
   reviewed?: boolean;
   chatRoomId?: number;
   gatheringId?: number;
+  // Extended partner profile (optional)
+  partnerIsVerified?: boolean;
+  partnerMannerTemperature?: number;
+  partnerMatchCount?: number;
+  partnerNoShowCount?: number;
+  partnerStyle?: string;
+  partnerExerciseIntensity?: string;
+  partnerExerciseReason?: string;
+  partnerExerciseTypes?: string[];
 };
 
 type MatchHistoryCardProps = {
   item: MatchHistoryItem;
   onChat?: () => void;
   onReview?: () => void;
+  onViewProfile?: () => void;
 };
 
 export default function MatchHistoryCard({
   item,
   onChat,
   onReview,
+  onViewProfile,
 }: MatchHistoryCardProps) {
   const isPost = item.sourceType === "POST";
-  const badgeColor = isPost ? "#C8960C" : "#4E9B6A";
-
-  const details = [
-    item.location && {
-      icon: <Ionicons name="location" size={13} color="#EF4444" />,
-      label: item.location,
-    },
-    item.scheduledTime && {
-      icon: <Ionicons name="time-outline" size={13} color="#413F46" />,
-      label: item.scheduledTime,
-    },
-    item.difficulty && {
-      icon: <DifficultyIcon width={13} height={13} />,
-      label: item.difficulty,
-    },
-    item.exerciseType && {
-      icon: <ExerciseIcon width={13} height={13} />,
-      label: item.exerciseType,
-    },
-  ].filter(Boolean) as { icon: React.ReactNode; label: string }[];
+  const stripeColor = isPost ? "#10B981" : "#4C5BE2";
 
   return (
-    <View style={styles.container}>
-      <View style={[styles.badge, { backgroundColor: badgeColor }]}>
-        {isPost ? (
-          <ExerciseIcon width={14} height={14} />
-        ) : (
-          <Ionicons name="people-outline" size={14} color="#FFFFFF" />
-        )}
-        <Text style={styles.badgeText}>
-          {isPost ? "일반 매칭" : "퀵매칭"}
-        </Text>
-      </View>
-
-      <View style={styles.card}>
+    <Pressable style={styles.container} onPress={onViewProfile}>
+      <View style={[styles.card, { borderLeftColor: stripeColor }]}>
         <Image
           source={
             item.partnerProfileImageUrl
@@ -107,16 +88,46 @@ export default function MatchHistoryCard({
 
           <Text style={styles.statusText}>매칭 완료</Text>
 
-          {details.length > 0 ? (
-            <View style={styles.detailRow}>
-              {details.map((detail) => (
-                <View key={detail.label} style={styles.detailChip}>
-                  {detail.icon}
-                  <Text style={styles.detailText} numberOfLines={1}>
-                    {detail.label}
+          {(item.location || item.scheduledTime || item.difficulty || item.exerciseType) ? (
+            <View style={styles.detailBlock}>
+              {item.location ? (
+                <View style={[styles.detailItem, styles.locationItem]}>
+                  <Ionicons name="location-sharp" size={16} color="#EF4444" />
+                  <Text numberOfLines={2} style={[styles.detailText, styles.locationText]}>
+                    {item.location}
                   </Text>
                 </View>
-              ))}
+              ) : null}
+              <View style={styles.detailRow}>
+                {item.scheduledTime ? (
+                  <View style={styles.detailItem}>
+                    <Ionicons name="time-outline" size={15} color="#413F46" />
+                    <Text numberOfLines={1} style={styles.detailText}>
+                      {item.scheduledTime}
+                    </Text>
+                  </View>
+                ) : null}
+                {item.difficulty ? (
+                  <View style={styles.detailItem}>
+                    <DifficultyIcon width={16} height={16} />
+                    <Text numberOfLines={1} style={styles.detailText}>
+                      {item.difficulty}
+                    </Text>
+                  </View>
+                ) : null}
+                {item.exerciseType ? (
+                  <View style={styles.detailItem}>
+                    <MaterialCommunityIcons
+                      name={getSportIcon(item.exerciseType)}
+                      size={16}
+                      color="#413F46"
+                    />
+                    <Text numberOfLines={1} style={styles.detailText}>
+                      {item.exerciseType}
+                    </Text>
+                  </View>
+                ) : null}
+              </View>
             </View>
           ) : null}
 
@@ -147,35 +158,19 @@ export default function MatchHistoryCard({
           </View>
         </View>
       </View>
-    </View>
+    </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
   container: {},
-  badge: {
-    alignSelf: "flex-start",
-    minHeight: 28,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
-    paddingHorizontal: 12,
-  },
-  badgeText: {
-    fontSize: 12,
-    lineHeight: 16,
-    color: "#FFFFFF",
-    fontWeight: "800",
-  },
   card: {
     flexDirection: "row",
     gap: 12,
     borderRadius: 16,
-    borderTopLeftRadius: 0,
     borderWidth: 1,
     borderColor: "#D9D9D9",
+    borderLeftWidth: 4,
     backgroundColor: "#FFFFFF",
     paddingHorizontal: 12,
     paddingVertical: 14,
@@ -255,31 +250,34 @@ const styles = StyleSheet.create({
     color: "#111827",
     fontWeight: "800",
   },
+  detailBlock: {
+    gap: 5,
+  },
   detailRow: {
     flexDirection: "row",
+    alignItems: "center",
     flexWrap: "wrap",
-    columnGap: 6,
-    rowGap: 6,
+    columnGap: 10,
+    rowGap: 4,
   },
-  detailChip: {
-    flexBasis: "47%",
-    flexGrow: 1,
-    minHeight: 30,
+  detailItem: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 5,
-    borderRadius: 8,
-    backgroundColor: "#F8FAFC",
-    paddingHorizontal: 8,
+    flexShrink: 1,
+    gap: 4,
+  },
+  locationItem: {
+    alignItems: "flex-start",
+    width: "100%",
   },
   detailText: {
-    flex: 1,
-    minWidth: 0,
+    flexShrink: 1,
     fontSize: 12,
     lineHeight: 16,
     color: "#413F46",
     fontWeight: "600",
   },
+  locationText: { flex: 1 },
   actionRow: {
     flexDirection: "row",
     gap: 6,

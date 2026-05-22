@@ -1,5 +1,6 @@
 import * as React from "react";
-import { View, Image, Text, StyleSheet } from "react-native";
+import { Image, StyleSheet, Text, View } from "react-native";
+
 import { HomeLayout } from "@/constants/locofyHomeStyles";
 
 const DefaultMatchContent = () => {
@@ -11,9 +12,10 @@ const DefaultMatchContent = () => {
       />
 
       <View style={styles.content}>
-        <Text style={styles.title}>Find a partner near you</Text>
+        <Text style={styles.title}>내 주변 운동 파트너 찾기</Text>
         <Text style={styles.subtitle}>
-          Turn on quick match and start meeting people who fit your vibe.
+          퀵 매치를 활성화하고{"\n"}
+          나와 맞는 공강 시간인 파트너를 찾아보세요
         </Text>
       </View>
     </>

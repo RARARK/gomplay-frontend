@@ -28,6 +28,7 @@ import CreatePostLocationCard from "@/components/matching/create-post/CreatePost
 import CreatePostTagSelector from "@/components/matching/create-post/CreatePostTagSelector";
 import ApplicantPanel from "@/components/matching/status/ApplicantPanel";
 import type { Applicant } from "@/components/matching/status/ApplicantPanel";
+import OpponentProfileModal from "@/components/matching/OpponentProfileModal";
 import WorkoutCompleteModal from "@/components/matching/WorkoutCompleteModal";
 import {
   formatCreatePostDayLabel,
@@ -89,6 +90,7 @@ export default function PostApplyScreen({ postId }: PostApplyScreenProps) {
     React.useState(false);
   const [participants, setParticipants] = React.useState<GatheringParticipant[]>([]);
   const [isApplicantPanelOpen, setIsApplicantPanelOpen] = React.useState(false);
+  const [isProfileModalVisible, setIsProfileModalVisible] = React.useState(false);
 
   const [editTitle, setEditTitle] = React.useState("");
   const [editTags, setEditTags] = React.useState<string[]>([]);
@@ -410,7 +412,10 @@ export default function PostApplyScreen({ postId }: PostApplyScreenProps) {
             </Text>
           </View>
         ) : (
-          <View style={styles.profileCard}>
+          <Pressable
+            style={styles.profileCard}
+            onPress={() => setIsProfileModalVisible(true)}
+          >
             <Image
               source={
                 post.hostProfileImageUrl
@@ -423,7 +428,8 @@ export default function PostApplyScreen({ postId }: PostApplyScreenProps) {
             <View style={styles.profileInfo}>
               <Text style={styles.hostName}>{post.hostName}</Text>
             </View>
-          </View>
+            <Ionicons name="chevron-forward" size={18} color="#9CA3AF" />
+          </Pressable>
         )}
 
         <View style={styles.section}>
@@ -725,6 +731,26 @@ export default function PostApplyScreen({ postId }: PostApplyScreenProps) {
         onAccept={handleAcceptApplicant}
         onReject={handleRejectApplicant}
       />
+      {post && (
+        <OpponentProfileModal
+          visible={isProfileModalVisible}
+          onClose={() => setIsProfileModalVisible(false)}
+          data={{
+            name: post.hostName,
+            profileImageUrl: post.hostProfileImageUrl,
+            exerciseTypes: post.sportType ? [post.sportType] : undefined,
+            matchStatus: canComplete ? "IN_PROGRESS" : undefined,
+          }}
+          onComplete={
+            canComplete
+              ? () => {
+                  setIsProfileModalVisible(false);
+                  void handleComplete();
+                }
+              : undefined
+          }
+        />
+      )}
     </>
   );
 }

@@ -148,7 +148,7 @@ const QuickMatchToggleNew = React.memo(function QuickMatchToggleNew({ state, isO
 
       <View style={styles.textBlock}>
         <Text style={[styles.title, isOn ? styles.titleOn : styles.titleOff]}>
-          Quick Match
+          퀵 매치
         </Text>
 
         <View style={styles.statusRow}>
@@ -213,9 +213,9 @@ const QuickMatchToggleNew = React.memo(function QuickMatchToggleNew({ state, isO
             <View style={styles.noticeIconWrap}>
               <Ionicons name="flash" size={24} color="#4C5BE2" />
             </View>
-            <Text style={styles.noticeTitle}>퀵매치를 시작할까요?</Text>
+            <Text style={styles.noticeTitle}>퀵 매치를 시작할까요?</Text>
             <Text style={styles.noticeDescription}>
-              퀵매치를 시작하면 50포인트가 차감돼요.
+              퀵 매치를 시작하면 50포인트가 차감돼요.
             </Text>
 
             <Pressable

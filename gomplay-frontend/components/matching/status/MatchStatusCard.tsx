@@ -1,10 +1,10 @@
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import DifficultyIcon from "@/assets/match/heroicons-chart-bar-16-solid.svg";
-import ExerciseIcon from "@/assets/match/fluent-run-16-filled.svg";
+import { getSportIcon } from "@/lib/utils/sportIconMap";
 
 export type MatchSourceType = "POST" | "PARTNER";
 export type MatchStatus = "IN_PROGRESS" | "PENDING" | "COMPLETED";
@@ -27,6 +27,15 @@ export type MatchItem = {
   exerciseType?: string;
   applicantCount?: number;
   chatRoomId?: number;
+  // Extended partner profile (optional)
+  partnerIsVerified?: boolean;
+  partnerMannerTemperature?: number;
+  partnerMatchCount?: number;
+  partnerNoShowCount?: number;
+  partnerStyle?: string;
+  partnerExerciseIntensity?: string;
+  partnerExerciseReason?: string;
+  partnerExerciseTypes?: string[];
 };
 
 type MatchStatusCardProps = {
@@ -34,6 +43,7 @@ type MatchStatusCardProps = {
   onComplete?: () => void;
   onChat?: () => void;
   onViewApplicants?: () => void;
+  onViewProfile?: () => void;
 };
 
 const COMPLETE_DELAY_MS = 60 * 60 * 1000; // 1시간
@@ -43,6 +53,7 @@ export default function MatchStatusCard({
   onComplete,
   onChat,
   onViewApplicants,
+  onViewProfile,
 }: MatchStatusCardProps) {
   const [now, setNow] = React.useState(() => Date.now());
 
@@ -71,18 +82,7 @@ export default function MatchStatusCard({
     item.matchedAt ? now > new Date(item.matchedAt).getTime() + COMPLETE_DELAY_MS : false;
 
   return (
-    <View style={styles.container}>
-      <View style={[styles.badge, { backgroundColor: badgeColor }]}>
-        {isPost ? (
-          <ExerciseIcon width={14} height={14} />
-        ) : (
-          <Ionicons name="people-outline" size={14} color="#FFFFFF" />
-        )}
-        <Text style={styles.badgeText} numberOfLines={1}>
-          {isPost ? "일반 매칭" : "퀵매칭"}
-        </Text>
-      </View>
-
+    <Pressable style={styles.container} onPress={onViewProfile}>
       <View style={[styles.card, { borderLeftColor: badgeColor }]}>
         <Image
           source={
@@ -171,7 +171,11 @@ export default function MatchStatusCard({
               ) : null}
               {exerciseType ? (
                 <View style={styles.detailItem}>
-                  <Ionicons name="fitness-outline" size={15} color="#413F46" />
+                  {exerciseType === "종목 협의" ? (
+                    <MaterialCommunityIcons name="swap-horizontal" size={16} color="#413F46" />
+                  ) : (
+                    <MaterialCommunityIcons name={getSportIcon(exerciseType)} size={16} color="#413F46" />
+                  )}
                   <Text numberOfLines={1} style={styles.detailText}>
                     {exerciseType}
                   </Text>
@@ -240,7 +244,7 @@ export default function MatchStatusCard({
           </View>
         </View>
       </View>
-    </View>
+    </Pressable>
   );
 }
 
@@ -248,29 +252,11 @@ const styles = StyleSheet.create({
   container: {
     width: "100%",
   },
-  badge: {
-    alignSelf: "flex-start",
-    maxWidth: "100%",
-    minHeight: 28,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
-    paddingHorizontal: 12,
-  },
-  badgeText: {
-    fontSize: 12,
-    lineHeight: 16,
-    color: "#FFFFFF",
-    fontWeight: "800",
-  },
   card: {
     flexDirection: "row",
     alignItems: "flex-start",
     gap: 12,
     borderRadius: 16,
-    borderTopLeftRadius: 0,
     borderWidth: 1,
     borderColor: "#E3E5EC",
     borderLeftWidth: 4,

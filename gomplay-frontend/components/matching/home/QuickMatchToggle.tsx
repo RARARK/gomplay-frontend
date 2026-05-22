@@ -36,7 +36,7 @@ const QuickMatchToggle = ({ state, onChange }: Props) => {
       <View style={styles.offParent}>
         <Text style={styles.offContainer}>
           <Text style={styles.off}>
-            {isOn ? "퀵매칭 On\n" : "퀵매칭 Off\n"}
+            {isOn ? "퀵 매치 On\n" : "퀵 매치 Off\n"}
           </Text>
           <Text style={styles.text}>공강 중 · 파트너 탐색 가능</Text>
         </Text>

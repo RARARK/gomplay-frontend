@@ -529,6 +529,7 @@ export default function ChatRoomScreen() {
           roomTitle={displayRoomTitle}
           roomTitleDraft={roomTitleDraft}
           isRoomTitleEditing={isRoomTitleEditing}
+          isReadOnly={isReadOnly}
           participants={chatRoom.participants}
           notices={notices}
           schedules={schedules}
@@ -622,6 +623,7 @@ type ChatRoomSideMenuProps = {
   roomTitle: string;
   roomTitleDraft: string;
   isRoomTitleEditing: boolean;
+  isReadOnly: boolean;
   participants: ChatRoomParticipant[];
   notices: ChatNoticeItem[];
   schedules: ChatScheduleItem[];
@@ -641,6 +643,7 @@ function ChatRoomSideMenu({
   roomTitle,
   roomTitleDraft,
   isRoomTitleEditing,
+  isReadOnly,
   participants,
   notices,
   schedules,
@@ -710,13 +713,15 @@ function ChatRoomSideMenu({
                 <Text numberOfLines={1} style={styles.roomTitleText}>
                   {roomTitle}
                 </Text>
-                <Pressable
-                  accessibilityRole="button"
-                  onPress={onStartRoomTitleEdit}
-                  style={styles.roomTitleEditButton}
-                >
-                  <Text style={styles.drawerActionText}>수정</Text>
-                </Pressable>
+                {!isReadOnly ? (
+                  <Pressable
+                    accessibilityRole="button"
+                    onPress={onStartRoomTitleEdit}
+                    style={styles.roomTitleEditButton}
+                  >
+                    <Text style={styles.drawerActionText}>수정</Text>
+                  </Pressable>
+                ) : null}
               </View>
             )}
           </View>
@@ -740,14 +745,16 @@ function ChatRoomSideMenu({
           <View style={styles.drawerSection}>
             <View style={styles.drawerSectionHeader}>
               <Text style={styles.drawerSectionTitle}>공지</Text>
-              <Pressable
-                accessibilityRole="button"
-                onPress={onAddNotice}
-                style={styles.addScheduleButton}
-              >
-                <Ionicons name="add" size={16} color={Color.primary100} />
-                <Text style={styles.drawerActionText}>공지 작성</Text>
-              </Pressable>
+              {!isReadOnly ? (
+                <Pressable
+                  accessibilityRole="button"
+                  onPress={onAddNotice}
+                  style={styles.addScheduleButton}
+                >
+                  <Ionicons name="add" size={16} color={Color.primary100} />
+                  <Text style={styles.drawerActionText}>공지 작성</Text>
+                </Pressable>
+              ) : null}
             </View>
             {notices.map((notice) => (
               <Pressable
@@ -776,14 +783,16 @@ function ChatRoomSideMenu({
           <View style={styles.drawerSection}>
             <View style={styles.drawerSectionHeader}>
               <Text style={styles.drawerSectionTitle}>일정</Text>
-              <Pressable
-                accessibilityRole="button"
-                onPress={onAddSchedule}
-                style={styles.addScheduleButton}
-              >
-                <Ionicons name="add" size={16} color={Color.primary100} />
-                <Text style={styles.drawerActionText}>일정 추가</Text>
-              </Pressable>
+              {!isReadOnly ? (
+                <Pressable
+                  accessibilityRole="button"
+                  onPress={onAddSchedule}
+                  style={styles.addScheduleButton}
+                >
+                  <Ionicons name="add" size={16} color={Color.primary100} />
+                  <Text style={styles.drawerActionText}>일정 추가</Text>
+                </Pressable>
+              ) : null}
             </View>
             {schedules.map((schedule) => (
               <Pressable

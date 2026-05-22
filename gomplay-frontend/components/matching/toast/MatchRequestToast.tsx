@@ -197,7 +197,7 @@ export default function MatchRequestToast() {
                 {"님이 함께 운동하고 싶어해요 💪"}
               </Text>
             </View>
-            <Text style={styles.sub}>퀵매칭 요청이 도착했어요</Text>
+            <Text style={styles.sub}>퀵 매치 요청이 도착했어요</Text>
           </View>
         </View>
 

@@ -44,7 +44,7 @@ const REASON_CONFIG: Record<string, ReasonConfig> = {
     iconColor: "#16A34A",
   },
   quick_match: {
-    label: "퀵매칭 시작",
+    label: "퀵 매치 시작",
     iconName: "flash",
     iconFamily: "ion",
     iconBg: "#FEE2E2",
@@ -110,7 +110,7 @@ const TABS = [
 const USAGE_ITEMS = [
   {
     key: "quick",
-    name: "퀵매칭 시작",
+    name: "퀵 매치 시작",
     icon: "flash",
     iconFamily: "ion" as const,
     iconBg: "#EEF2FF",
@@ -529,7 +529,7 @@ const EARN_GUIDE = [
 ];
 
 const SPEND_GUIDE = [
-  { action: "퀵매칭 세션 시작", point: -8, desc: undefined },
+  { action: "퀵 매치 세션 시작", point: -8, desc: undefined },
   { action: "추천 모집글 새로고침", point: -5, desc: undefined },
   { action: "모집글 부스트", point: -25, desc: "일정 시간 동안 내 모집글 상단 노출" },
 ];

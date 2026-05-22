@@ -15,6 +15,9 @@ import ApplicantPanel, {
 import MatchStatusCard, {
   type MatchItem,
 } from "@/components/matching/status/MatchStatusCard";
+import OpponentProfileModal, {
+  type OpponentProfileData,
+} from "@/components/matching/OpponentProfileModal";
 import WorkoutCompleteModal from "@/components/matching/WorkoutCompleteModal";
 import {
   acceptParticipant,
@@ -24,7 +27,7 @@ import {
 } from "@/services/gathering/gatheringService";
 import type { GatheringParticipant } from "@/types/domain/gathering";
 
-const SOURCE_FILTERS = ["일반 매칭", "퀵매칭"] as const;
+const SOURCE_FILTERS = ["일반 매칭", "퀵 매치"] as const;
 const STATUS_FILTERS = ["진행중", "수락 대기"] as const;
 
 type SourceFilter = (typeof SOURCE_FILTERS)[number] | null;
@@ -49,6 +52,15 @@ const MOCK_MATCHES: MatchItem[] = [
     scheduledEndAt: new Date(Date.now() - 10 * 60 * 1000).toISOString(),
     difficulty: "초보자",
     exerciseType: "풋살",
+    chatRoomId: 1,
+    partnerIsVerified: true,
+    partnerMannerTemperature: 92,
+    partnerMatchCount: 18,
+    partnerNoShowCount: 0,
+    partnerStyle: "독립형",
+    partnerExerciseIntensity: "꾸준형",
+    partnerExerciseReason: "건강관리",
+    partnerExerciseTypes: ["풋살", "헬스", "러닝", "배드민턴", "농구"],
   },
   {
     id: "2",
@@ -59,6 +71,15 @@ const MOCK_MATCHES: MatchItem[] = [
     partnerDepartment: "컴퓨터공학과",
     partnerStudentNumber: "21학번",
     matchedAt: new Date(Date.now() - 90 * 60 * 1000).toISOString(),
+    chatRoomId: 2,
+    partnerIsVerified: false,
+    partnerMannerTemperature: 65,
+    partnerMatchCount: 7,
+    partnerNoShowCount: 1,
+    partnerStyle: "소통형",
+    partnerExerciseIntensity: "강도형",
+    partnerExerciseReason: "다이어트",
+    partnerExerciseTypes: ["헬스", "러닝"],
   },
   {
     id: "3",
@@ -156,6 +177,10 @@ export default function MatchStatusScreen({
   const [sourceFilter, setSourceFilter] = React.useState<SourceFilter>(null);
   const [statusFilter, setStatusFilter] = React.useState<StatusFilter>(null);
   const [panelMatchId, setPanelMatchId] = React.useState<string | null>(null);
+  const [profileModal, setProfileModal] = React.useState<{
+    data: OpponentProfileData;
+    item: MatchItem;
+  } | null>(null);
   const [matches, setMatches] = React.useState<MatchItem[]>(initialMatches);
   const [completedGatheringId, setCompletedGatheringId] = React.useState<
     string | null
@@ -189,7 +214,7 @@ export default function MatchStatusScreen({
       matchesWithApplicantCount.filter((m) => {
         if (m.sourceType === "PARTNER" && m.status === "PENDING") return false;
         if (sourceFilter === "일반 매칭" && m.sourceType !== "POST") return false;
-        if (sourceFilter === "퀵매칭" && m.sourceType !== "PARTNER") return false;
+        if (sourceFilter === "퀵 매치" && m.sourceType !== "PARTNER") return false;
         if (statusFilter === "진행중" && m.status !== "IN_PROGRESS") return false;
         if (statusFilter === "수락 대기" && m.status !== "PENDING") return false;
         return true;
@@ -226,6 +251,29 @@ export default function MatchStatusScreen({
       setApplicantsLoading(false);
     }
   }, []);
+
+  const handleViewProfile = (item: MatchItem) => {
+    setProfileModal({
+      item,
+      data: {
+        name: item.partnerName,
+        department: item.partnerDepartment,
+        studentId: item.partnerStudentNumber,
+        profileImageUrl: item.partnerProfileImageUrl,
+        isVerified: item.partnerIsVerified,
+        partnerStyle: item.partnerStyle,
+        exerciseIntensity: item.partnerExerciseIntensity,
+        exerciseReason: item.partnerExerciseReason,
+        exerciseTypes:
+          item.partnerExerciseTypes ??
+          (item.exerciseType ? [item.exerciseType] : undefined),
+        mannerTemperature: item.partnerMannerTemperature,
+        matchCount: item.partnerMatchCount,
+        noShowCount: item.partnerNoShowCount,
+        matchStatus: item.status,
+      },
+    });
+  };
 
   const handleViewApplicants = (matchId: string) => {
     setPanelMatchId(matchId);
@@ -405,7 +453,13 @@ export default function MatchStatusScreen({
                     ? () => handleComplete(item)
                     : undefined
                 }
+                onChat={
+                  item.chatRoomId
+                    ? () => router.push(`/chat/${item.chatRoomId}` as any)
+                    : undefined
+                }
                 onViewApplicants={() => handleViewApplicants(item.id)}
+                onViewProfile={() => handleViewProfile(item)}
               />
             ))}
           </View>
@@ -432,6 +486,30 @@ export default function MatchStatusScreen({
           router.push(`/review/${targetId}?type=gathering` as any);
         }}
       />
+      {profileModal && (
+        <OpponentProfileModal
+          visible
+          data={profileModal.data}
+          onClose={() => setProfileModal(null)}
+          onComplete={
+            profileModal.item.sourceType === "POST" &&
+            profileModal.item.status === "IN_PROGRESS"
+              ? () => {
+                  setProfileModal(null);
+                  void handleComplete(profileModal.item);
+                }
+              : undefined
+          }
+          onChat={
+            profileModal.item.chatRoomId
+              ? () => {
+                  setProfileModal(null);
+                  router.push(`/chat/${profileModal.item.chatRoomId}` as any);
+                }
+              : undefined
+          }
+        />
+      )}
     </>
   );
 }

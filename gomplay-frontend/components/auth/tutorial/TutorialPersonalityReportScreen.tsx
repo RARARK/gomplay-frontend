@@ -247,9 +247,9 @@ export default function TutorialPersonalityReportScreen({ onContinue }: Props = 
           {/* 한줄 요약 */}
           <Section label="한줄 요약">
             <View style={styles.quoteBox}>
-              <Text style={styles.quoteMark}>"</Text>
+              <Text style={styles.quoteMark}>{'"'}</Text>
               <Text style={styles.quoteText}>{report.summary}</Text>
-              <Text style={styles.quoteMark}>"</Text>
+              <Text style={styles.quoteMark}>{'"'}</Text>
             </View>
           </Section>
 
@@ -335,7 +335,7 @@ export default function TutorialPersonalityReportScreen({ onContinue }: Props = 
               pressed && styles.buttonPressed,
             ]}
           >
-            <Text style={styles.ctaText}>나와 맞는 파트너 찾기</Text>
+            <Text style={styles.ctaText}>나와 맞는 파트너 찾으러가기</Text>
             <Ionicons name="chevron-forward" size={21} color="#FFFFFF" />
           </Pressable>
         </View>

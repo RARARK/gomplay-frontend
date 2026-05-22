@@ -14,6 +14,9 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import MatchHistoryCard, {
   type MatchHistoryItem,
 } from "@/components/matching/history/MatchHistoryCard";
+import OpponentProfileModal, {
+  type OpponentProfileData,
+} from "@/components/matching/OpponentProfileModal";
 const MOCK_HISTORY: MatchHistoryItem[] = [
   {
     id: "1",
@@ -28,6 +31,14 @@ const MOCK_HISTORY: MatchHistoryItem[] = [
     exerciseType: "풋살",
     reviewed: false,
     chatRoomId: 3,
+    partnerIsVerified: true,
+    partnerMannerTemperature: 92,
+    partnerMatchCount: 18,
+    partnerNoShowCount: 0,
+    partnerStyle: "독립형",
+    partnerExerciseIntensity: "꾸준형",
+    partnerExerciseReason: "건강관리",
+    partnerExerciseTypes: ["풋살", "헬스", "러닝", "배드민턴", "농구"],
   },
   {
     id: "2",
@@ -87,6 +98,7 @@ export default function MatchHistoryScreen() {
   const insets = useSafeAreaInsets();
   const [history, setHistory] = React.useState<MatchHistoryItem[]>(MOCK_HISTORY);
   const [isLoading, setIsLoading] = React.useState(false);
+  const [profileModal, setProfileModal] = React.useState<OpponentProfileData | null>(null);
 
   const handleBackPress = () => {
     if (router.canGoBack()) {
@@ -98,6 +110,7 @@ export default function MatchHistoryScreen() {
   };
 
   return (
+    <>
     <ScrollView
       style={styles.screen}
       contentContainerStyle={[styles.content, { paddingBottom: 32 + insets.bottom }]}
@@ -119,6 +132,11 @@ export default function MatchHistoryScreen() {
             <MatchHistoryCard
               key={item.id}
               item={item}
+              onChat={
+                item.chatRoomId
+                  ? () => router.push(`/chat/${item.chatRoomId}` as any)
+                  : undefined
+              }
               onReview={
                 item.reviewed
                   ? undefined
@@ -126,6 +144,25 @@ export default function MatchHistoryScreen() {
                       router.push(
                         `/review/${item.gatheringId}?type=gathering` as any,
                       )
+              }
+              onViewProfile={() =>
+                setProfileModal({
+                  name: item.partnerName,
+                  department: item.partnerDepartment,
+                  studentId: item.partnerStudentNumber,
+                  profileImageUrl: item.partnerProfileImageUrl,
+                  isVerified: item.partnerIsVerified,
+                  partnerStyle: item.partnerStyle,
+                  exerciseIntensity: item.partnerExerciseIntensity,
+                  exerciseReason: item.partnerExerciseReason,
+                  exerciseTypes:
+                    item.partnerExerciseTypes ??
+                    (item.exerciseType ? [item.exerciseType] : undefined),
+                  mannerTemperature: item.partnerMannerTemperature,
+                  matchCount: item.partnerMatchCount,
+                  noShowCount: item.partnerNoShowCount,
+                  matchStatus: "COMPLETED",
+                })
               }
             />
           ))}
@@ -136,6 +173,14 @@ export default function MatchHistoryScreen() {
         </View>
       )}
     </ScrollView>
+    {profileModal && (
+      <OpponentProfileModal
+        visible
+        data={profileModal}
+        onClose={() => setProfileModal(null)}
+      />
+    )}
+    </>
   );
 }
 
