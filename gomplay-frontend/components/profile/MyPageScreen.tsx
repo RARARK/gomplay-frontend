@@ -16,14 +16,12 @@ import {
 
 import { normalizeImageUrl } from "@/lib/utils/imageUrl";
 import { logout } from "@/services/auth/authService";
-import { getMyReviews } from "@/services/review/reviewService";
 import { getSurvey } from "@/services/survey/surveyService";
 import { getMyProfile } from "@/services/user/userService";
 import { useAuthStore } from "@/stores/auth/authStore";
 import { useMatchingStore } from "@/stores/matching/matchingStore";
 import { useNotificationStore } from "@/stores/notification/notificationStore";
 import { useUserStore } from "@/stores/user/userStore";
-import type { ReceivedReview } from "@/types/domain/review";
 import type { Survey } from "@/types/domain/survey";
 
 const MANNER_TEMPERATURE_COLOR = "#F59E0B";
@@ -137,7 +135,6 @@ export default function MyPageScreen() {
   const [isUniversityBadgeExpanded, setIsUniversityBadgeExpanded] =
     React.useState(false);
   const [survey, setSurvey] = React.useState<Survey | null>(null);
-  const [reviews, setReviews] = React.useState<ReceivedReview[]>([]);
   const mannerDescriptionProgress = React.useRef(new Animated.Value(0)).current;
   const universityBadgeProgress = React.useRef(new Animated.Value(0)).current;
 
@@ -165,10 +162,6 @@ export default function MyPageScreen() {
 
     getSurvey()
       .then((data) => { if (!cancelled) setSurvey(data); })
-      .catch(() => {});
-
-    getMyReviews()
-      .then((data) => { if (!cancelled) setReviews(data); })
       .catch(() => {});
 
     return () => {
@@ -484,8 +477,6 @@ export default function MyPageScreen() {
           </View>
         </View>
 
-        <ReceivedReviewsCard reviews={reviews} />
-
         {survey && styleSummary && intensitySummary && reasonSummary ? (
           <View style={styles.preferenceCard}>
             <View style={styles.preferenceHeader}>
@@ -594,76 +585,6 @@ export default function MyPageScreen() {
         </Pressable>
       </View>
     </ScrollView>
-  );
-}
-
-function ReceivedReviewsCard({ reviews }: { reviews: ReceivedReview[] }) {
-  const tagCounts = React.useMemo(() => {
-    const good: Record<string, number> = {};
-    const bad: Record<string, number> = {};
-
-    for (const r of reviews) {
-      for (const tag of r.goodTags.split(",").map((t) => t.trim()).filter(Boolean)) {
-        good[tag] = (good[tag] ?? 0) + 1;
-      }
-      for (const tag of r.badTags.split(",").map((t) => t.trim()).filter(Boolean)) {
-        bad[tag] = (bad[tag] ?? 0) + 1;
-      }
-    }
-
-    return {
-      good: Object.entries(good).sort((a, b) => b[1] - a[1]),
-      bad: Object.entries(bad).sort((a, b) => b[1] - a[1]),
-    };
-  }, [reviews]);
-
-  return (
-    <View style={styles.card}>
-      <View style={styles.reviewCardHeader}>
-        <Text style={styles.cardTitle}>받은 평가</Text>
-        <Text style={styles.reviewCount}>총 {reviews.length}개</Text>
-      </View>
-
-      {reviews.length === 0 ? (
-        <Text style={styles.reviewEmpty}>아직 받은 평가가 없어요.</Text>
-      ) : (
-        <View style={styles.reviewTagSection}>
-          {tagCounts.good.length > 0 ? (
-            <View style={styles.reviewTagGroup}>
-              <View style={styles.reviewTagGroupHeader}>
-                <Ionicons name="thumbs-up" size={13} color="#4C5BE2" />
-                <Text style={styles.reviewTagGroupLabelPos}>좋았어요</Text>
-              </View>
-              <View style={styles.tagRow}>
-                {tagCounts.good.map(([tag, count]) => (
-                  <View key={tag} style={styles.tagChipPos}>
-                    <Text style={styles.tagChipTextPos}>{tag}</Text>
-                    <Text style={styles.tagChipCount}>{count}</Text>
-                  </View>
-                ))}
-              </View>
-            </View>
-          ) : null}
-
-          {tagCounts.bad.length > 0 ? (
-            <View style={styles.reviewTagGroup}>
-              <View style={styles.reviewTagGroupHeader}>
-                <Ionicons name="thumbs-down" size={13} color="#EF4444" />
-                <Text style={styles.reviewTagGroupLabelNeg}>아쉬웠어요</Text>
-              </View>
-              <View style={styles.tagRow}>
-                {tagCounts.bad.map(([tag, count]) => (
-                  <View key={tag} style={styles.tagChipNeg}>
-                    <Text style={styles.tagChipTextNeg}>{tag}</Text>
-                    <Text style={styles.tagChipCount}>{count}</Text>
-                  </View>
-                ))}
-              </View>
-            </View>
-          ) : null}
-        </View>
-      )}
-    </View>
   );
 }
 
@@ -1335,99 +1256,6 @@ const styles = StyleSheet.create({
     lineHeight: 19,
     color: "#FFFFFF",
     fontWeight: "900",
-  },
-  reviewCardHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  reviewCount: {
-    fontSize: 12,
-    lineHeight: 16,
-    color: "#9CA3AF",
-    fontWeight: "600",
-  },
-  reviewEmpty: {
-    fontSize: 13,
-    lineHeight: 18,
-    color: "#9CA3AF",
-    fontWeight: "600",
-    textAlign: "center",
-    paddingVertical: 8,
-  },
-  reviewTagSection: {
-    gap: 12,
-  },
-  reviewTagGroup: {
-    gap: 8,
-  },
-  reviewTagGroupHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 5,
-  },
-  reviewTagGroupLabelPos: {
-    fontSize: 12,
-    fontWeight: "700",
-    color: "#4C5BE2",
-  },
-  reviewTagGroupLabelNeg: {
-    fontSize: 12,
-    fontWeight: "700",
-    color: "#EF4444",
-  },
-  tagRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-  },
-  tagChip: {
-    borderRadius: 999,
-    backgroundColor: "#C1CDFF",
-    paddingHorizontal: 11,
-    paddingVertical: 6,
-  },
-  tagText: {
-    fontSize: 12,
-    lineHeight: 16,
-    color: "#2A327D",
-    fontWeight: "800",
-  },
-  tagChipPos: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 5,
-    borderRadius: 999,
-    backgroundColor: "#EEF2FF",
-    paddingHorizontal: 11,
-    paddingVertical: 6,
-  },
-  tagChipNeg: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 5,
-    borderRadius: 999,
-    backgroundColor: "#FEF2F2",
-    paddingHorizontal: 11,
-    paddingVertical: 6,
-  },
-  tagChipTextPos: {
-    fontSize: 12,
-    lineHeight: 16,
-    color: "#3730A3",
-    fontWeight: "700",
-  },
-  tagChipTextNeg: {
-    fontSize: 12,
-    lineHeight: 16,
-    color: "#991B1B",
-    fontWeight: "700",
-  },
-  tagChipCount: {
-    fontSize: 11,
-    lineHeight: 15,
-    color: "#6B7280",
-    fontWeight: "800",
   },
   quickActionRow: {
     flexDirection: "row",

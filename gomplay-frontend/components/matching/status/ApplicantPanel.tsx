@@ -192,7 +192,8 @@ export default function ApplicantPanel({
     [onClose, swipeThreshold, translateX],
   );
 
-  const pending = applicants.filter((a) => a.status === "pending").length;
+  const visibleApplicants = applicants.filter((a) => a.status !== "rejected");
+  const pending = visibleApplicants.filter((a) => a.status === "pending").length;
 
   return (
     <Modal
@@ -214,7 +215,7 @@ export default function ApplicantPanel({
             <View style={styles.headerTextBlock}>
               <Text style={styles.headerTitle}>신청자 목록</Text>
               <Text style={styles.headerSub}>
-                {pending}명 대기 중 · 총 {applicants.length}명
+                {pending}명 대기 중 · 총 {visibleApplicants.length}명
               </Text>
             </View>
             <Pressable style={styles.closeBtn} onPress={onClose}>
@@ -239,12 +240,12 @@ export default function ApplicantPanel({
                 </Pressable>
               ) : null}
             </View>
-          ) : applicants.length > 0 ? (
+          ) : visibleApplicants.length > 0 ? (
             <ScrollView
               contentContainerStyle={styles.listContent}
               showsVerticalScrollIndicator={false}
             >
-              {applicants.map((applicant) => (
+              {visibleApplicants.map((applicant) => (
                 <ApplicantCard
                   key={applicant.id}
                   applicant={applicant}

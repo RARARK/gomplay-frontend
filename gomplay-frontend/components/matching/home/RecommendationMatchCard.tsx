@@ -1,19 +1,16 @@
 import * as React from "react";
 import { ImageBackground, Pressable, StyleSheet, Text, View } from "react-native";
-import FootballIcons1 from "@/assets/home/Football-Icons.svg";
 import {
   Border,
   BoxShadow,
   Color,
   FontFamily,
   FontSize,
-  Gap,
   Height,
   HomeLayout,
   LetterSpacing,
   LineHeight,
   Padding,
-  Width,
 } from "@/constants/locofyHomeStyles";
 import type { RecommendationMatchCardProps } from "@/types/ui/homeCards";
 
@@ -41,10 +38,6 @@ const RecommendationMatchCard = ({
           </View>
 
           <View style={styles.sportBadge}>
-            <FootballIcons1
-              width={Width.width_24_67}
-              height={Height.height_24_67}
-            />
             <Text style={styles.sportText} numberOfLines={1}>
               {sport}
             </Text>
@@ -123,10 +116,9 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "flex-start",
-    gap: Gap.gap_4,
-    minWidth: 92,
+    minWidth: 72,
     height: Height.height_30_7,
-    paddingHorizontal: 12,
+    paddingHorizontal: 14,
     paddingVertical: Padding.padding_3,
     borderRadius: Border.br_32_7,
     backgroundColor: Color.secondary100,

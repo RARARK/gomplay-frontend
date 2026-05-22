@@ -1,12 +1,15 @@
 import * as React from "react";
 import { Image } from "expo-image";
 import {
+  Animated,
+  Easing,
+  PanResponder,
+  Pressable,
   StyleSheet,
   Text,
   View,
-  Pressable,
-  PanResponder,
 } from "react-native";
+
 import type { Banner } from "@/types/ui/homeBanner";
 
 type HeroBannerProps = {
@@ -20,34 +23,90 @@ const FALLBACK_BANNER: Banner = {
   text: "같이 운동할 때\n더 즐거워요!",
 };
 
+const AUTO_SLIDE_MS = 5000;
+const TRANSITION_MS = 350;
+
 const HeroBanner = React.memo(({ banners = [] }: HeroBannerProps) => {
+  const displayBanners = banners.length > 0 ? banners : [FALLBACK_BANNER];
   const [index, setIndex] = React.useState(0);
+  const [bannerWidth, setBannerWidth] = React.useState(0);
+  const translateX = React.useRef(new Animated.Value(0)).current;
+  const timerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+  const indexRef = React.useRef(0);
+  const isAnimatingRef = React.useRef(false);
 
   React.useEffect(() => {
-    if (banners.length === 0) {
-      if (index !== 0) setIndex(0);
-      return;
+    if (index > displayBanners.length - 1) {
+      setIndex(displayBanners.length - 1);
+      indexRef.current = displayBanners.length - 1;
     }
-    if (index > banners.length - 1) setIndex(banners.length - 1);
-  }, [banners.length, index]);
+  }, [displayBanners.length, index]);
 
   React.useEffect(() => {
-    if (banners.length <= 1) return;
-    const timer = setInterval(() => {
-      setIndex((current) => (current === banners.length - 1 ? 0 : current + 1));
-    }, 3000);
-    return () => clearInterval(timer);
-  }, [index, banners.length]);
+    if (bannerWidth <= 0) return;
+    translateX.setValue(-indexRef.current * bannerWidth);
+  }, [bannerWidth, translateX]);
+
+  const clearAutoTimer = React.useCallback(() => {
+    if (!timerRef.current) return;
+    clearTimeout(timerRef.current);
+    timerRef.current = null;
+  }, []);
+
+  const slideTo = React.useCallback(
+    (targetIndex: number) => {
+      if (
+        displayBanners.length <= 1 ||
+        bannerWidth <= 0 ||
+        isAnimatingRef.current ||
+        targetIndex === indexRef.current
+      ) {
+        return;
+      }
+
+      clearAutoTimer();
+      isAnimatingRef.current = true;
+
+      Animated.timing(translateX, {
+        toValue: -targetIndex * bannerWidth,
+        duration: TRANSITION_MS,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }).start(({ finished }) => {
+        if (finished) {
+          indexRef.current = targetIndex;
+          setIndex(targetIndex);
+        }
+        isAnimatingRef.current = false;
+      });
+    },
+    [bannerWidth, clearAutoTimer, displayBanners.length, translateX],
+  );
+
+  const scheduleAutoSlide = React.useCallback(() => {
+    clearAutoTimer();
+    if (displayBanners.length <= 1 || bannerWidth <= 0) return;
+
+    timerRef.current = setTimeout(() => {
+      const current = indexRef.current;
+      slideTo(current === displayBanners.length - 1 ? 0 : current + 1);
+    }, AUTO_SLIDE_MS);
+  }, [bannerWidth, clearAutoTimer, displayBanners.length, slideTo]);
+
+  React.useEffect(() => {
+    scheduleAutoSlide();
+    return clearAutoTimer;
+  }, [index, scheduleAutoSlide, clearAutoTimer]);
 
   const prev = React.useCallback(() => {
-    if (banners.length <= 1) return;
-    setIndex((current) => (current === 0 ? banners.length - 1 : current - 1));
-  }, [banners.length]);
+    const current = indexRef.current;
+    slideTo(current === 0 ? displayBanners.length - 1 : current - 1);
+  }, [displayBanners.length, slideTo]);
 
   const next = React.useCallback(() => {
-    if (banners.length <= 1) return;
-    setIndex((current) => (current === banners.length - 1 ? 0 : current + 1));
-  }, [banners.length]);
+    const current = indexRef.current;
+    slideTo(current === displayBanners.length - 1 ? 0 : current + 1);
+  }, [displayBanners.length, slideTo]);
 
   const panResponder = React.useMemo(
     () =>
@@ -63,16 +122,40 @@ const HeroBanner = React.memo(({ banners = [] }: HeroBannerProps) => {
     [prev, next],
   );
 
-  const currentBanner = banners[index] ?? FALLBACK_BANNER;
+  const currentBanner = displayBanners[index] ?? FALLBACK_BANNER;
 
   return (
     <View style={styles.wrapper}>
-      <View {...panResponder.panHandlers} style={styles.heroBanner}>
-        <Image
-          source={currentBanner.image}
-          style={StyleSheet.absoluteFill}
-          contentFit="cover"
-        />
+      <View
+        {...panResponder.panHandlers}
+        style={styles.heroBanner}
+        onLayout={(event) => setBannerWidth(event.nativeEvent.layout.width)}
+      >
+        {bannerWidth > 0 ? (
+          <Animated.View
+            style={[
+              styles.bannerTrack,
+              {
+                width: bannerWidth * displayBanners.length,
+                transform: [{ translateX }],
+              },
+            ]}
+          >
+            {displayBanners.map((banner) => (
+              <View
+                key={banner.id}
+                style={[styles.bannerSlide, { width: bannerWidth }]}
+              >
+                <Image
+                  source={banner.image}
+                  style={StyleSheet.absoluteFill}
+                  contentFit="cover"
+                  cachePolicy="memory-disk"
+                />
+              </View>
+            ))}
+          </Animated.View>
+        ) : null}
 
         {currentBanner.onPress ? (
           <Pressable
@@ -82,9 +165,9 @@ const HeroBanner = React.memo(({ banners = [] }: HeroBannerProps) => {
           />
         ) : null}
 
-        {banners.length > 1 ? (
+        {displayBanners.length > 1 ? (
           <View style={styles.dotRow}>
-            {banners.map((_, i) => (
+            {displayBanners.map((_, i) => (
               <View key={i} style={[styles.dot, i === index && styles.dotActive]} />
             ))}
           </View>
@@ -109,44 +192,14 @@ const styles = StyleSheet.create({
     aspectRatio: 402 / 220,
     overflow: "hidden",
     borderRadius: 20,
+    backgroundColor: "#F3F4F6",
   },
-  content: {
-    flex: 1,
-    justifyContent: "flex-end",
-    paddingHorizontal: 22,
-    paddingBottom: 30,
-    gap: 9,
+  bannerTrack: {
+    height: "100%",
+    flexDirection: "row",
   },
-  tagChip: {
-    alignSelf: "flex-start",
-    backgroundColor: "#4C5BE2",
-    borderRadius: 999,
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-  },
-  tagText: {
-    fontSize: 13,
-    fontWeight: "700",
-    color: "#FFFFFF",
-  },
-  bannerTitle: {
-    fontSize: 28,
-    fontWeight: "800",
-    color: "#FFFFFF",
-    lineHeight: 36,
-    letterSpacing: -0.5,
-  },
-  actionButton: {
-    alignSelf: "flex-start",
-    backgroundColor: "#FFFFFF",
-    borderRadius: 999,
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-  },
-  actionButtonText: {
-    fontSize: 13,
-    fontWeight: "700",
-    color: "#111827",
+  bannerSlide: {
+    height: "100%",
   },
   dotRow: {
     position: "absolute",
