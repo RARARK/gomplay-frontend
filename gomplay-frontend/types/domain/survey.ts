@@ -40,3 +40,15 @@ export type Survey = {
   exerciseReason: SurveyExerciseReason;
   exerciseTypes: string[];
 };
+
+export type SurveyReport = {
+  userId: number;
+  personalityType: string;
+  intensityType: string;
+  purposeType: string;
+  exerciseTypes: string[];
+  summary: string;
+  recommendedExercises: string[];
+  partnerStyleDescription: string;
+  exerciseMoodDescription: string;
+};

@@ -21,6 +21,7 @@ import { getSurvey } from "@/services/survey/surveyService";
 import { getMyProfile } from "@/services/user/userService";
 import { useAuthStore } from "@/stores/auth/authStore";
 import { useMatchingStore } from "@/stores/matching/matchingStore";
+import { useNotificationStore } from "@/stores/notification/notificationStore";
 import { useUserStore } from "@/stores/user/userStore";
 import type { ReceivedReview } from "@/types/domain/review";
 import type { Survey } from "@/types/domain/survey";
@@ -126,6 +127,7 @@ export default function MyPageScreen() {
   const clearAuth = useAuthStore((state) => state.clearAuth);
   const profile = useUserStore((state) => state.profile);
   const setProfile = useUserStore((state) => state.setProfile);
+  const unreadCount = useNotificationStore((s) => s.unreadCount);
   const wsConnected = useMatchingStore((state) => state.wsConnected);
 
   const [isLoading, setIsLoading] = React.useState(!profile);
@@ -291,6 +293,13 @@ export default function MyPageScreen() {
             style={styles.iconButton}
           >
             <Frame91 style={styles.notificationIcon} width={48} height={48} />
+            {unreadCount > 0 && (
+              <View style={styles.notifBadge}>
+                <Text style={styles.notifBadgeText}>
+                  {unreadCount > 99 ? "99+" : String(unreadCount)}
+                </Text>
+              </View>
+            )}
           </Pressable>
         </View>
 
@@ -846,6 +855,24 @@ const styles = StyleSheet.create({
   notificationIcon: {
     width: 48,
     height: 48,
+  },
+  notifBadge: {
+    position: "absolute",
+    top: 0,
+    right: 0,
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: "#EF4444",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 4,
+  },
+  notifBadgeText: {
+    fontSize: 10,
+    lineHeight: 12,
+    color: "#FFFFFF",
+    fontWeight: "800",
   },
   headerSpacer: {
     width: 40,

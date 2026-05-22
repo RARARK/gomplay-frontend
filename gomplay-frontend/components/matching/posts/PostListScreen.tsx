@@ -30,7 +30,7 @@ import type { PostDifficulty } from "@/types/domain/post";
 
 const ALL_FILTER_VALUE = "";
 const PAGE_SIZE = 50;
-const ERR_FETCH_FAILED = ERR_FETCH_FAILED;
+const ERR_FETCH_FAILED = "모집글을 불러오지 못했습니다.";
 
 type DifficultyFilterValue = PostDifficulty | typeof ALL_FILTER_VALUE;
 type DateFilterValue =
@@ -267,15 +267,6 @@ export default function PostListScreen({
       };
     }, []),
   );
-
-  const handleBackPress = () => {
-    if (router.canGoBack()) {
-      router.back();
-      return;
-    }
-
-    router.replace("/" as any);
-  };
 
   return (
     <>

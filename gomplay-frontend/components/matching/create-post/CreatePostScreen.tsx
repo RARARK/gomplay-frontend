@@ -68,6 +68,7 @@ const createInitialFormState = (): CreatePostFormState => ({
 
 export default function CreatePostScreen() {
   const insets = useSafeAreaInsets();
+  const scrollViewRef = React.useRef<ScrollView>(null);
 
   const [form, setForm] = React.useState<CreatePostFormState>(
     createInitialFormState,
@@ -340,14 +341,16 @@ export default function CreatePostScreen() {
   return (
     <>
       <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.keyboardAvoidingView}
       >
         <ScrollView
+          ref={scrollViewRef}
           contentContainerStyle={[
             styles.scrollContent,
             { paddingBottom: 28 + insets.bottom },
           ]}
+          keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.headerRow}>
@@ -480,6 +483,7 @@ export default function CreatePostScreen() {
               multiline
               numberOfLines={5}
               onChangeText={(value) => updateForm("message", value)}
+              onFocus={() => scrollViewRef.current?.scrollToEnd({ animated: true })}
               placeholder="예: 초보도 환영하고, 1시간 정도 가볍게 같이 뛰실 분 찾아요."
               placeholderTextColor="#8F95A1"
               style={styles.messageInput}

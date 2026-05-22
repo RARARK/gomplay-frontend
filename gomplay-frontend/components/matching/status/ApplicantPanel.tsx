@@ -2,6 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import React from "react";
 import {
+  ActivityIndicator,
   Animated,
   Modal,
   PanResponder,
@@ -19,6 +20,7 @@ export type Applicant = {
   id: string;
   name: string;
   department: string;
+  profileImageUrl?: string | null;
   studentNumber: string;
   tags: string[];
   trustScore: number;
@@ -28,9 +30,12 @@ export type Applicant = {
 type Props = {
   visible: boolean;
   applicants: Applicant[];
+  loading?: boolean;
+  errorMessage?: string | null;
   onClose: () => void;
   onAccept: (applicantId: string) => void;
   onReject: (applicantId: string) => void;
+  onRetry?: () => void;
 };
 
 function ApplicantCard({
@@ -45,7 +50,13 @@ function ApplicantCard({
   return (
     <View style={styles.card}>
       <View style={styles.cardTop}>
-        <Image source={AVATAR} style={styles.avatar} contentFit="cover" />
+        <Image
+          source={
+            applicant.profileImageUrl ? { uri: applicant.profileImageUrl } : AVATAR
+          }
+          style={styles.avatar}
+          contentFit="cover"
+        />
         <View style={styles.cardInfo}>
           <View style={styles.nameRow}>
             <Text style={styles.name} numberOfLines={1}>
@@ -69,12 +80,14 @@ function ApplicantCard({
               ))}
             </View>
           ) : null}
-          <View style={styles.trustBadge}>
-            <Ionicons name="thermometer-outline" size={15} color="#F59E0B" />
-            <Text style={styles.trustValue}>
-              {applicant.trustScore.toFixed(1)}°C
-            </Text>
-          </View>
+          {Number.isFinite(applicant.trustScore) ? (
+            <View style={styles.trustBadge}>
+              <Ionicons name="thermometer-outline" size={15} color="#F59E0B" />
+              <Text style={styles.trustValue}>
+                {applicant.trustScore.toFixed(1)}°C
+              </Text>
+            </View>
+          ) : null}
         </View>
 
         {applicant.status === "pending" ? (
@@ -123,9 +136,12 @@ function ApplicantCard({
 export default function ApplicantPanel({
   visible,
   applicants,
+  loading = false,
+  errorMessage = null,
   onClose,
   onAccept,
   onReject,
+  onRetry,
 }: Props) {
   const { width } = useWindowDimensions();
   const panelWidth = Math.min(Math.round(width * 0.86), 420);
@@ -207,7 +223,23 @@ export default function ApplicantPanel({
           </View>
           <View style={styles.headerDivider} />
 
-          {applicants.length > 0 ? (
+          {loading ? (
+            <View style={styles.empty}>
+              <ActivityIndicator size="small" color="#4C5BE2" />
+              <Text style={styles.emptyTitle}>신청자 목록을 불러오는 중</Text>
+            </View>
+          ) : errorMessage ? (
+            <View style={styles.empty}>
+              <Ionicons name="alert-circle-outline" size={32} color="#EF4444" />
+              <Text style={styles.emptyTitle}>신청자 목록을 불러오지 못했어요</Text>
+              <Text style={styles.emptyText}>{errorMessage}</Text>
+              {onRetry ? (
+                <Pressable style={styles.retryButton} onPress={onRetry}>
+                  <Text style={styles.retryText}>다시 시도</Text>
+                </Pressable>
+              ) : null}
+            </View>
+          ) : applicants.length > 0 ? (
             <ScrollView
               contentContainerStyle={styles.listContent}
               showsVerticalScrollIndicator={false}
@@ -448,5 +480,20 @@ const styles = StyleSheet.create({
     color: "#9CA3AF",
     fontWeight: "600",
     textAlign: "center",
+  },
+  retryButton: {
+    minHeight: 34,
+    borderRadius: 8,
+    backgroundColor: "#4C5BE2",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 14,
+    marginTop: 6,
+  },
+  retryText: {
+    fontSize: 12,
+    lineHeight: 16,
+    color: "#FFFFFF",
+    fontWeight: "800",
   },
 });

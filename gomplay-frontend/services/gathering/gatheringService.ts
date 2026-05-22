@@ -281,6 +281,38 @@ export async function completeGathering(gatheringId: number): Promise<void> {
   }
 }
 
+export async function boostGathering(gatheringId: number): Promise<void> {
+  try {
+    await apiClient.post(`/api/gathering/${gatheringId}/boost`);
+  } catch (error) {
+    if (error instanceof ApiError) throw error;
+
+    if (isAxiosError(error)) {
+      const errorBody = getBackendErrorBody(error.response?.data);
+
+      if (errorBody?.code === 4000) {
+        throw new ApiError("데이터베이스 연결에 실패하였습니다.");
+      }
+
+      if (error.response?.status === 400) {
+        throw new ApiError(
+          errorBody?.message ?? "모집글을 부스트할 수 없습니다.",
+        );
+      }
+
+      if (error.response?.status === 500) {
+        throw new ApiError("서버 내부 오류", "Internal server error");
+      }
+
+      if (errorBody?.message) {
+        throw new ApiError(errorBody.message);
+      }
+    }
+
+    throw new ApiError("모집글 부스트에 실패했습니다.");
+  }
+}
+
 export async function getGatheringParticipants(
   gatheringId: number,
 ): Promise<GatheringParticipant[]> {
@@ -294,6 +326,16 @@ export async function getGatheringParticipants(
 
     if (isAxiosError(error)) {
       const errorBody = getBackendErrorBody(error.response?.data);
+
+      if (errorBody?.code === 4000) {
+        throw new ApiError("데이터베이스 연결에 실패하였습니다.");
+      }
+
+      if (error.response?.status === 400) {
+        throw new ApiError(
+          errorBody?.message ?? "모집글 작성자만 조회할 수 있습니다.",
+        );
+      }
 
       if (error.response?.status === 403) {
         throw new ApiError(

@@ -1,11 +1,13 @@
 import type { PostDifficulty } from "@/types/domain/post";
 
 export type GatheringListItem = {
+  boostExpiredAt?: string | null;
   currentParticipants: number;
   difficulty: string;
   hostMannerTemperature: number;
   hostProfileImageUrl: string | null;
   id: number;
+  isBoosted?: boolean;
   maxParticipants: number;
   scheduledAt: string;
   scheduledEndAt: string;
@@ -63,6 +65,7 @@ export type DeleteGatheringRequest = {
 };
 
 export type GatheringPostDetailResponse = {
+  boostExpiredAt?: string | null;
   id: number;
   title: string;
   sportType: string;
@@ -81,6 +84,7 @@ export type GatheringPostDetailResponse = {
   hostId: number;
   hostName: string;
   hostProfileImageUrl: string | null;
+  isBoosted?: boolean;
 };
 
 export type UpdateGatheringResponse = {
@@ -113,11 +117,12 @@ export type ParticipantStatus = "PENDING" | "ACCEPTED" | "REJECTED";
 export type GatheringParticipant = {
   id: number;
   gatheringId: number;
+  mannerTemperature?: number | null;
   userId: number;
   userName: string;
   userProfileImageUrl: string | null;
   status: ParticipantStatus;
-  createdAt: string;
+  updatedAt: string;
 };
 
 export type AcceptParticipantResponse = {
@@ -144,7 +149,9 @@ export type CreateGatheringResponse = {
 };
 
 export type GatheringRecommendItem = {
+  boostExpiredAt?: string | null;
   id: number;
+  isBoosted?: boolean;
   title: string;
   sportType: string;
   difficulty: string;

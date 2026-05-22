@@ -2,7 +2,7 @@ import { isAxiosError } from "axios";
 
 import apiClient, { ApiError } from "@/lib/api/client";
 import type { ApiResponse } from "@/types/auth/auth";
-import type { SubmitSurveyInput, Survey } from "@/types/domain/survey";
+import type { SubmitSurveyInput, Survey, SurveyReport } from "@/types/domain/survey";
 
 type SurveyApiResponse = ApiResponse<Survey> | Survey;
 
@@ -75,5 +75,14 @@ export async function updateSurvey(input: SubmitSurveyInput): Promise<Survey> {
     return unwrapSurveyResponse(response.data);
   } catch (err) {
     throw toSurveyApiError(err, "설문 수정에 실패했습니다.");
+  }
+}
+
+export async function getSurveyReport(): Promise<SurveyReport> {
+  try {
+    const response = await apiClient.get<ApiResponse<SurveyReport>>("/api/survey/report");
+    return response.data.data;
+  } catch (err) {
+    throw toSurveyApiError(err, "리포트를 불러오지 못했습니다.");
   }
 }

@@ -35,6 +35,7 @@ import {
 } from "@/components/matching/create-post/createPostUtils";
 import {
   acceptParticipant,
+  boostGathering,
   completeGathering,
   deleteGathering,
   getGatheringDetail,
@@ -44,6 +45,7 @@ import {
   updateGathering,
 } from "@/services/gathering/gatheringService";
 import { useAuthStore } from "@/stores/auth/authStore";
+import { useBoostStore } from "@/stores/gathering/boostStore";
 import type { GatheringParticipant, GatheringPostDetailResponse } from "@/types/domain/gathering";
 import { POST_STATUS } from "@/types/domain/post";
 
@@ -63,14 +65,25 @@ const parseTags = (tags: string | null | undefined): string[] => {
   return tags.split(" ").filter(Boolean);
 };
 
+const getParticipantMannerTemperature = (
+  participant: GatheringParticipant,
+): number => {
+  return typeof participant.mannerTemperature === "number"
+    ? participant.mannerTemperature
+    : Number.NaN;
+};
+
 export default function PostApplyScreen({ postId }: PostApplyScreenProps) {
   const insets = useSafeAreaInsets();
   const userId = useAuthStore((s) => s.userId);
+  const getBoostExpiresAt = useBoostStore((s) => s.getBoostExpiresAt);
+  const markBoosted = useBoostStore((s) => s.markBoosted);
 
   const [post, setPost] = React.useState<GatheringPostDetailResponse | null>(null);
   const [isLoading, setIsLoading] = React.useState(true);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [isSaving, setIsSaving] = React.useState(false);
+  const [isBoosting, setIsBoosting] = React.useState(false);
   const [isCompleting, setIsCompleting] = React.useState(false);
   const [isCompletePromptVisible, setIsCompletePromptVisible] =
     React.useState(false);
@@ -110,18 +123,26 @@ export default function PostApplyScreen({ postId }: PostApplyScreenProps) {
   }, [postId]);
 
   const isOwner = userId !== null && post?.hostId === userId;
+  const postIdForParticipants = post?.id;
 
   React.useEffect(() => {
-    if (!isOwner || !post) return;
+    if (!isOwner || !postIdForParticipants) return;
     let isMounted = true;
-    getGatheringParticipants(post.id)
+    getGatheringParticipants(postIdForParticipants)
       .then((data) => {
         if (isMounted) setParticipants(data);
       })
       .catch(() => {});
     return () => { isMounted = false; };
-  }, [isOwner, post?.id]);
+  }, [isOwner, postIdForParticipants]);
+  const localBoostExpiresAt = post ? getBoostExpiresAt(post.id) : null;
+  const isPostBoosted =
+    Boolean(post?.isBoosted || localBoostExpiresAt) &&
+    (!(post?.boostExpiredAt ?? localBoostExpiresAt) ||
+      new Date(post?.boostExpiredAt ?? localBoostExpiresAt ?? "").getTime() >
+        Date.now());
   const canEdit = isOwner && post?.status === POST_STATUS.OPEN;
+  const canBoost = canEdit && !isPostBoosted;
   const canApply = !isOwner && post?.status === POST_STATUS.OPEN;
   const hasAcceptedParticipant = participants.some((p) => p.status === "ACCEPTED");
   const canComplete =
@@ -133,10 +154,11 @@ export default function PostApplyScreen({ postId }: PostApplyScreenProps) {
     list.map((p) => ({
       id: String(p.id),
       name: p.userName,
+      profileImageUrl: p.userProfileImageUrl,
       department: "",
       studentNumber: "",
       tags: [],
-      trustScore: 0,
+      trustScore: getParticipantMannerTemperature(p),
       status:
         p.status === "ACCEPTED"
           ? "accepted"
@@ -204,6 +226,61 @@ export default function PostApplyScreen({ postId }: PostApplyScreenProps) {
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const handleBoost = () => {
+    if (!post || isBoosting) return;
+
+    Alert.alert(
+      "모집글 부스트",
+      "25P를 사용해 24시간 동안 이 모집글을 목록 상단에 노출할까요?",
+      [
+        { text: "취소", style: "cancel" },
+        {
+          text: "부스트",
+          onPress: async () => {
+            setIsBoosting(true);
+            try {
+              await boostGathering(post.id);
+              const localBoostExpiredAt = markBoosted(post.id);
+              setPost((prev) =>
+                prev
+                  ? {
+                      ...prev,
+                      isBoosted: true,
+                      boostExpiredAt: prev.boostExpiredAt ?? localBoostExpiredAt,
+                    }
+                  : prev,
+              );
+
+              try {
+                const nextPost = await getGatheringDetail(post.id);
+                const nextBoostExpiredAt = markBoosted(
+                  post.id,
+                  nextPost.boostExpiredAt ?? localBoostExpiredAt,
+                );
+                setPost({
+                  ...nextPost,
+                  isBoosted: true,
+                  boostExpiredAt: nextPost.boostExpiredAt ?? nextBoostExpiredAt,
+                });
+              } catch {
+                // The boost already succeeded; keep the local boosted state.
+              }
+
+              Alert.alert("부스트 완료", "24시간 동안 모집글이 상단에 노출됩니다.");
+            } catch (err) {
+              Alert.alert(
+                "부스트 실패",
+                err instanceof Error ? err.message : "다시 시도해주세요.",
+              );
+            } finally {
+              setIsBoosting(false);
+            }
+          },
+        },
+      ],
+    );
   };
 
   const handleDelete = () => {
@@ -501,6 +578,41 @@ export default function PostApplyScreen({ postId }: PostApplyScreenProps) {
                 </Text>
               </View>
             ) : null}
+          </Pressable>
+        ) : null}
+
+        {canEdit ? (
+          <Pressable
+            accessibilityRole="button"
+            disabled={!canBoost || isBoosting}
+            onPress={handleBoost}
+            style={[
+              styles.boostButton,
+              (!canBoost || isBoosting) && styles.boostButtonDisabled,
+            ]}
+          >
+            <Ionicons
+              name="flash"
+              size={20}
+              color={canBoost && !isBoosting ? "#C2410C" : "#9CA3AF"}
+            />
+            <View style={styles.boostTextBlock}>
+              <Text
+                style={[
+                  styles.boostTitle,
+                  (!canBoost || isBoosting) && styles.boostTitleDisabled,
+                ]}
+              >
+                {isPostBoosted
+                  ? "부스트 적용 중"
+                  : isBoosting
+                    ? "부스트 처리 중..."
+                    : "모집글 부스트"}
+              </Text>
+              <Text style={styles.boostDescription}>
+                25P 사용 · 24시간 상단 노출
+              </Text>
+            </View>
           </Pressable>
         ) : null}
 
@@ -914,6 +1026,41 @@ const styles = StyleSheet.create({
     lineHeight: 14,
     color: "#FFFFFF",
     fontWeight: "800",
+  },
+  boostButton: {
+    minHeight: 58,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: "#FDBA74",
+    backgroundColor: "#FFF7ED",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    paddingHorizontal: 16,
+  },
+  boostButtonDisabled: {
+    borderColor: "#E5E7EB",
+    backgroundColor: "#F9FAFB",
+  },
+  boostTextBlock: {
+    flex: 1,
+    minWidth: 0,
+    gap: 2,
+  },
+  boostTitle: {
+    fontSize: 15,
+    lineHeight: 20,
+    color: "#C2410C",
+    fontWeight: "800",
+  },
+  boostTitleDisabled: {
+    color: "#6B7280",
+  },
+  boostDescription: {
+    fontSize: 12,
+    lineHeight: 16,
+    color: "#9CA3AF",
+    fontWeight: "700",
   },
   ownerButtonRow: {
     flexDirection: "row",

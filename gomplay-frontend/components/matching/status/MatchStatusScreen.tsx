@@ -1,4 +1,3 @@
-import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React from "react";
 import {
@@ -17,7 +16,13 @@ import MatchStatusCard, {
   type MatchItem,
 } from "@/components/matching/status/MatchStatusCard";
 import WorkoutCompleteModal from "@/components/matching/WorkoutCompleteModal";
-import { completeGathering } from "@/services/gathering/gatheringService";
+import {
+  acceptParticipant,
+  completeGathering,
+  getGatheringParticipants,
+  rejectParticipant,
+} from "@/services/gathering/gatheringService";
+import type { GatheringParticipant } from "@/types/domain/gathering";
 
 const SOURCE_FILTERS = ["일반 매칭", "퀵매칭"] as const;
 const STATUS_FILTERS = ["진행중", "수락 대기"] as const;
@@ -115,6 +120,35 @@ const MOCK_APPLICANTS: Record<string, Applicant[]> = {
   ],
 };
 
+const participantStatusToApplicantStatus = (
+  status: GatheringParticipant["status"],
+): Applicant["status"] => {
+  if (status === "ACCEPTED") return "accepted";
+  if (status === "REJECTED") return "rejected";
+  return "pending";
+};
+
+const getParticipantMannerTemperature = (
+  participant: GatheringParticipant,
+): number => {
+  return typeof participant.mannerTemperature === "number"
+    ? participant.mannerTemperature
+    : Number.NaN;
+};
+
+const mapParticipantToApplicant = (
+  participant: GatheringParticipant,
+): Applicant => ({
+  id: String(participant.id),
+  name: participant.userName,
+  profileImageUrl: participant.userProfileImageUrl,
+  department: "",
+  studentNumber: "",
+  tags: [],
+  trustScore: getParticipantMannerTemperature(participant),
+  status: participantStatusToApplicantStatus(participant.status),
+});
+
 export default function MatchStatusScreen({
   initialMatches = MOCK_MATCHES,
   initialApplicantsByMatch = MOCK_APPLICANTS,
@@ -129,6 +163,10 @@ export default function MatchStatusScreen({
   const [applicantsByMatch, setApplicantsByMatch] = React.useState<
     Record<string, Applicant[]>
   >(initialApplicantsByMatch);
+  const [applicantsLoading, setApplicantsLoading] = React.useState(false);
+  const [applicantsError, setApplicantsError] = React.useState<string | null>(
+    null,
+  );
 
   const matchesWithApplicantCount = React.useMemo(
     () =>
@@ -165,33 +203,73 @@ export default function MatchStatusScreen({
     ? (applicantsByMatch[panelMatchId] ?? [])
     : [];
 
-  const handleAccept = (applicantId: string) => {
-    if (!panelMatchId) return;
-    setApplicantsByMatch((prev) => ({
-      ...prev,
-      [panelMatchId]: (prev[panelMatchId] ?? []).filter(
-        (a) => a.id !== applicantId,
-      ),
-    }));
-  };
+  const loadApplicants = React.useCallback(async (matchId: string) => {
+    const gatheringId = Number(matchId);
+    if (!Number.isFinite(gatheringId)) return;
 
-  const handleReject = (applicantId: string) => {
-    if (!panelMatchId) return;
-    setApplicantsByMatch((prev) => ({
-      ...prev,
-      [panelMatchId]: (prev[panelMatchId] ?? []).filter(
-        (a) => a.id !== applicantId,
-      ),
-    }));
-  };
+    setApplicantsLoading(true);
+    setApplicantsError(null);
 
-  const handleBackPress = () => {
-    if (router.canGoBack()) {
-      router.back();
-      return;
+    try {
+      const participants = await getGatheringParticipants(gatheringId);
+      setApplicantsByMatch((prev) => ({
+        ...prev,
+        [matchId]: participants.map(mapParticipantToApplicant),
+      }));
+    } catch (error) {
+      setApplicantsError(
+        error instanceof Error
+          ? error.message
+          : "신청자 목록을 불러오지 못했습니다.",
+      );
+    } finally {
+      setApplicantsLoading(false);
     }
+  }, []);
 
-    router.replace("/" as any);
+  const handleViewApplicants = (matchId: string) => {
+    setPanelMatchId(matchId);
+    void loadApplicants(matchId);
+  };
+
+  const handleAccept = async (applicantId: string) => {
+    if (!panelMatchId) return;
+    try {
+      await acceptParticipant(Number(panelMatchId), Number(applicantId));
+      setApplicantsByMatch((prev) => ({
+        ...prev,
+        [panelMatchId]: (prev[panelMatchId] ?? []).map((applicant) =>
+          applicant.id === applicantId
+            ? { ...applicant, status: "accepted" }
+            : applicant,
+        ),
+      }));
+    } catch (error) {
+      Alert.alert(
+        "신청 수락 실패",
+        error instanceof Error ? error.message : "다시 시도해주세요.",
+      );
+    }
+  };
+
+  const handleReject = async (applicantId: string) => {
+    if (!panelMatchId) return;
+    try {
+      await rejectParticipant(Number(panelMatchId), Number(applicantId));
+      setApplicantsByMatch((prev) => ({
+        ...prev,
+        [panelMatchId]: (prev[panelMatchId] ?? []).map((applicant) =>
+          applicant.id === applicantId
+            ? { ...applicant, status: "rejected" }
+            : applicant,
+        ),
+      }));
+    } catch (error) {
+      Alert.alert(
+        "신청 거절 실패",
+        error instanceof Error ? error.message : "다시 시도해주세요.",
+      );
+    }
   };
 
   const handleComplete = async (item: MatchItem) => {
@@ -322,7 +400,7 @@ export default function MatchStatusScreen({
                     ? () => handleComplete(item)
                     : undefined
                 }
-                onViewApplicants={() => setPanelMatchId(item.id)}
+                onViewApplicants={() => handleViewApplicants(item.id)}
               />
             ))}
           </View>
@@ -332,9 +410,12 @@ export default function MatchStatusScreen({
       <ApplicantPanel
         visible={panelMatchId !== null}
         applicants={panelApplicants}
+        loading={applicantsLoading}
+        errorMessage={applicantsError}
         onClose={() => setPanelMatchId(null)}
         onAccept={handleAccept}
         onReject={handleReject}
+        onRetry={panelMatchId ? () => void loadApplicants(panelMatchId) : undefined}
       />
       <WorkoutCompleteModal
         visible={completedGatheringId !== null}

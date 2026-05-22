@@ -1,8 +1,9 @@
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { router } from "expo-router";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
+  ActivityIndicator,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -11,10 +12,52 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { getSurveyReport } from "@/services/survey/surveyService";
+import type { SurveyReport } from "@/types/domain/survey";
+
 const BLUE = "#4C5BE2";
 const DEEP_BLUE = "#25258F";
 const SOFT_BLUE = "#F1F2FF";
 const LINE = "#ECEEF6";
+
+type MCIconName = keyof typeof MaterialCommunityIcons.glyphMap;
+
+const SPORT_IMAGES: Record<string, number> = {
+  농구: require("../../../assets/sports/농구.jpg"),
+  당구: require("../../../assets/sports/당구.jpg"),
+  등산: require("../../../assets/sports/등산.jpg"),
+  러닝: require("../../../assets/sports/러닝.jpg"),
+  런닝: require("../../../assets/sports/러닝.jpg"),
+  배드민턴: require("../../../assets/sports/베드민턴.jpg"),
+  볼링: require("../../../assets/sports/볼링.jpg"),
+  야구: require("../../../assets/sports/야구.jpg"),
+  자전거: require("../../../assets/sports/자전거.jpg"),
+  축구: require("../../../assets/sports/축구.jpg"),
+  테니스: require("../../../assets/sports/테니스.jpg"),
+  풋살: require("../../../assets/sports/풋살.jpg"),
+  헬스: require("../../../assets/sports/헬스.jpg"),
+};
+
+const SPORT_ICONS: Record<string, MCIconName> = {
+  농구: "basketball",
+  당구: "billiards-rack",
+  등산: "hiking",
+  러닝: "run",
+  런닝: "run",
+  배드민턴: "badminton",
+  볼링: "bowling",
+  야구: "baseball",
+  자전거: "bike",
+  축구: "soccer",
+  테니스: "tennis-ball",
+  풋살: "soccer",
+  헬스: "dumbbell",
+  수영: "swim",
+  사이클링: "bike",
+  클라이밍: "terrain",
+};
+
+const DEFAULT_IMAGE = require("../../../assets/sports/러닝.jpg");
 
 function ReportHeader() {
   return (
@@ -31,9 +74,7 @@ function ReportHeader() {
       <Text pointerEvents="none" style={styles.headerTitle}>
         운동 성향 리포트
       </Text>
-      <Pressable accessibilityRole="button" style={styles.headerButton}>
-        <Ionicons name="share-outline" size={24} color="#111827" />
-      </Pressable>
+      <View style={styles.headerButton} />
     </View>
   );
 }
@@ -61,55 +102,30 @@ function Section({
   );
 }
 
-function PersonalitySlider() {
-  return (
-    <View style={styles.sliderBlock}>
-      <Text style={styles.sectionText}>
-        내향형이 강하고, 혼자 조용히 하는 것을 선호해요.
-      </Text>
-      <View style={styles.personalityScale}>
-        <Text style={styles.scaleLabel}>외향형</Text>
-        <View style={styles.scaleTrack}>
-          <View style={styles.scaleFill} />
-          <View style={styles.scaleThumb} />
-        </View>
-        <Text style={[styles.scaleLabel, styles.scaleLabelActive]}>내향형</Text>
-      </View>
-    </View>
-  );
-}
-
-function IntensityScale() {
-  return (
-    <View style={styles.sliderBlock}>
-      <Text style={styles.sectionText}>운동 강도는 중간 정도가 좋아요.</Text>
-      <View style={styles.intensityLine}>
-        {[0, 1, 2, 3, 4].map((item) => (
-          <View
-            key={item}
-            style={[
-              styles.intensityDot,
-              item === 2 && styles.intensityDotActive,
-            ]}
-          />
-        ))}
-      </View>
-      <View style={styles.intensityLabels}>
-        <Text style={styles.scaleLabel}>가벼운 편</Text>
-        <Text style={[styles.scaleLabel, styles.scaleLabelActive]}>중간</Text>
-        <Text style={styles.scaleLabel}>강한 편</Text>
-      </View>
-    </View>
-  );
-}
-
-function SportCircle({
+function TypeCard({
   icon,
-  label,
+  title,
+  value,
 }: {
-  icon: keyof typeof MaterialCommunityIcons.glyphMap;
-  label: string;
+  icon: MCIconName;
+  title: string;
+  value: string;
 }) {
+  return (
+    <View style={styles.typeCard}>
+      <View style={styles.typeCardIcon}>
+        <MaterialCommunityIcons name={icon} size={24} color={BLUE} />
+      </View>
+      <View style={styles.typeCardText}>
+        <Text style={styles.typeCardLabel}>{title}</Text>
+        <Text style={styles.typeCardValue}>{value}</Text>
+      </View>
+    </View>
+  );
+}
+
+function SportCircle({ label }: { label: string }) {
+  const icon = SPORT_ICONS[label] ?? "dumbbell";
   return (
     <View style={styles.sportItem}>
       <View style={styles.sportIcon}>
@@ -120,7 +136,7 @@ function SportCircle({
   );
 }
 
-function RecommendationItem({
+function DescriptionCard({
   icon,
   title,
   description,
@@ -130,19 +146,74 @@ function RecommendationItem({
   description: string;
 }) {
   return (
-    <View style={styles.recommendationItem}>
-      <View style={styles.recommendationIcon}>
-        <Ionicons name={icon} size={27} color={BLUE} />
+    <View style={styles.descCard}>
+      <View style={styles.descCardHeader}>
+        <View style={styles.descCardIcon}>
+          <Ionicons name={icon} size={22} color={BLUE} />
+        </View>
+        <Text style={styles.descCardTitle}>{title}</Text>
       </View>
-      <View style={styles.recommendationTextBlock}>
-        <Text style={styles.recommendationItemTitle}>{title}</Text>
-        <Text style={styles.recommendationDescription}>{description}</Text>
-      </View>
+      <Text style={styles.descCardBody}>{description}</Text>
     </View>
   );
 }
 
-export default function TutorialPersonalityReportScreen() {
+type Props = {
+  onContinue?: () => void;
+};
+
+export default function TutorialPersonalityReportScreen({ onContinue }: Props = {}) {
+  const [report, setReport] = useState<SurveyReport | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchReport = () => {
+    setError(null);
+    setLoading(true);
+    getSurveyReport()
+      .then(setReport)
+      .catch((err: Error) =>
+        setError(err.message ?? "리포트를 불러오지 못했어요.")
+      )
+      .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    fetchReport();
+  }, []);
+
+  const heroImage =
+    report && report.exerciseTypes.length > 0
+      ? (SPORT_IMAGES[report.exerciseTypes[0]] ?? DEFAULT_IMAGE)
+      : DEFAULT_IMAGE;
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <ReportHeader />
+        <View style={styles.center}>
+          <ActivityIndicator size="large" color={BLUE} />
+          <Text style={styles.loadingText}>리포트를 불러오는 중...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (error || !report) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <ReportHeader />
+        <View style={styles.center}>
+          <Ionicons name="alert-circle-outline" size={48} color="#D1D5DB" />
+          <Text style={styles.errorText}>{error ?? "리포트를 불러오지 못했어요."}</Text>
+          <Pressable onPress={fetchReport} style={styles.retryButton}>
+            <Text style={styles.retryText}>다시 시도</Text>
+          </Pressable>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <ReportHeader />
@@ -151,108 +222,120 @@ export default function TutorialPersonalityReportScreen() {
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
+        {/* 히어로 */}
         <View style={styles.hero}>
           <Image
-            source={require("../../../assets/sports/러닝.jpg")}
+            source={heroImage}
             style={styles.heroImage}
             contentFit="cover"
           />
           <View style={styles.heroOverlay} />
           <View style={styles.heroGlow} />
           <Text style={styles.heroEyebrow}>MY EXERCISE TYPE</Text>
-          <Text style={styles.heroTitle}>
-            독립형 · 도전형 ·{"\n"}힐링 추구
-          </Text>
-          <Text style={styles.heroSubtitle}>
-            혼자서 조용히 즐기는 스타일이에요!
-          </Text>
+          <Text style={styles.heroTitle}>{report.personalityType}</Text>
           <View style={styles.tagRow}>
-            <Tag label="내향형" />
-            <Tag label="혼자 운동 선호" />
-            <Tag label="중간 강도" />
-            <Tag label="체력 관리 목적" />
+            <Tag label={report.personalityType} />
+            <Tag label={report.intensityType} />
+            <Tag label={report.purposeType} />
+            {report.exerciseTypes.slice(0, 1).map((t) => (
+              <Tag key={t} label={t} />
+            ))}
           </View>
         </View>
 
         <View style={styles.reportBody}>
+          {/* 한줄 요약 */}
           <Section label="한줄 요약">
             <View style={styles.quoteBox}>
-              <Text style={styles.quoteMark}>“</Text>
-              <Text style={styles.quoteText}>
-                혼자서 조용히 즐기는 스타일이에요!
-              </Text>
-              <Text style={styles.quoteMark}>”</Text>
+              <Text style={styles.quoteMark}>"</Text>
+              <Text style={styles.quoteText}>{report.summary}</Text>
+              <Text style={styles.quoteMark}>"</Text>
             </View>
           </Section>
 
-          <Section label="성격">
-            <PersonalitySlider />
+          {/* 운동 스타일 */}
+          <Section label="운동 스타일">
+            <TypeCard
+              icon="account-group-outline"
+              title="파트너 스타일"
+              value={report.personalityType}
+            />
           </Section>
 
+          {/* 운동 강도 */}
           <Section label="운동 강도">
-            <IntensityScale />
+            <TypeCard
+              icon="lightning-bolt"
+              title="선호 강도"
+              value={report.intensityType}
+            />
           </Section>
 
+          {/* 운동 목적 */}
           <Section label="운동 목적">
             <View style={styles.goalBlock}>
-              <MaterialCommunityIcons
-                name="heart-pulse"
-                size={38}
-                color={BLUE}
-              />
+              <MaterialCommunityIcons name="heart-pulse" size={38} color={BLUE} />
               <View style={styles.goalTextBlock}>
-                <Text style={styles.goalTitle}>체력 관리</Text>
-                <Text style={styles.goalDescription}>
-                  건강하고 꾸준한 나를 만들기 위해 운동해요.
-                </Text>
+                <Text style={styles.goalTitle}>{report.purposeType}</Text>
               </View>
             </View>
           </Section>
 
+          {/* 관심 종목 */}
           <Section label="관심 종목">
             <Text style={styles.sectionText}>내가 좋아하는 운동이에요!</Text>
             <View style={styles.sportRow}>
-              <SportCircle icon="dumbbell" label="헬스" />
-              <SportCircle icon="run" label="러닝" />
+              {report.exerciseTypes.map((sport) => (
+                <SportCircle key={sport} label={sport} />
+              ))}
             </View>
           </Section>
 
+          {/* 추천 */}
           <View style={styles.recommendationBox}>
             <Text style={styles.recommendationTitle}>
               나에게 추천하는 운동 스타일
             </Text>
-            <Text style={styles.recommendationLead}>
-              혼자 집중할 수 있는 환경에서, 꾸준히 실천할 수 있는 운동이 잘 맞아요!
-            </Text>
+
+            {report.recommendedExercises.length > 0 && (
+              <View style={styles.recommendedSports}>
+                {report.recommendedExercises.map((sport) => (
+                  <View key={sport} style={styles.recommendedSportTag}>
+                    <MaterialCommunityIcons
+                      name={SPORT_ICONS[sport] ?? "dumbbell"}
+                      size={15}
+                      color={BLUE}
+                    />
+                    <Text style={styles.recommendedSportText}>{sport}</Text>
+                  </View>
+                ))}
+              </View>
+            )}
 
             <View style={styles.recommendationList}>
-              <RecommendationItem
-                icon="headset-outline"
-                title="혼자만의 시간"
-                description="조용한 환경에서 몰입하며 운동하기"
+              <DescriptionCard
+                icon="people-outline"
+                title="추천 파트너"
+                description={report.partnerStyleDescription}
               />
-              <RecommendationItem
-                icon="calendar-outline"
-                title="꾸준한 루틴"
-                description="주 3~4회, 중간 강도의 꾸준한 운동"
-              />
-              <RecommendationItem
-                icon="heart-outline"
-                title="체력 중심"
-                description="지구력과 근력 향상에 도움이 되는 운동"
+              <DescriptionCard
+                icon="musical-notes-outline"
+                title="추천 분위기"
+                description={report.exerciseMoodDescription}
               />
             </View>
           </View>
 
+          {/* CTA */}
           <Pressable
             accessibilityRole="button"
-            onPress={() => router.replace("/" as any)}
+            onPress={() => (onContinue ? onContinue() : router.replace("/" as any))}
             style={({ pressed }) => [
               styles.ctaButton,
               pressed && styles.buttonPressed,
             ]}
           >
-            <Text style={styles.ctaText}>비슷한 성향의 사람들 보기</Text>
+            <Text style={styles.ctaText}>나와 맞는 파트너 찾기</Text>
             <Ionicons name="chevron-forward" size={21} color="#FFFFFF" />
           </Pressable>
         </View>
@@ -265,6 +348,36 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: "#FFFFFF",
+  },
+  center: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 16,
+    paddingHorizontal: 32,
+  },
+  loadingText: {
+    fontSize: 14,
+    color: "#9CA3AF",
+    fontWeight: "600",
+  },
+  errorText: {
+    fontSize: 15,
+    color: "#374151",
+    fontWeight: "600",
+    textAlign: "center",
+  },
+  retryButton: {
+    marginTop: 4,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 999,
+    backgroundColor: BLUE,
+  },
+  retryText: {
+    fontSize: 14,
+    color: "#FFFFFF",
+    fontWeight: "700",
   },
   header: {
     height: 56,
@@ -327,7 +440,6 @@ const styles = StyleSheet.create({
     lineHeight: 18,
     color: "#5D62A4",
     fontWeight: "800",
-    letterSpacing: 0,
   },
   heroTitle: {
     marginTop: 15,
@@ -382,6 +494,12 @@ const styles = StyleSheet.create({
   sectionBody: {
     minWidth: 0,
   },
+  sectionText: {
+    fontSize: 15,
+    lineHeight: 23,
+    color: "#303642",
+    fontWeight: "700",
+  },
   quoteBox: {
     minHeight: 92,
     borderRadius: 16,
@@ -401,84 +519,47 @@ const styles = StyleSheet.create({
   },
   quoteText: {
     flex: 1,
-    fontSize: 18,
-    lineHeight: 27,
+    fontSize: 16,
+    lineHeight: 25,
     color: "#11184A",
     fontWeight: "900",
     textAlign: "center",
   },
-  sliderBlock: {
-    gap: 20,
-  },
-  sectionText: {
-    fontSize: 15,
-    lineHeight: 23,
-    color: "#303642",
-    fontWeight: "700",
-  },
-  personalityScale: {
+  typeCard: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
+    gap: 16,
+    backgroundColor: SOFT_BLUE,
+    borderRadius: 16,
+    paddingHorizontal: 18,
+    paddingVertical: 16,
   },
-  scaleLabel: {
+  typeCardIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: "#FFFFFF",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  typeCardText: {
+    flex: 1,
+    gap: 4,
+  },
+  typeCardLabel: {
     fontSize: 12,
     lineHeight: 17,
-    color: "#737684",
-    fontWeight: "800",
+    color: "#5D62A4",
+    fontWeight: "700",
   },
-  scaleLabelActive: {
+  typeCardValue: {
+    fontSize: 18,
+    lineHeight: 26,
     color: DEEP_BLUE,
-  },
-  scaleTrack: {
-    flex: 1,
-    height: 8,
-    borderRadius: 999,
-    backgroundColor: "#E3E4F6",
-  },
-  scaleFill: {
-    width: "82%",
-    height: "100%",
-    borderRadius: 999,
-    backgroundColor: "#7B6AF0",
-  },
-  scaleThumb: {
-    position: "absolute",
-    right: "15%",
-    top: -8,
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: "#5E55E8",
-    borderWidth: 3,
-    borderColor: "#FFFFFF",
-  },
-  intensityLine: {
-    height: 28,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 18,
-  },
-  intensityLineBackground: {},
-  intensityDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: "#C8CBD4",
-  },
-  intensityDotActive: {
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-    backgroundColor: "#5E55E8",
-  },
-  intensityLabels: {
-    flexDirection: "row",
-    justifyContent: "space-between",
+    fontWeight: "900",
   },
   goalBlock: {
-    minHeight: 110,
+    minHeight: 80,
     borderRadius: 16,
     flexDirection: "row",
     alignItems: "center",
@@ -489,24 +570,18 @@ const styles = StyleSheet.create({
   },
   goalTextBlock: {
     flex: 1,
-    gap: 6,
   },
   goalTitle: {
-    fontSize: 17,
-    lineHeight: 24,
+    fontSize: 18,
+    lineHeight: 26,
     color: BLUE,
     fontWeight: "900",
   },
-  goalDescription: {
-    fontSize: 14,
-    lineHeight: 20,
-    color: "#303642",
-    fontWeight: "700",
-  },
   sportRow: {
     flexDirection: "row",
+    flexWrap: "wrap",
     gap: 18,
-    marginTop: 18,
+    marginTop: 14,
   },
   sportItem: {
     alignItems: "center",
@@ -532,6 +607,7 @@ const styles = StyleSheet.create({
     backgroundColor: SOFT_BLUE,
     paddingHorizontal: 20,
     paddingVertical: 22,
+    gap: 16,
   },
   recommendationTitle: {
     fontSize: 17,
@@ -539,45 +615,60 @@ const styles = StyleSheet.create({
     color: DEEP_BLUE,
     fontWeight: "900",
   },
-  recommendationLead: {
-    marginTop: 9,
-    fontSize: 14,
-    lineHeight: 21,
-    color: DEEP_BLUE,
-    fontWeight: "700",
+  recommendedSports: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
   },
-  recommendationList: {
-    gap: 14,
-    marginTop: 20,
-  },
-  recommendationItem: {
+  recommendedSportTag: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 14,
+    gap: 6,
+    backgroundColor: "rgba(255, 255, 255, 0.72)",
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
   },
-  recommendationIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+  recommendedSportText: {
+    fontSize: 13,
+    lineHeight: 18,
+    color: DEEP_BLUE,
+    fontWeight: "800",
+  },
+  recommendationList: {
+    gap: 12,
+  },
+  descCard: {
+    backgroundColor: "rgba(255, 255, 255, 0.72)",
+    borderRadius: 14,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    gap: 10,
+  },
+  descCardHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  descCardIcon: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: SOFT_BLUE,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "rgba(255, 255, 255, 0.72)",
   },
-  recommendationTextBlock: {
-    flex: 1,
-    gap: 4,
-  },
-  recommendationItemTitle: {
+  descCardTitle: {
     fontSize: 14,
-    lineHeight: 19,
+    lineHeight: 20,
     color: DEEP_BLUE,
     fontWeight: "900",
   },
-  recommendationDescription: {
-    fontSize: 12,
-    lineHeight: 17,
+  descCardBody: {
+    fontSize: 13,
+    lineHeight: 20,
     color: "#50568B",
-    fontWeight: "700",
+    fontWeight: "600",
   },
   ctaButton: {
     minHeight: 58,

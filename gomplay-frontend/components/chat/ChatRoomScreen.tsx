@@ -89,6 +89,7 @@ export default function ChatRoomScreen() {
   const messagesByRoomId = useChatStore((state) => state.messagesByRoomId);
   const setMessages = useChatStore((state) => state.setMessages);
   const appendMessage = useChatStore((state) => state.appendMessage);
+  const clearUnreadCount = useChatStore((state) => state.clearUnreadCount);
   const draftsByRoomId = useChatStore((state) => state.draftsByRoomId);
   const setDraft = useChatStore((state) => state.setDraft);
 
@@ -340,6 +341,7 @@ export default function ChatRoomScreen() {
         upsertChatRoom(details.chatRoom);
         setSelectedChatRoomId(chatRoomId);
         setMessages(chatRoomId, details.messages);
+        clearUnreadCount(chatRoomId);
         await markChatRoomAsRead(chatRoomId);
       } finally {
         if (isMounted) {
@@ -366,6 +368,7 @@ export default function ChatRoomScreen() {
   }, [
     appendMessage,
     chatRoomId,
+    clearUnreadCount,
     upsertChatRoom,
     setMessages,
     setSelectedChatRoomId,

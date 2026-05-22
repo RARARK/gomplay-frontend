@@ -42,6 +42,7 @@ export default function EditPostRoute() {
   const [capacity, setCapacity] = React.useState(1);
   const [message, setMessage] = React.useState("");
   const [isTagSelectorExpanded, setIsTagSelectorExpanded] = React.useState(false);
+  const scrollViewRef = React.useRef<ScrollView>(null);
 
   React.useEffect(() => {
     if (!postId) return;
@@ -106,9 +107,10 @@ export default function EditPostRoute() {
     <SafeAreaView edges={["top"]} style={styles.safe}>
       <KeyboardAvoidingView
         style={styles.flex}
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
         <ScrollView
+          ref={scrollViewRef}
           contentContainerStyle={styles.content}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
@@ -173,6 +175,7 @@ export default function EditPostRoute() {
             <TextInput
               value={message}
               onChangeText={setMessage}
+              onFocus={() => scrollViewRef.current?.scrollToEnd({ animated: true })}
               placeholder="예: 초보도 환영하고, 1시간 정도 가볍게 같이 뛰실 분 찾아요."
               placeholderTextColor="#8F95A1"
               multiline

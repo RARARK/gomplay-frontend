@@ -1,3 +1,4 @@
+import { Ionicons } from "@expo/vector-icons";
 import * as React from "react";
 import { Pressable, Text, StyleSheet, View } from "react-native";
 import {
@@ -29,6 +30,9 @@ const RecommendationSectionHeader = ({
         style={styles.titleRow}
       >
         <Text style={styles.text}>{title}</Text>
+        {onPress && (
+          <Ionicons name="chevron-forward" size={18} color={Color.labelsPrimary} />
+        )}
       </TitleContainer>
     </View>
   );

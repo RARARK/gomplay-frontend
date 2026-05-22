@@ -15,8 +15,16 @@ export default function TutorialCompleteRoute() {
   const { pendingCredentials, setAuth, setPendingCredentials, setPendingProfileImageUri } = useAuthStore();
 
   const handlePressCta = async () => {
-    if (pendingCredentials) {
-      try {
+    try {
+      // 이미 tutorial-analyzing에서 로그인 완료된 경우 토큰이 있음
+      const currentToken = useAuthStore.getState().accessToken;
+
+      if (!currentToken) {
+        // fallback: analyzing에서 로그인 실패한 경우 재시도
+        if (!pendingCredentials) {
+          router.replace("/login");
+          return;
+        }
         const data = await login(
           pendingCredentials.schoolEmail,
           pendingCredentials.password
@@ -28,36 +36,37 @@ export default function TutorialCompleteRoute() {
           matching: data.matching,
         });
 
-        const { pendingSurvey, pendingSchedule, setPendingSurvey, setPendingSchedule } = useSurveyStore.getState();
+        const { pendingSurvey, setPendingSurvey } = useSurveyStore.getState();
         if (pendingSurvey) {
           await submitSurvey(pendingSurvey).catch(() => {});
           setPendingSurvey(null);
         }
-        if (pendingSchedule && pendingSchedule.length > 0) {
-          await submitSchedule(pendingSchedule).catch(() => {});
-          setPendingSchedule(null);
-          setHasScheduleCache(true);
-        }
-
-        const pendingUri = useAuthStore.getState().pendingProfileImageUri;
-        if (pendingUri) {
-          const profileImageUrl = await uploadProfileImage(pendingUri, {
-            fileName: "profile.jpg",
-            mimeType: "image/jpeg",
-          }).catch(() => null);
-          if (profileImageUrl) {
-            await updateMyProfile({ profileImageUrl }).catch(() => {});
-          }
-          setPendingProfileImageUri(null);
-        }
-        setPendingCredentials(null);
-        router.replace("/(tabs)");
-        return;
-      } catch {
-        // credentials 만료 또는 오류 시 로그인 화면으로
       }
+
+      const { pendingSchedule, setPendingSchedule } = useSurveyStore.getState();
+      if (pendingSchedule && pendingSchedule.length > 0) {
+        await submitSchedule(pendingSchedule).catch(() => {});
+        setPendingSchedule(null);
+        setHasScheduleCache(true);
+      }
+
+      const pendingUri = useAuthStore.getState().pendingProfileImageUri;
+      if (pendingUri) {
+        const profileImageUrl = await uploadProfileImage(pendingUri, {
+          fileName: "profile.jpg",
+          mimeType: "image/jpeg",
+        }).catch(() => null);
+        if (profileImageUrl) {
+          await updateMyProfile({ profileImageUrl }).catch(() => {});
+        }
+        setPendingProfileImageUri(null);
+      }
+
+      if (pendingCredentials) setPendingCredentials(null);
+      router.replace("/(tabs)");
+    } catch {
+      router.replace("/login");
     }
-    router.replace("/login");
   };
 
   return (

@@ -1,5 +1,4 @@
 import { Ionicons } from "@expo/vector-icons";
-import { Image } from "expo-image";
 import { router } from "expo-router";
 import React from "react";
 import {
@@ -11,85 +10,172 @@ import {
   View,
 } from "react-native";
 
-import { getNotifications, markAllNotificationsRead } from "@/services/notification/notificationService";
-import type { NotificationItem, NotificationTab } from "@/types/domain/notification";
+import {
+  getNotifications,
+  markAllNotificationsRead,
+} from "@/services/notification/notificationService";
+import { useNotificationStore } from "@/stores/notification/notificationStore";
+import type {
+  NotificationApiType,
+  NotificationItem,
+  NotificationTab,
+} from "@/types/domain/notification";
+
+// ── 타입별 아이콘 / 색상 설정 ────────────────────────────────────────────────
+
+type IconConfig = {
+  name: keyof typeof Ionicons.glyphMap;
+  bg: string;
+  color: string;
+};
+
+const TYPE_ICON: Record<NotificationApiType, IconConfig> = {
+  match_request:     { name: "flash",                   bg: "#EEF2FF", color: "#4C5BE2" },
+  match_accepted:    { name: "checkmark-circle",        bg: "#DCFCE7", color: "#16A34A" },
+  match_rejected:    { name: "close-circle",            bg: "#FEE2E2", color: "#EF4444" },
+  gathering:         { name: "people",                  bg: "#EEF2FF", color: "#4C5BE2" },
+  gathering_request: { name: "person-add",              bg: "#EDE9FE", color: "#7C3AED" },
+  review_available:  { name: "star",                    bg: "#FEF9C3", color: "#CA8A04" },
+  match_end_confirm: { name: "flag",                    bg: "#FFEDD5", color: "#EA580C" },
+  match_auto_ended:  { name: "time",                    bg: "#F3F4F6", color: "#6B7280" },
+  review:            { name: "star-half",               bg: "#FEF9C3", color: "#CA8A04" },
+  point:             { name: "diamond",                 bg: "#F5F3FF", color: "#7C3AED" },
+};
+
+// ── 탭 필터 ──────────────────────────────────────────────────────────────────
 
 type FilterOption = { label: string; tab: NotificationTab };
 
 const FILTERS: FilterOption[] = [
-  { label: "전체", tab: "all" },
+  { label: "전체",   tab: "all"     },
   { label: "파트너", tab: "partner" },
-  { label: "일반", tab: "general" },
+  { label: "일반",   tab: "general" },
 ];
 
-const PROFILE_IMAGE = require("../../assets/chat/Profileimage.png");
+// ── 시간 포맷 ─────────────────────────────────────────────────────────────────
 
-function formatDate(iso: string) {
+function formatRelativeTime(iso: string): string {
+  const diff = Date.now() - new Date(iso).getTime();
+  const minutes = Math.floor(diff / 60_000);
+  if (minutes < 1)  return "방금 전";
+  if (minutes < 60) return `${minutes}분 전`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24)   return `${hours}시간 전`;
+  const days = Math.floor(hours / 24);
+  if (days === 1)   return "어제";
+  if (days < 7)     return `${days}일 전`;
   const d = new Date(iso);
-  return `${d.getFullYear()}년 ${d.getMonth() + 1}월 ${d.getDate()}일`;
+  return `${d.getMonth() + 1}월 ${d.getDate()}일`;
 }
+
+// ── 타입별 이동 ───────────────────────────────────────────────────────────────
+
+function handleNotificationPress(item: NotificationItem) {
+  const id = item.refId;
+  switch (item.type) {
+    case "gathering":
+    case "gathering_request":
+      if (id) router.push(`/posts/${id}` as any);
+      break;
+    case "review_available":
+      if (id) router.push(`/review/${id}` as any);
+      break;
+    case "match_request":
+    case "match_accepted":
+    case "match_rejected":
+    case "match_end_confirm":
+    case "match_auto_ended":
+      router.push("/(tabs)/match" as any);
+      break;
+    case "point":
+      router.push("/point" as any);
+      break;
+    default:
+      break;
+  }
+}
+
+// ── 알림 행 ───────────────────────────────────────────────────────────────────
 
 function NotificationRow({ item }: { item: NotificationItem }) {
+  const iconCfg = TYPE_ICON[item.type] ?? TYPE_ICON.point;
+
   return (
-    <View>
-      <View style={[styles.row, !item.read && styles.rowUnread]}>
-        <Image source={PROFILE_IMAGE} style={styles.avatar} contentFit="cover" />
-        <View style={styles.rowText}>
-          <Text style={[styles.message, !item.read && styles.messageUnread]}>
-            {item.body}
-          </Text>
-          <Text style={styles.date}>{formatDate(item.createdAt)}</Text>
-        </View>
-        {!item.read && <View style={styles.unreadDot} />}
+    <Pressable
+      accessibilityRole="button"
+      onPress={() => handleNotificationPress(item)}
+      style={({ pressed }) => [
+        styles.row,
+        !item.read && styles.rowUnread,
+        pressed && styles.rowPressed,
+      ]}
+    >
+      {/* 타입 아이콘 */}
+      <View style={[styles.iconCircle, { backgroundColor: iconCfg.bg }]}>
+        <Ionicons name={iconCfg.name} size={22} color={iconCfg.color} />
       </View>
-      <View style={styles.divider} />
-    </View>
+
+      {/* 텍스트 */}
+      <View style={styles.rowText}>
+        <Text style={[styles.title, !item.read && styles.titleUnread]} numberOfLines={1}>
+          {item.title}
+        </Text>
+        <Text style={styles.body} numberOfLines={2}>
+          {item.body}
+        </Text>
+        <Text style={styles.time}>{formatRelativeTime(item.createdAt)}</Text>
+      </View>
+
+      {/* 미읽음 점 */}
+      {!item.read && <View style={styles.unreadDot} />}
+    </Pressable>
   );
 }
+
+// ── 메인 화면 ─────────────────────────────────────────────────────────────────
 
 export default function NotificationsScreen() {
   const [activeTab, setActiveTab] = React.useState<NotificationTab>("all");
   const [notifications, setNotifications] = React.useState<NotificationItem[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
+  const { setUnreadCount, clearUnread } = useNotificationStore();
 
   React.useEffect(() => {
-    let isMounted = true;
+    let alive = true;
     setIsLoading(true);
     setError(null);
 
     getNotifications(activeTab)
       .then((data) => {
-        if (isMounted) setNotifications(data);
+        if (!alive) return;
+        setNotifications(data);
+        // 전체 탭 기준으로 미읽음 수 동기화
+        if (activeTab === "all") {
+          setUnreadCount(data.filter((n) => !n.read).length);
+        }
       })
       .catch((err) => {
-        if (isMounted) {
+        if (alive) {
           setNotifications([]);
           setError(err instanceof Error ? err.message : "알림을 불러오지 못했어요.");
         }
       })
-      .finally(() => {
-        if (isMounted) setIsLoading(false);
-      });
+      .finally(() => { if (alive) setIsLoading(false); });
 
-    return () => { isMounted = false; };
-  }, [activeTab]);
+    return () => { alive = false; };
+  }, [activeTab, setUnreadCount]);
 
   const handleMarkAllRead = React.useCallback(() => {
     markAllNotificationsRead()
       .then(() => {
         setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+        clearUnread();
       })
       .catch(() => {});
-  }, []);
+  }, [clearUnread]);
 
-  const handleBackPress = () => {
-    if (router.canGoBack()) {
-      router.back();
-      return;
-    }
-    router.replace("/" as any);
-  };
+  const hasUnread = notifications.some((n) => !n.read);
 
   return (
     <ScrollView
@@ -97,37 +183,45 @@ export default function NotificationsScreen() {
       contentContainerStyle={styles.content}
       showsVerticalScrollIndicator={false}
     >
+      {/* 헤더 */}
       <View style={styles.headerRow}>
         <Pressable
           accessibilityRole="button"
-          onPress={handleBackPress}
-          style={styles.backButton}
+          onPress={() => (router.canGoBack() ? router.back() : router.replace("/" as any))}
+          style={styles.headerBtn}
           hitSlop={10}
         >
           <Ionicons name="chevron-back" size={28} color="#111827" />
         </Pressable>
+
         <Text pointerEvents="none" style={styles.headerTitle}>알림</Text>
+
         <Pressable
           accessibilityRole="button"
           onPress={handleMarkAllRead}
-          style={styles.markAllButton}
+          disabled={!hasUnread}
+          style={styles.headerBtn}
         >
-          <Ionicons name="checkmark-done-outline" size={18} color="#4C5BE2" />
-          <Text style={styles.markAllText}>전체확인</Text>
+          <Ionicons
+            name="checkmark-done-outline"
+            size={22}
+            color={hasUnread ? "#4C5BE2" : "#D1D5DB"}
+          />
         </Pressable>
       </View>
 
+      {/* 필터 탭 */}
       <View style={styles.filterRow}>
         {FILTERS.map((f) => {
-          const selected = activeTab === f.tab;
+          const active = activeTab === f.tab;
           return (
             <Pressable
               key={f.tab}
               accessibilityRole="button"
               onPress={() => setActiveTab(f.tab)}
-              style={[styles.filterChip, selected && styles.filterChipActive]}
+              style={[styles.filterChip, active && styles.filterChipActive]}
             >
-              <Text style={[styles.filterText, selected && styles.filterTextActive]}>
+              <Text style={[styles.filterText, active && styles.filterTextActive]}>
                 {f.label}
               </Text>
             </Pressable>
@@ -135,28 +229,36 @@ export default function NotificationsScreen() {
         })}
       </View>
 
+      {/* 목록 */}
       {isLoading ? (
         <View style={styles.stateBox}>
           <ActivityIndicator color="#4C5BE2" />
         </View>
       ) : error ? (
         <View style={styles.stateBox}>
-          <Text style={styles.emptyText}>{error}</Text>
+          <Ionicons name="alert-circle-outline" size={40} color="#D1D5DB" />
+          <Text style={styles.stateText}>{error}</Text>
         </View>
-      ) : notifications.length > 0 ? (
-        <View>
-          {notifications.map((item) => (
-            <NotificationRow key={item.id} item={item} />
-          ))}
+      ) : notifications.length === 0 ? (
+        <View style={styles.stateBox}>
+          <Ionicons name="notifications-off-outline" size={40} color="#D1D5DB" />
+          <Text style={styles.stateText}>알림이 없어요.</Text>
         </View>
       ) : (
-        <View style={styles.empty}>
-          <Text style={styles.emptyText}>알림이 없어요.</Text>
+        <View>
+          {notifications.map((item, idx) => (
+            <React.Fragment key={item.id}>
+              <NotificationRow item={item} />
+              {idx < notifications.length - 1 && <View style={styles.divider} />}
+            </React.Fragment>
+          ))}
         </View>
       )}
     </ScrollView>
   );
 }
+
+// ── 스타일 ────────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
   screen: {
@@ -164,81 +266,69 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
   },
   content: {
-    paddingBottom: 32,
+    paddingBottom: 40,
   },
 
+  // 헤더
   headerRow: {
-    height: 48,
+    height: 56,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 16,
+    paddingHorizontal: 12,
   },
-  backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 999,
+  headerBtn: {
+    width: 44,
+    height: 44,
     alignItems: "center",
     justifyContent: "center",
-    zIndex: 1,
   },
   headerTitle: {
     position: "absolute",
     left: 0,
     right: 0,
-    alignSelf: "center",
-    fontSize: 20,
-    lineHeight: 28,
+    textAlign: "center",
+    fontSize: 18,
+    lineHeight: 24,
     fontWeight: "800",
     color: "#111827",
-    textAlign: "center",
-  },
-  markAllButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    paddingHorizontal: 8,
-    height: 40,
-    zIndex: 1,
-  },
-  markAllText: {
-    fontSize: 15,
-    fontWeight: "600",
-    color: "#4C5BE2",
   },
 
+  // 필터
   filterRow: {
     flexDirection: "row",
     gap: 8,
     paddingHorizontal: 16,
-    paddingBottom: 12,
+    paddingBottom: 8,
   },
   filterChip: {
-    minHeight: 32,
+    minHeight: 34,
     borderRadius: 999,
-    borderWidth: 1,
-    borderColor: "#4C5BE2",
+    borderWidth: 1.5,
+    borderColor: "#E5E7EB",
     backgroundColor: "#FFFFFF",
     alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: 14,
+    paddingHorizontal: 16,
   },
   filterChipActive: {
+    borderColor: "#4C5BE2",
     backgroundColor: "#4C5BE2",
   },
   filterText: {
     fontSize: 13,
     fontWeight: "700",
-    color: "#111827",
+    color: "#6B7280",
   },
   filterTextActive: {
     color: "#FFFFFF",
   },
 
+  // 알림 행
   row: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
+    gap: 14,
     paddingHorizontal: 16,
     paddingVertical: 14,
     backgroundColor: "#FFFFFF",
@@ -246,53 +336,64 @@ const styles = StyleSheet.create({
   rowUnread: {
     backgroundColor: "#F5F7FF",
   },
-  avatar: {
+  rowPressed: {
+    opacity: 0.8,
+  },
+  iconCircle: {
     width: 48,
     height: 48,
     borderRadius: 24,
+    alignItems: "center",
+    justifyContent: "center",
+    flexShrink: 0,
   },
   rowText: {
     flex: 1,
-    gap: 6,
+    gap: 3,
   },
-  message: {
-    fontSize: 13,
-    fontWeight: "600",
-    color: "#6B7280",
-    lineHeight: 18,
-    letterSpacing: -0.08,
+  title: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: "#9CA3AF",
+    lineHeight: 19,
   },
-  messageUnread: {
+  titleUnread: {
     color: "#111827",
   },
-  date: {
+  body: {
+    fontSize: 13,
+    fontWeight: "500",
+    color: "#6B7280",
+    lineHeight: 18,
+  },
+  time: {
     fontSize: 11,
     color: "#9CA3AF",
-    lineHeight: 13,
-    letterSpacing: 0.07,
+    lineHeight: 15,
+    marginTop: 1,
   },
   unreadDot: {
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: "#EF4444",
+    backgroundColor: "#4C5BE2",
+    flexShrink: 0,
   },
   divider: {
     height: 1,
-    backgroundColor: "#E5E7EB",
+    backgroundColor: "#F3F4F6",
     marginHorizontal: 16,
   },
 
+  // 빈 상태
   stateBox: {
     alignItems: "center",
+    justifyContent: "center",
     paddingTop: 80,
+    gap: 12,
   },
-  empty: {
-    alignItems: "center",
-    paddingTop: 80,
-  },
-  emptyText: {
-    fontSize: 15,
+  stateText: {
+    fontSize: 14,
     color: "#9CA3AF",
     fontWeight: "600",
   },

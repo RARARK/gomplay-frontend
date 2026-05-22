@@ -1,10 +1,7 @@
 import { router, useLocalSearchParams } from "expo-router";
 import React from "react";
-import { StyleSheet } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 
-import TutorialResultScreen from "@/components/auth/tutorial/TutorialResultScreen";
-import { useSurveyStore } from "@/stores/survey/surveyStore";
+import TutorialPersonalityReportScreen from "@/components/auth/tutorial/TutorialPersonalityReportScreen";
 
 export default function TutorialResultRoute() {
   const params = useLocalSearchParams<{
@@ -12,7 +9,6 @@ export default function TutorialResultRoute() {
     nickname?: string;
     studentId?: string;
   }>();
-  const tutorialSelections = useSurveyStore((s) => s.tutorialSelections);
 
   const handleContinue = () => {
     router.replace({
@@ -26,19 +22,5 @@ export default function TutorialResultRoute() {
     });
   };
 
-  return (
-    <SafeAreaView style={styles.safeArea}>
-      <TutorialResultScreen
-        selections={tutorialSelections}
-        onContinue={handleContinue}
-      />
-    </SafeAreaView>
-  );
+  return <TutorialPersonalityReportScreen onContinue={handleContinue} />;
 }
-
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: "#FFFFFF",
-  },
-});

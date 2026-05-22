@@ -1,7 +1,8 @@
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import * as React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import { getSportIcon } from "@/lib/utils/sportIconMap";
 import type { ModernMatchCardProps } from "@/types/ui/homeCards";
 
 const CARD_WIDTH = 195;
@@ -56,6 +57,11 @@ const ModernMatchCard = React.memo(function ModernMatchCard({
       <View style={styles.infoArea}>
         {/* Sport name + icon */}
         <View style={styles.sportRow}>
+          <MaterialCommunityIcons
+            name={getSportIcon(sport)}
+            size={18}
+            color="#4C5BE2"
+          />
           <Text style={styles.sportName}>{sport}</Text>
         </View>
 
@@ -180,6 +186,7 @@ const styles = StyleSheet.create({
   sportRow: {
     flexDirection: "row",
     alignItems: "center",
+    gap: 6,
   },
   sportName: {
     fontSize: 20,

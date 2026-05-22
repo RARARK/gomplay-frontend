@@ -348,6 +348,7 @@ const styles = StyleSheet.create({
     alignItems: "stretch",
     justifyContent: "flex-start",
     gap: 28,
+    paddingBottom: 36,
   },
   testButtonRow: {
     flexDirection: "row",
