@@ -93,6 +93,15 @@ const mapParticipantToApplicant = (
   status: participantStatusToApplicantStatus(participant.status),
 });
 
+const formatScheduledDate = (value: string | null | undefined): string | undefined => {
+  if (!value) return undefined;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return undefined;
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${month}.${day}`;
+};
+
 const formatTimeRange = (
   startAt?: string | null,
   endAt?: string | null,
@@ -181,6 +190,7 @@ const mapActiveMatchToItem = (
     partnerDepartment: displayDepartment ?? undefined,
     partnerStudentNumber: formatStudentNumber(displayStudentNumber),
     location: match.location ?? undefined,
+    scheduledDate: formatScheduledDate(match.scheduledAt),
     scheduledTime:
       match.scheduledTime ??
       formatTimeRange(match.scheduledAt, match.scheduledEndAt),

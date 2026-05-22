@@ -60,10 +60,6 @@ export type UpdateGatheringRequest = {
   tags?: string;
 };
 
-export type DeleteGatheringRequest = {
-  hostId: number;
-};
-
 export type GatheringPostDetailResponse = {
   boostExpiredAt?: string | null;
   id: number;

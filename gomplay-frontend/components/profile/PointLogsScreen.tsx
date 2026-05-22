@@ -50,13 +50,6 @@ const REASON_CONFIG: Record<string, ReasonConfig> = {
     iconBg: "#FEE2E2",
     iconColor: "#EF4444",
   },
-  recommendation_refresh: {
-    label: "추천 새로고침",
-    iconName: "refresh",
-    iconFamily: "ion",
-    iconBg: "#FEE2E2",
-    iconColor: "#EF4444",
-  },
   gathering: {
     label: "모집글 등록",
     iconName: "document-text",
@@ -115,22 +108,10 @@ const USAGE_ITEMS = [
     iconFamily: "ion" as const,
     iconBg: "#EEF2FF",
     iconColor: PRIMARY,
-    cost: "8P",
+    cost: "10P",
     costColor: PRIMARY,
     desc: "빠르게 운동 파트너 찾기",
     onPress: () => router.push("/(tabs)" as any),
-  },
-  {
-    key: "refresh",
-    name: "추천 새로고침",
-    icon: "refresh",
-    iconFamily: "ion" as const,
-    iconBg: "#EEF2FF",
-    iconColor: PRIMARY,
-    cost: "5P",
-    costColor: PRIMARY,
-    desc: "추천 모집글 다시 보기",
-    onPress: () => router.push("/(tabs)/partner" as any),
   },
   {
     key: "boost",
@@ -139,7 +120,7 @@ const USAGE_ITEMS = [
     iconFamily: "ion" as const,
     iconBg: "#F3E8FF",
     iconColor: "#7C3AED",
-    cost: "25P",
+    cost: "30P",
     costColor: "#7C3AED",
     desc: "더 많은 사람에게 노출",
     onPress: () => router.push("/(tabs)/partner" as any),
@@ -248,9 +229,13 @@ export default function PointLogsScreen() {
       .finally(() => setLoading(false));
   }, []);
 
+  const visibleLogs = useMemo(
+    () => (logs ?? []).filter((log) => log.reason !== "recommendation_refresh"),
+    [logs],
+  );
+
   const { weekEarned, weekSpent } = useMemo(() => {
-    const safeLogs = logs ?? [];
-    const wl = safeLogs.filter((l) => {
+    const wl = visibleLogs.filter((l) => {
       const d = new Date(l.createdAt);
       return d >= week.start && d <= week.end;
     });
@@ -260,16 +245,15 @@ export default function PointLogsScreen() {
         .reduce((s, l) => s + l.delta, 0),
       weekSpent: wl.filter((l) => l.delta < 0).reduce((s, l) => s + l.delta, 0),
     };
-  }, [logs, week]);
+  }, [visibleLogs, week]);
 
   const weekNet = weekEarned + weekSpent;
 
   const filtered = useMemo(() => {
-    const safeLogs = logs ?? [];
-    if (tab === "earned") return safeLogs.filter((l) => l.delta > 0);
-    if (tab === "spent") return safeLogs.filter((l) => l.delta < 0);
-    return safeLogs;
-  }, [logs, tab]);
+    if (tab === "earned") return visibleLogs.filter((l) => l.delta > 0);
+    if (tab === "spent") return visibleLogs.filter((l) => l.delta < 0);
+    return visibleLogs;
+  }, [visibleLogs, tab]);
 
   const displayed = showAll ? filtered : filtered.slice(0, 6);
 
@@ -529,9 +513,8 @@ const EARN_GUIDE = [
 ];
 
 const SPEND_GUIDE = [
-  { action: "퀵 매치 세션 시작", point: -8, desc: undefined },
-  { action: "추천 모집글 새로고침", point: -5, desc: undefined },
-  { action: "모집글 부스트", point: -25, desc: "일정 시간 동안 내 모집글 상단 노출" },
+  { action: "퀵 매치 세션 시작", point: -10, desc: undefined },
+  { action: "모집글 부스트", point: -30, desc: "일정 시간 동안 내 모집글 상단 노출" },
 ];
 
 const styles = StyleSheet.create({
@@ -705,23 +688,24 @@ const styles = StyleSheet.create({
   // Usage
   usageRow: {
     flexDirection: "row",
-    gap: 10,
+    gap: 12,
   },
   usageCard: {
     flex: 1,
     borderWidth: 1,
     borderColor: "#F3F4F6",
-    borderRadius: 12,
-    padding: 12,
-    gap: 6,
+    borderRadius: 14,
+    padding: 14,
+    gap: 8,
+    minHeight: 138,
   },
   usageIconBox: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 2,
+    marginBottom: 4,
   },
   usageNameRow: {
     flexDirection: "row",
@@ -729,20 +713,22 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   usageName: {
-    fontSize: 12,
-    fontWeight: "600",
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: "700",
     color: "#111827",
     flex: 1,
   },
   usageCost: {
-    fontSize: 15,
+    fontSize: 18,
+    lineHeight: 24,
     fontWeight: "800",
     letterSpacing: -0.3,
   },
   usageDesc: {
-    fontSize: 10,
+    fontSize: 11,
     color: "#9CA3AF",
-    lineHeight: 14,
+    lineHeight: 16,
   },
   // Tabs
   tabRow: {

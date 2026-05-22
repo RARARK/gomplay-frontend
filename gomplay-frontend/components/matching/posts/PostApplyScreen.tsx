@@ -43,6 +43,7 @@ import {
   rejectParticipant,
   updateGathering,
 } from "@/services/gathering/gatheringService";
+import { getUserProfile, type OpponentProfile } from "@/services/user/userService";
 import { useAuthStore } from "@/stores/auth/authStore";
 import { useBoostStore } from "@/stores/gathering/boostStore";
 import type { GatheringParticipant, GatheringPostDetailResponse } from "@/types/domain/gathering";
@@ -87,6 +88,8 @@ export default function PostApplyScreen({ postId }: PostApplyScreenProps) {
   const [participants, setParticipants] = React.useState<GatheringParticipant[]>([]);
   const [isApplicantPanelOpen, setIsApplicantPanelOpen] = React.useState(false);
   const [isProfileModalVisible, setIsProfileModalVisible] = React.useState(false);
+  const [isProfileLoading, setIsProfileLoading] = React.useState(false);
+  const [hostProfile, setHostProfile] = React.useState<OpponentProfile | null>(null);
 
   const [editTitle, setEditTitle] = React.useState("");
   const [editTags, setEditTags] = React.useState<string[]>([]);
@@ -108,6 +111,7 @@ export default function PostApplyScreen({ postId }: PostApplyScreenProps) {
             currentUserId: userId,
             status: nextPost.status,
           });
+
           setPost(nextPost);
           setEditTitle(nextPost.title ?? "");
           setEditTags(parseTags(nextPost.tags));
@@ -214,6 +218,21 @@ export default function PostApplyScreen({ postId }: PostApplyScreenProps) {
     if (!post || userId === null) return;
     setIsSaving(true);
     try {
+      console.log("[PostApplyScreen] update gathering pressed", {
+        routePostId: postId,
+        requestPostId: post.id,
+        postHostId: post.hostId,
+        currentUserId: userId,
+        isOwner,
+        status: post.status,
+        participantSummary: participants.reduce<Record<string, number>>(
+          (acc, participant) => ({
+            ...acc,
+            [participant.status]: (acc[participant.status] ?? 0) + 1,
+          }),
+          {},
+        ),
+      });
       await updateGathering(post.id, {
         hostId: userId,
         title: editTitle.trim() || undefined,
@@ -236,7 +255,7 @@ export default function PostApplyScreen({ postId }: PostApplyScreenProps) {
 
     Alert.alert(
       "모집글 부스트",
-      "25P를 사용해 24시간 동안 이 모집글을 목록 상단에 노출할까요?",
+      "30P를 사용해 24시간 동안 이 모집글을 목록 상단에 노출할까요?",
       [
         { text: "취소", style: "cancel" },
         {
@@ -294,30 +313,78 @@ export default function PostApplyScreen({ postId }: PostApplyScreenProps) {
         style: "destructive",
         onPress: async () => {
           if (!post) return;
-          if (userId === null) {
-            Alert.alert("삭제 실패", "로그인 정보를 확인할 수 없습니다.");
-            return;
-          }
           console.log("[PostApplyScreen] delete gathering pressed", {
             routePostId: postId,
             requestPostId: post.id,
             postHostId: post.hostId,
             currentUserId: userId,
-            requestBody: { hostId: userId },
             isOwner,
             status: post.status,
+            participantSummary: participants.reduce<Record<string, number>>(
+              (acc, participant) => ({
+                ...acc,
+                [participant.status]: (acc[participant.status] ?? 0) + 1,
+              }),
+              {},
+            ),
           });
           try {
-            await deleteGathering(post.id, { hostId: userId });
+            await deleteGathering(post.id);
             router.back();
           } catch (err) {
+            let latestPost: GatheringPostDetailResponse | null = null;
+            let latestParticipants: GatheringParticipant[] | null = null;
+
+            try {
+              latestPost = await getGatheringDetail(post.id);
+            } catch (detailError) {
+              console.log("[PostApplyScreen] delete diagnostic detail failed", {
+                requestPostId: post.id,
+                error: detailError,
+              });
+            }
+
+            try {
+              latestParticipants = await getGatheringParticipants(post.id);
+            } catch (participantError) {
+              console.log("[PostApplyScreen] delete diagnostic participants failed", {
+                requestPostId: post.id,
+                error: participantError,
+              });
+            }
+
             console.log("[PostApplyScreen] delete gathering failed", {
               routePostId: postId,
               requestPostId: post.id,
               postHostId: post.hostId,
               currentUserId: userId,
-              requestBody: { hostId: userId },
               isOwner,
+              status: post.status,
+              participantSummary: participants.reduce<Record<string, number>>(
+                (acc, participant) => ({
+                  ...acc,
+                  [participant.status]: (acc[participant.status] ?? 0) + 1,
+                }),
+                {},
+              ),
+              latestPost: latestPost
+                ? {
+                    id: latestPost.id,
+                    hostId: latestPost.hostId,
+                    status: latestPost.status,
+                    currentParticipants: latestPost.currentParticipants,
+                    maxParticipants: latestPost.maxParticipants,
+                  }
+                : null,
+              latestParticipantSummary: latestParticipants
+                ? latestParticipants.reduce<Record<string, number>>(
+                    (acc, participant) => ({
+                      ...acc,
+                      [participant.status]: (acc[participant.status] ?? 0) + 1,
+                    }),
+                    {},
+                  )
+                : null,
               error: err,
             });
             Alert.alert(
@@ -416,7 +483,19 @@ export default function PostApplyScreen({ postId }: PostApplyScreenProps) {
         ) : (
           <Pressable
             style={styles.profileCard}
-            onPress={() => setIsProfileModalVisible(true)}
+            onPress={async () => {
+              if (!post || isProfileLoading) return;
+              setIsProfileLoading(true);
+              try {
+                const profile = await getUserProfile(post.hostId);
+                setHostProfile(profile);
+              } catch {
+                // 프로필 로드 실패해도 모달은 열기 (기본 정보만 표시)
+              } finally {
+                setIsProfileLoading(false);
+              }
+              setIsProfileModalVisible(true);
+            }}
           >
             <Image
               source={
@@ -622,7 +701,7 @@ export default function PostApplyScreen({ postId }: PostApplyScreenProps) {
               <Text style={styles.boostDescription}>
                 {hasPostBeenBoosted
                   ? "이미 부스트를 사용한 모집글입니다"
-                  : "25P 사용 · 24시간 상단 노출"}
+                  : "30P 사용 · 24시간 상단 노출"}
               </Text>
             </View>
           </Pressable>
@@ -681,8 +760,11 @@ export default function PostApplyScreen({ postId }: PostApplyScreenProps) {
           visible={isProfileModalVisible}
           onClose={() => setIsProfileModalVisible(false)}
           data={{
-            name: post.hostName,
+            name: hostProfile?.name ?? post.hostName,
             profileImageUrl: post.hostProfileImageUrl,
+            department: hostProfile?.department,
+            studentId: hostProfile?.studentId,
+            mannerTemperature: hostProfile?.mannerTemperature,
             exerciseTypes: post.sportType ? [post.sportType] : undefined,
           }}
         />

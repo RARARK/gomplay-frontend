@@ -22,6 +22,7 @@ export type MatchItem = {
   partnerDepartment?: string;
   partnerStudentNumber?: string;
   location?: string;
+  scheduledDate?: string;
   scheduledTime?: string;
   scheduledEndAt?: string;
   matchedAt?: string;
@@ -74,7 +75,8 @@ export default function MatchStatusCard({
   const statusLabel = isCompleted ? "완료" : isInProgress ? "진행중" : "수락 대기";
 
   const location = isPost ? (item.location ?? "") : (item.location ?? "상의 후 결정");
-  const scheduledTime = isPost
+  const scheduledDateText = item.scheduledDate ?? "";
+  const scheduledDisplay = isPost
     ? (item.scheduledTime ?? "")
     : (item.scheduledTime ?? "상의 후 결정");
   const difficulty = isPost ? (item.difficulty ?? "") : (item.difficulty ?? "");
@@ -103,20 +105,15 @@ export default function MatchStatusCard({
         />
 
         <View style={styles.content}>
-          {/* 이름 · 학과 · 학번 */}
+          {/* 이름 · 날짜 */}
           <View style={styles.titleRow}>
             <View style={styles.nameBlock}>
               <Text style={styles.name} numberOfLines={1}>
                 {item.partnerName}
               </Text>
-              {item.partnerStudentNumber ? (
-                <Text style={styles.studentNumber} numberOfLines={1}>
-                  {item.partnerStudentNumber}
-                </Text>
-              ) : null}
-              {item.partnerDepartment ? (
-                <Text style={styles.department} numberOfLines={1}>
-                  {item.partnerDepartment}
+              {scheduledDateText ? (
+                <Text style={styles.scheduledDate} numberOfLines={1}>
+                  {scheduledDateText}
                 </Text>
               ) : null}
             </View>
@@ -161,11 +158,11 @@ export default function MatchStatusCard({
               </View>
             ) : null}
             <View style={styles.detailRow}>
-              {scheduledTime ? (
+              {scheduledDisplay ? (
                 <View style={styles.detailItem}>
                   <Ionicons name="time-outline" size={15} color="#413F46" />
                   <Text numberOfLines={1} style={styles.detailText}>
-                    {scheduledTime}
+                    {scheduledDisplay}
                   </Text>
                 </View>
               ) : null}
@@ -310,18 +307,11 @@ const styles = StyleSheet.create({
     color: "#070322",
     fontWeight: "800",
   },
-  studentNumber: {
+  scheduledDate: {
     flexShrink: 1,
     fontSize: 12,
     lineHeight: 16,
-    color: "#9CA3AF",
-    fontWeight: "600",
-  },
-  department: {
-    flexShrink: 1,
-    fontSize: 12,
-    lineHeight: 16,
-    color: "#6B7280",
+    color: "#4C5BE2",
     fontWeight: "700",
   },
   titleMeta: {

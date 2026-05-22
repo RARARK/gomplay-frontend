@@ -8,6 +8,7 @@ import HeroBanner from "@/components/matching/home/HeroBanner";
 import { homeBanners, matchedPartners } from "@/components/matching/home/homeMockData";
 import HomeStatusSection from "@/components/matching/home/HomeStatusSection";
 import MatchSection from "@/components/matching/home/MatchSection";
+import OpponentProfileModal from "@/components/matching/OpponentProfileModal";
 import WorkoutCompleteModal from "@/components/matching/WorkoutCompleteModal";
 
 import { Color } from "@/constants/locofyHomeStyles";
@@ -53,10 +54,9 @@ export default function HomePage() {
   const wsConnected = useMatchingStore((s) => s.wsConnected);
 
   const [isQuickMatchOn, setIsQuickMatchOn] = React.useState(storedMatching);
-  const [forceMatchedContent, setForceMatchedContent] = React.useState(false);
-  const [forceMatchedContentNew, setForceMatchedContentNew] = React.useState(false);
   const [isWorkoutCompleteTestVisible, setIsWorkoutCompleteTestVisible] =
     React.useState(false);
+  const [isProfileModalVisible, setIsProfileModalVisible] = React.useState(false);
   const [banners] = React.useState<Banner[]>(homeBanners);
   const [noMoreCandidates, setNoMoreCandidates] = React.useState(false);
   const [survey, setSurvey] = React.useState<Survey | null>(null);
@@ -111,12 +111,7 @@ export default function HomePage() {
     }, [setUserProfile]),
   );
 
-  const isMatched = forceMatchedContent;
-  const isMatchedNew = forceMatchedContentNew;
-
   const getHomeStatusVariant = (): HomeStatusVariant => {
-    if (isMatchedNew) return "MatchedNew";
-    if (isMatched) return "Matched";
     if (candidates.length > 0) return "Matched";
     if (isQuickMatchOn) return "Matching";
     if (hasTimetable === null) return "Loading";
@@ -298,20 +293,11 @@ export default function HomePage() {
         <View style={styles.testButtonRow}>
           <Pressable
             accessibilityRole="button"
-            style={styles.testButton}
-            onPress={() => setForceMatchedContent((value) => !value)}
+            style={[styles.testButton, styles.testButtonProfile]}
+            onPress={() => setIsProfileModalVisible(true)}
           >
-            <Text style={styles.testButtonText}>
-              {forceMatchedContent ? "기존 끄기" : "기존 카드"}
-            </Text>
-          </Pressable>
-          <Pressable
-            accessibilityRole="button"
-            style={[styles.testButton, styles.testButtonNew]}
-            onPress={() => setForceMatchedContentNew((value) => !value)}
-          >
-            <Text style={[styles.testButtonText, styles.testButtonNewText]}>
-              {forceMatchedContentNew ? "새 카드 끄기" : "새 카드 (New)"}
+            <Text style={[styles.testButtonText, styles.testButtonProfileText]}>
+              상대 프로필
             </Text>
           </Pressable>
           <Pressable
@@ -364,6 +350,23 @@ export default function HomePage() {
         onReviewPress={() => {
           setIsWorkoutCompleteTestVisible(false);
           router.push(reviewTestRoute as any);
+        }}
+      />
+      <OpponentProfileModal
+        visible={isProfileModalVisible}
+        onClose={() => setIsProfileModalVisible(false)}
+        data={{
+          name: "김단국",
+          department: "컴퓨터공학과",
+          studentId: "20학번",
+          mannerTemperature: 36.5,
+          exerciseTypes: ["풋살", "헬스", "러닝", "배드민턴", "농구"],
+          partnerStyle: "독립형",
+          exerciseIntensity: "꾸준형",
+          exerciseReason: "건강관리",
+          isVerified: true,
+          matchCount: 12,
+          noShowCount: 0,
         }}
       />
     </SafeAreaView>
@@ -436,6 +439,12 @@ const styles = StyleSheet.create({
   },
   testButtonReportText: {
     color: "#25258F",
+  },
+  testButtonProfile: {
+    borderColor: "#0891B2",
+  },
+  testButtonProfileText: {
+    color: "#0891B2",
   },
   sectionTitle: {
     paddingHorizontal: 20,

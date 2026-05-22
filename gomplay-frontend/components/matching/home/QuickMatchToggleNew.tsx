@@ -215,7 +215,7 @@ const QuickMatchToggleNew = React.memo(function QuickMatchToggleNew({ state, isO
             </View>
             <Text style={styles.noticeTitle}>퀵 매치를 시작할까요?</Text>
             <Text style={styles.noticeDescription}>
-              퀵 매치를 시작하면 50포인트가 차감돼요.
+              퀵 매치를 시작하면 10포인트가 차감돼요.
             </Text>
 
             <Pressable

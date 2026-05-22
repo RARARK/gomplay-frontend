@@ -1,12 +1,12 @@
 import { isAxiosError } from "axios";
 
 import apiClient, { ApiError } from "@/lib/api/client";
+import { useAuthStore } from "@/stores/auth/authStore";
 import { POST_STATUS } from "@/types/domain/post";
 import type {
   AcceptParticipantResponse,
   CreateGatheringRequest,
   CreateGatheringResponse,
-  DeleteGatheringRequest,
   GatheringHistoryItem,
   GatheringListQuery,
   GatheringListResponse,
@@ -22,6 +22,52 @@ import type {
 type BackendErrorBody = {
   code?: number;
   message?: string;
+};
+
+const decodeJwtPayload = (token: string | null): Record<string, unknown> | null => {
+  if (!token) return null;
+
+  const payload = token.split(".")[1];
+  if (!payload) return null;
+
+  try {
+    const normalized = payload.replace(/-/g, "+").replace(/_/g, "/");
+    const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, "=");
+    const decoded = globalThis.atob(padded);
+
+    try {
+      return JSON.parse(
+        decodeURIComponent(
+          decoded
+            .split("")
+            .map((char) => `%${char.charCodeAt(0).toString(16).padStart(2, "0")}`)
+            .join(""),
+        ),
+      ) as Record<string, unknown>;
+    } catch {
+      return JSON.parse(decoded) as Record<string, unknown>;
+    }
+  } catch {
+    return null;
+  }
+};
+
+const getAuthDebugSnapshot = () => {
+  const { userId, isLoggedIn, accessToken } = useAuthStore.getState();
+  const payload = decodeJwtPayload(accessToken);
+
+  return {
+    storeUserId: userId,
+    isLoggedIn,
+    hasAccessToken: Boolean(accessToken),
+    tokenLength: accessToken?.length ?? 0,
+    tokenPreview: accessToken
+      ? `${accessToken.slice(0, 12)}...${accessToken.slice(-8)}`
+      : null,
+    jwtSub: payload?.sub,
+    jwtUserId: payload?.userId ?? payload?.id ?? payload?.memberId,
+    jwtExp: payload?.exp,
+  };
 };
 
 const getBackendErrorBody = (value: unknown): BackendErrorBody | null => {
@@ -173,16 +219,33 @@ export async function updateGathering(
   body: UpdateGatheringRequest,
 ): Promise<UpdateGatheringResponse> {
   try {
+    console.log("[gatheringService] update gathering request", {
+      postId,
+      body,
+      auth: getAuthDebugSnapshot(),
+    });
     const res = await apiClient.patch<UpdateGatheringResponse>(
       `/api/gathering/${postId}`,
       body,
     );
+    console.log("[gatheringService] update gathering success", {
+      postId,
+      status: res.status,
+      responseData: res.data,
+    });
     return res.data;
   } catch (error) {
     if (error instanceof ApiError) throw error;
 
     if (isAxiosError(error)) {
       const errorBody = getBackendErrorBody(error.response?.data);
+      console.log("[gatheringService] update gathering error", {
+        postId,
+        body,
+        auth: getAuthDebugSnapshot(),
+        status: error.response?.status,
+        responseData: error.response?.data,
+      });
 
       if (errorBody?.code === 4000) {
         throw new ApiError("데이터베이스 연결에 실패하였습니다.");
@@ -501,15 +564,22 @@ export async function getGatheringHistory(): Promise<GatheringHistoryItem[]> {
   }
 }
 
-export async function deleteGathering(
-  postId: number,
-  body?: DeleteGatheringRequest,
-): Promise<void> {
+export async function deleteGathering(postId: number): Promise<string> {
+  const endpoint = `/api/gathering/${postId}`;
   try {
-    await apiClient.delete(
-      `/api/gathering/${postId}`,
-      body ? { data: body } : undefined,
-    );
+    console.log("[gatheringService] delete gathering request", {
+      postId,
+      method: "DELETE",
+      endpoint,
+      auth: getAuthDebugSnapshot(),
+    });
+    const res = await apiClient.delete<string>(endpoint);
+    console.log("[gatheringService] delete gathering success", {
+      postId,
+      status: res.status,
+      responseData: res.data,
+    });
+    return res.data;
   } catch (error) {
     if (error instanceof ApiError) throw error;
 
@@ -517,9 +587,15 @@ export async function deleteGathering(
       const errorBody = getBackendErrorBody(error.response?.data);
       console.log("[gatheringService] delete gathering error", {
         postId,
-        requestBody: body,
+        method: "DELETE",
+        endpoint,
+        auth: getAuthDebugSnapshot(),
         status: error.response?.status,
+        responseHeaders: error.response?.headers,
         responseData: error.response?.data,
+        requestHeaders: error.config?.headers,
+        requestUrl: error.config?.url,
+        requestBaseUrl: error.config?.baseURL,
       });
 
       if (errorBody?.code === 4000) {

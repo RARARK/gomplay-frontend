@@ -13,6 +13,27 @@ type ProfileApiResponse = ApiResponse<UserProfile> | UserProfile;
 const unwrapProfileResponse = (value: ProfileApiResponse): UserProfile =>
   "data" in value ? (value as ApiResponse<UserProfile>).data : (value as UserProfile);
 
+export type OpponentProfile = {
+  id: number;
+  name: string;
+  department: string;
+  studentId: string;
+  mannerTemperature: number;
+};
+
+export async function getUserProfile(userProfileId: number): Promise<OpponentProfile> {
+  try {
+    const res = await apiClient.get<OpponentProfile>(`/api/user/${userProfileId}/profile`);
+    return res.data;
+  } catch (error) {
+    if (error instanceof ApiError) throw error;
+    if (isAxiosError(error) && error.response?.status === 400) {
+      throw new ApiError("유저를 찾을 수 없습니다.");
+    }
+    throw new ApiError("프로필을 불러올 수 없습니다.");
+  }
+}
+
 export async function getMyProfile(): Promise<UserProfile> {
   try {
     const res = await apiClient.get<ProfileApiResponse>("/api/user/me/profile");
