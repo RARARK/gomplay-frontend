@@ -33,7 +33,7 @@ export type WsMatchAcceptedEvent = {
   type: "MATCH_ACCEPTED";
   data: {
     matchRequestId: number;
-    roomId: number;
+    chatRoomId: number;
   };
 };
 

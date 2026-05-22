@@ -4,10 +4,11 @@ import apiClient, { ApiError } from "@/lib/api/client";
 import {
   MATCH_STATUS,
   type AcceptMatchRequestResponse,
+  type ActiveMatch,
+  type ActiveMatchesResponse,
   type CompleteMatchContext,
   type CompleteMatchInput,
   type CompleteMatchResult,
-  type Match,
   type MatchCandidate,
   type MatchRequestBody,
   type MatchRequestResponse,
@@ -199,20 +200,41 @@ export async function passCandidate(
   }
 }
 
-export async function getActiveMatches(): Promise<Match[]> {
-  return [
-    {
-      id: 55,
-      hostUserId: 1,
-      guestUserId: 2,
-      sourceType: "APPLICATION",
-      sourceId: 101,
-      status: "IN_PROGRESS",
-      scheduledStartAt: "2026-04-10T18:00:00",
-      scheduledEndAt: "2026-04-10T19:30:00",
-      createdAt: "2026-04-10T17:00:00",
-    },
-  ];
+export async function getActiveMatches(): Promise<ActiveMatch[]> {
+  try {
+    const res = await apiClient.get<ActiveMatchesResponse | ActiveMatch[]>(
+      "/api/match/active",
+      {
+        headers: { "Cache-Control": "no-cache" },
+      },
+    );
+
+    return Array.isArray(res.data) ? res.data : res.data.data;
+  } catch (error) {
+    if (error instanceof ApiError) throw error;
+
+    if (isAxiosError(error)) {
+      const errorBody = getBackendErrorBody(error.response?.data);
+
+      if (errorBody?.code === 4000) {
+        throw new ApiError("?곗씠?곕쿋?댁뒪 ?곌껐???ㅽ뙣?섏??듬땲??");
+      }
+
+      if (error.response?.status === 400) {
+        throw new ApiError(errorBody?.message ?? "?섎せ???붿껌?낅땲??");
+      }
+
+      if (error.response?.status === 500) {
+        throw new ApiError("?쒕쾭 ?대? ?ㅻ쪟", "Internal server error");
+      }
+
+      if (errorBody?.message) {
+        throw new ApiError(errorBody.message);
+      }
+    }
+
+    throw new ApiError("매칭 현황을 불러오지 못했습니다.");
+  }
 }
 
 export async function completeMatch(

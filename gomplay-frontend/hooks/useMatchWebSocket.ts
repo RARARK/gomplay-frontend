@@ -58,7 +58,7 @@ export function useMatchWebSocket(): void {
           store.setPendingMatchRequest(event.data);
           break;
         case "MATCH_ACCEPTED":
-          store.resolveMatchRequest(event.data.matchRequestId, true, event.data.roomId);
+          store.resolveMatchRequest(event.data.matchRequestId, true, event.data.chatRoomId);
           break;
         case "MATCH_REJECTED":
           store.resolveMatchRequest(event.data, false);

@@ -1,8 +1,10 @@
 import { router } from "expo-router";
 import React from "react";
 import {
+  ActivityIndicator,
   Alert,
   Pressable,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
@@ -25,7 +27,12 @@ import {
   getGatheringParticipants,
   rejectParticipant,
 } from "@/services/gathering/gatheringService";
+import { getActiveMatches } from "@/services/matching/matchingService";
+import { getMyProfile } from "@/services/user/userService";
+import { useUserStore } from "@/stores/user/userStore";
 import type { GatheringParticipant } from "@/types/domain/gathering";
+import type { ActiveMatch } from "@/types/domain/match";
+import type { UserProfile } from "@/types/domain/user";
 
 const SOURCE_FILTERS = ["일반 매칭", "퀵 매치"] as const;
 const STATUS_FILTERS = ["진행중", "수락 대기"] as const;
@@ -38,107 +45,23 @@ type MatchStatusScreenProps = {
   initialApplicantsByMatch?: Record<string, Applicant[]>;
 };
 
-const MOCK_MATCHES: MatchItem[] = [
-  {
-    id: "1",
-    sourceType: "POST",
-    status: "IN_PROGRESS",
-    role: "GUEST",
-    partnerName: "김단국",
-    partnerDepartment: "컴퓨터공학과",
-    partnerStudentNumber: "20학번",
-    location: "체육관",
-    scheduledTime: "19:00 ~ 21:00",
-    scheduledEndAt: new Date(Date.now() - 10 * 60 * 1000).toISOString(),
-    difficulty: "초보자",
-    exerciseType: "풋살",
-    chatRoomId: 1,
-    partnerIsVerified: true,
-    partnerMannerTemperature: 92,
-    partnerMatchCount: 18,
-    partnerNoShowCount: 0,
-    partnerStyle: "독립형",
-    partnerExerciseIntensity: "꾸준형",
-    partnerExerciseReason: "건강관리",
-    partnerExerciseTypes: ["풋살", "헬스", "러닝", "배드민턴", "농구"],
-  },
-  {
-    id: "2",
-    sourceType: "PARTNER",
-    status: "IN_PROGRESS",
-    role: "GUEST",
-    partnerName: "김단국",
-    partnerDepartment: "컴퓨터공학과",
-    partnerStudentNumber: "21학번",
-    matchedAt: new Date(Date.now() - 90 * 60 * 1000).toISOString(),
-    chatRoomId: 2,
-    partnerIsVerified: false,
-    partnerMannerTemperature: 65,
-    partnerMatchCount: 7,
-    partnerNoShowCount: 1,
-    partnerStyle: "소통형",
-    partnerExerciseIntensity: "강도형",
-    partnerExerciseReason: "다이어트",
-    partnerExerciseTypes: ["헬스", "러닝"],
-  },
-  {
-    id: "3",
-    sourceType: "POST",
-    status: "PENDING",
-    role: "GUEST",
-    partnerName: "김단국",
-    partnerDepartment: "컴퓨터공학과",
-    partnerStudentNumber: "20학번",
-    location: "체육관",
-    scheduledTime: "19:00 ~ 21:00",
-    difficulty: "초보자",
-    exerciseType: "풋살",
-  },
-  {
-    id: "4",
-    sourceType: "POST",
-    status: "PENDING",
-    role: "HOST",
-    partnerName: "김단국",
-    partnerDepartment: "컴퓨터공학과",
-    partnerStudentNumber: "22학번",
-    location: "체육관",
-    scheduledTime: "19:00 ~ 21:00",
-    difficulty: "초보자",
-    exerciseType: "풋살",
-  },
-];
+const normalizeMatchType = (type: ActiveMatch["type"]): MatchItem["sourceType"] =>
+  String(type).toUpperCase() === "GATHERING" ? "POST" : "PARTNER";
 
-const MOCK_APPLICANTS: Record<string, Applicant[]> = {
-  "4": [
-    {
-      id: "a1",
-      name: "이서윤",
-      department: "체육교육과",
-      studentNumber: "20230042",
-      tags: ["아침형", "기초체력"],
-      trustScore: 42.5,
-      status: "pending",
-    },
-    {
-      id: "a2",
-      name: "박지훈",
-      department: "소프트웨어학과",
-      studentNumber: "20220198",
-      tags: ["저녁형", "다이어트"],
-      trustScore: 36.0,
-      status: "pending",
-    },
-    {
-      id: "a3",
-      name: "최민준",
-      department: "스포츠과학과",
-      studentNumber: "20210355",
-      tags: ["주말형", "근력"],
-      trustScore: 58.0,
-      status: "pending",
-    },
-  ],
+const normalizeMatchStatus = (
+  status: ActiveMatch["status"],
+): MatchItem["status"] | null => {
+  const normalized = String(status).toUpperCase();
+  if (normalized === "PENDING") return "PENDING";
+  if (normalized === "IN_PROGRESS") return "IN_PROGRESS";
+  return null;
+};
+
+const normalizeMatchRole = (
+  role: ActiveMatch["role"],
+): MatchItem["role"] => {
+  if (!role) return null;
+  return String(role).toUpperCase() === "HOST" ? "HOST" : "GUEST";
 };
 
 const participantStatusToApplicantStatus = (
@@ -170,10 +93,112 @@ const mapParticipantToApplicant = (
   status: participantStatusToApplicantStatus(participant.status),
 });
 
+const formatTimeRange = (
+  startAt?: string | null,
+  endAt?: string | null,
+): string | undefined => {
+  if (!startAt) return undefined;
+
+  const formatTime = (value: string) => {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return null;
+    return date.toLocaleTimeString("ko-KR", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    });
+  };
+
+  const start = formatTime(startAt);
+  const end = endAt ? formatTime(endAt) : null;
+
+  if (!start) return undefined;
+  return end ? `${start} ~ ${end}` : start;
+};
+
+const formatStudentNumber = (
+  value: ActiveMatch["partnerStudentNumber"] | ActiveMatch["hostStudentNumber"],
+): string | undefined => {
+  if (value === null || value === undefined) return undefined;
+  return String(value);
+};
+
+const isMatchItem = (item: MatchItem | null): item is MatchItem => item !== null;
+
+const getDisplayValue = <T,>(...values: (T | null | undefined | "")[]): T | undefined => {
+  const value = values.find((item) => item !== null && item !== undefined && item !== "");
+  return value as T | undefined;
+};
+
+const mapActiveMatchToItem = (
+  match: ActiveMatch,
+  currentUserProfile?: UserProfile | null,
+): MatchItem | null => {
+  const sourceType = normalizeMatchType(match.type);
+  const status = normalizeMatchStatus(match.status);
+  if (!status) return null;
+  const isGathering = sourceType === "POST";
+  const role = normalizeMatchRole(match.role);
+  const shouldUseCurrentUserAsHostFallback = isGathering && role === "HOST";
+  const displayName = isGathering
+    ? getDisplayValue(
+        match.hostName,
+        match.partnerName,
+        shouldUseCurrentUserAsHostFallback ? currentUserProfile?.name : undefined,
+      )
+    : match.partnerName;
+  const displayProfileImageUrl = isGathering
+    ? getDisplayValue(
+        match.hostProfileImageUrl,
+        match.partnerProfileImageUrl,
+        shouldUseCurrentUserAsHostFallback ? currentUserProfile?.profileImageUrl : undefined,
+      )
+    : match.partnerProfileImageUrl;
+  const displayDepartment = isGathering
+    ? getDisplayValue(
+        match.hostDepartment,
+        match.partnerDepartment,
+        shouldUseCurrentUserAsHostFallback ? currentUserProfile?.department : undefined,
+      )
+    : match.partnerDepartment;
+  const displayStudentNumber = isGathering
+    ? getDisplayValue(
+        match.hostStudentNumber,
+        match.partnerStudentNumber,
+        shouldUseCurrentUserAsHostFallback ? currentUserProfile?.studentId : undefined,
+      )
+    : match.partnerStudentNumber;
+
+  return {
+    id: String(match.id),
+    sourceType,
+    status,
+    role,
+    canComplete: match.canComplete,
+    reviewed: match.reviewed,
+    partnerName: displayName ?? "",
+    partnerProfileImageUrl: displayProfileImageUrl,
+    partnerDepartment: displayDepartment ?? undefined,
+    partnerStudentNumber: formatStudentNumber(displayStudentNumber),
+    location: match.location ?? undefined,
+    scheduledTime:
+      match.scheduledTime ??
+      formatTimeRange(match.scheduledAt, match.scheduledEndAt),
+    scheduledEndAt: match.scheduledEndAt ?? undefined,
+    matchedAt: match.matchedAt ?? undefined,
+    difficulty: match.difficulty ?? undefined,
+    exerciseType: match.sportType ?? undefined,
+    applicantCount: match.pendingCount,
+    chatRoomId: match.chatRoomId ?? undefined,
+  };
+};
+
 export default function MatchStatusScreen({
-  initialMatches = MOCK_MATCHES,
-  initialApplicantsByMatch = MOCK_APPLICANTS,
+  initialMatches,
+  initialApplicantsByMatch = {},
 }: MatchStatusScreenProps) {
+  const currentUserProfile = useUserStore((state) => state.profile);
+  const setCurrentUserProfile = useUserStore((state) => state.setProfile);
   const [sourceFilter, setSourceFilter] = React.useState<SourceFilter>(null);
   const [statusFilter, setStatusFilter] = React.useState<StatusFilter>(null);
   const [panelMatchId, setPanelMatchId] = React.useState<string | null>(null);
@@ -181,7 +206,12 @@ export default function MatchStatusScreen({
     data: OpponentProfileData;
     item: MatchItem;
   } | null>(null);
-  const [matches, setMatches] = React.useState<MatchItem[]>(initialMatches);
+  const [matches, setMatches] = React.useState<MatchItem[]>(
+    initialMatches ?? [],
+  );
+  const [matchesLoading, setMatchesLoading] = React.useState(!initialMatches);
+  const [matchesRefreshing, setMatchesRefreshing] = React.useState(false);
+  const [matchesError, setMatchesError] = React.useState<string | null>(null);
   const [completedGatheringId, setCompletedGatheringId] = React.useState<
     string | null
   >(null);
@@ -193,6 +223,59 @@ export default function MatchStatusScreen({
     null,
   );
 
+  const loadActiveMatches = React.useCallback(
+    async (refreshing = false) => {
+      if (refreshing) {
+        setMatchesRefreshing(true);
+      } else {
+        setMatchesLoading(true);
+      }
+      setMatchesError(null);
+
+      try {
+        const activeMatches = await getActiveMatches();
+        setMatches(
+          activeMatches
+            .map((match) => mapActiveMatchToItem(match, currentUserProfile))
+            .filter(isMatchItem),
+        );
+      } catch (error) {
+        setMatchesError(
+          error instanceof Error
+            ? error.message
+            : "Failed to load active matches.",
+        );
+      } finally {
+        if (refreshing) {
+          setMatchesRefreshing(false);
+        } else {
+          setMatchesLoading(false);
+        }
+      }
+    },
+    [currentUserProfile],
+  );
+
+  React.useEffect(() => {
+    if (currentUserProfile) return;
+
+    let isMounted = true;
+    getMyProfile()
+      .then((profile) => {
+        if (isMounted) setCurrentUserProfile(profile);
+      })
+      .catch(() => {});
+
+    return () => {
+      isMounted = false;
+    };
+  }, [currentUserProfile, setCurrentUserProfile]);
+
+  React.useEffect(() => {
+    if (initialMatches) return;
+    void loadActiveMatches();
+  }, [initialMatches, loadActiveMatches]);
+
   const matchesWithApplicantCount = React.useMemo(
     () =>
       matches.map((match) =>
@@ -202,7 +285,7 @@ export default function MatchStatusScreen({
               applicantCount:
                 applicantsByMatch[match.id]?.filter(
                   (a) => a.status === "pending",
-                ).length ?? 0,
+                ).length ?? match.applicantCount ?? 0,
             }
           : match,
       ),
@@ -212,6 +295,7 @@ export default function MatchStatusScreen({
   const filtered = React.useMemo(
     () =>
       matchesWithApplicantCount.filter((m) => {
+        if (m.status !== "IN_PROGRESS" && m.status !== "PENDING") return false;
         if (m.sourceType === "PARTNER" && m.status === "PENDING") return false;
         if (sourceFilter === "일반 매칭" && m.sourceType !== "POST") return false;
         if (sourceFilter === "퀵 매치" && m.sourceType !== "PARTNER") return false;
@@ -286,10 +370,8 @@ export default function MatchStatusScreen({
       await acceptParticipant(Number(panelMatchId), Number(applicantId));
       setApplicantsByMatch((prev) => ({
         ...prev,
-        [panelMatchId]: (prev[panelMatchId] ?? []).map((applicant) =>
-          applicant.id === applicantId
-            ? { ...applicant, status: "accepted" }
-            : applicant,
+        [panelMatchId]: (prev[panelMatchId] ?? []).filter(
+          (applicant) => applicant.id !== applicantId,
         ),
       }));
     } catch (error) {
@@ -306,10 +388,8 @@ export default function MatchStatusScreen({
       await rejectParticipant(Number(panelMatchId), Number(applicantId));
       setApplicantsByMatch((prev) => ({
         ...prev,
-        [panelMatchId]: (prev[panelMatchId] ?? []).map((applicant) =>
-          applicant.id === applicantId
-            ? { ...applicant, status: "rejected" }
-            : applicant,
+        [panelMatchId]: (prev[panelMatchId] ?? []).filter(
+          (applicant) => applicant.id !== applicantId,
         ),
       }));
     } catch (error) {
@@ -325,11 +405,7 @@ export default function MatchStatusScreen({
       if (item.sourceType === "POST") {
         await completeGathering(Number(item.id));
       }
-      setMatches((prev) =>
-        prev.map((match) =>
-          match.id === item.id ? { ...match, status: "COMPLETED" } : match,
-        ),
-      );
+      setMatches((prev) => prev.filter((match) => match.id !== item.id));
       setCompletedGatheringId(item.id);
     } catch (error) {
       Alert.alert(
@@ -360,6 +436,12 @@ export default function MatchStatusScreen({
         style={styles.scroll}
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={matchesRefreshing}
+            onRefresh={() => void loadActiveMatches(true)}
+          />
+        }
       >
         {/* 필터 */}
         <ScrollView
@@ -438,7 +520,23 @@ export default function MatchStatusScreen({
         </ScrollView>
 
         {/* 카드 목록 */}
-        {filtered.length === 0 ? (
+        {matchesLoading ? (
+          <View style={styles.empty}>
+            <ActivityIndicator color="#4C5BE2" />
+            <Text style={styles.emptyText}>매칭 현황을 불러오고 있어요.</Text>
+          </View>
+        ) : matchesError ? (
+          <View style={styles.empty}>
+            <Text style={styles.emptyText}>{matchesError}</Text>
+            <Pressable
+              accessibilityRole="button"
+              style={[styles.retryButton]}
+              onPress={() => void loadActiveMatches()}
+            >
+              <Text style={styles.retryButtonText}>다시 시도</Text>
+            </Pressable>
+          </View>
+        ) : filtered.length === 0 ? (
           <View style={styles.empty}>
             <Text style={styles.emptyText}>해당하는 매칭이 없어요.</Text>
           </View>
@@ -458,7 +556,11 @@ export default function MatchStatusScreen({
                     ? () => router.push(`/chat/${item.chatRoomId}` as any)
                     : undefined
                 }
-                onViewApplicants={() => handleViewApplicants(item.id)}
+                onViewApplicants={
+                  item.sourceType === "POST" && item.role === "HOST"
+                    ? () => handleViewApplicants(item.id)
+                    : undefined
+                }
                 onViewProfile={() => handleViewProfile(item)}
               />
             ))}
@@ -619,11 +721,26 @@ const styles = StyleSheet.create({
   empty: {
     alignItems: "center",
     paddingTop: 60,
+    gap: 12,
   },
   emptyText: {
     fontSize: 15,
     lineHeight: 22,
     color: "#9CA3AF",
     fontWeight: "600",
+  },
+  retryButton: {
+    minHeight: 36,
+    borderRadius: 8,
+    backgroundColor: "#4C5BE2",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 16,
+  },
+  retryButtonText: {
+    fontSize: 13,
+    lineHeight: 18,
+    color: "#FFFFFF",
+    fontWeight: "800",
   },
 });

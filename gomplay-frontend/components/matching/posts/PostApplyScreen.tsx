@@ -26,18 +26,16 @@ import {
 import CreatePostDetailCard from "@/components/matching/create-post/CreatePostDetailCard";
 import CreatePostLocationCard from "@/components/matching/create-post/CreatePostLocationCard";
 import CreatePostTagSelector from "@/components/matching/create-post/CreatePostTagSelector";
-import ApplicantPanel from "@/components/matching/status/ApplicantPanel";
-import type { Applicant } from "@/components/matching/status/ApplicantPanel";
-import OpponentProfileModal from "@/components/matching/OpponentProfileModal";
-import WorkoutCompleteModal from "@/components/matching/WorkoutCompleteModal";
 import {
   formatCreatePostDayLabel,
   formatCreatePostTimeRangeLabel,
 } from "@/components/matching/create-post/createPostUtils";
+import ApplicantPanel from "@/components/matching/status/ApplicantPanel";
+import type { Applicant } from "@/components/matching/status/ApplicantPanel";
+import OpponentProfileModal from "@/components/matching/OpponentProfileModal";
 import {
   acceptParticipant,
   boostGathering,
-  completeGathering,
   deleteGathering,
   getGatheringDetail,
   getGatheringParticipants,
@@ -78,6 +76,7 @@ export default function PostApplyScreen({ postId }: PostApplyScreenProps) {
   const insets = useSafeAreaInsets();
   const userId = useAuthStore((s) => s.userId);
   const getBoostExpiresAt = useBoostStore((s) => s.getBoostExpiresAt);
+  const hasBoosted = useBoostStore((s) => s.hasBoosted);
   const markBoosted = useBoostStore((s) => s.markBoosted);
 
   const [post, setPost] = React.useState<GatheringPostDetailResponse | null>(null);
@@ -85,9 +84,6 @@ export default function PostApplyScreen({ postId }: PostApplyScreenProps) {
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [isSaving, setIsSaving] = React.useState(false);
   const [isBoosting, setIsBoosting] = React.useState(false);
-  const [isCompleting, setIsCompleting] = React.useState(false);
-  const [isCompletePromptVisible, setIsCompletePromptVisible] =
-    React.useState(false);
   const [participants, setParticipants] = React.useState<GatheringParticipant[]>([]);
   const [isApplicantPanelOpen, setIsApplicantPanelOpen] = React.useState(false);
   const [isProfileModalVisible, setIsProfileModalVisible] = React.useState(false);
@@ -105,6 +101,13 @@ export default function PostApplyScreen({ postId }: PostApplyScreenProps) {
       try {
         const nextPost = await getGatheringDetail(postId);
         if (isMounted) {
+          console.log("[PostApplyScreen] gathering detail loaded", {
+            requestedPostId: postId,
+            responsePostId: nextPost.id,
+            responseHostId: nextPost.hostId,
+            currentUserId: userId,
+            status: nextPost.status,
+          });
           setPost(nextPost);
           setEditTitle(nextPost.title ?? "");
           setEditTags(parseTags(nextPost.tags));
@@ -122,7 +125,7 @@ export default function PostApplyScreen({ postId }: PostApplyScreenProps) {
     return () => {
       isMounted = false;
     };
-  }, [postId]);
+  }, [postId, userId]);
 
   const isOwner = userId !== null && post?.hostId === userId;
   const postIdForParticipants = post?.id;
@@ -138,19 +141,17 @@ export default function PostApplyScreen({ postId }: PostApplyScreenProps) {
     return () => { isMounted = false; };
   }, [isOwner, postIdForParticipants]);
   const localBoostExpiresAt = post ? getBoostExpiresAt(post.id) : null;
+  const hasPostBeenBoosted = post
+    ? Boolean(post.isBoosted || post.boostExpiredAt || hasBoosted(post.id))
+    : false;
   const isPostBoosted =
     Boolean(post?.isBoosted || localBoostExpiresAt) &&
     (!(post?.boostExpiredAt ?? localBoostExpiresAt) ||
       new Date(post?.boostExpiredAt ?? localBoostExpiresAt ?? "").getTime() >
         Date.now());
   const canEdit = isOwner && post?.status === POST_STATUS.OPEN;
-  const canBoost = canEdit && !isPostBoosted;
+  const canBoost = canEdit && !hasPostBeenBoosted;
   const canApply = !isOwner && post?.status === POST_STATUS.OPEN;
-  const hasAcceptedParticipant = participants.some((p) => p.status === "ACCEPTED");
-  const canComplete =
-    post?.status !== POST_STATUS.CANCELLED &&
-    post?.status !== POST_STATUS.COMPLETED &&
-    (isOwner ? hasAcceptedParticipant : !canApply);
 
   const toApplicants = (list: GatheringParticipant[]): Applicant[] =>
     list.map((p) => ({
@@ -293,10 +294,32 @@ export default function PostApplyScreen({ postId }: PostApplyScreenProps) {
         style: "destructive",
         onPress: async () => {
           if (!post) return;
+          if (userId === null) {
+            Alert.alert("삭제 실패", "로그인 정보를 확인할 수 없습니다.");
+            return;
+          }
+          console.log("[PostApplyScreen] delete gathering pressed", {
+            routePostId: postId,
+            requestPostId: post.id,
+            postHostId: post.hostId,
+            currentUserId: userId,
+            requestBody: { hostId: userId },
+            isOwner,
+            status: post.status,
+          });
           try {
-            await deleteGathering(post.id, { hostId: userId ?? 0 });
+            await deleteGathering(post.id, { hostId: userId });
             router.back();
           } catch (err) {
+            console.log("[PostApplyScreen] delete gathering failed", {
+              routePostId: postId,
+              requestPostId: post.id,
+              postHostId: post.hostId,
+              currentUserId: userId,
+              requestBody: { hostId: userId },
+              isOwner,
+              error: err,
+            });
             Alert.alert(
               "삭제 실패",
               err instanceof Error ? err.message : "다시 시도해주세요.",
@@ -325,27 +348,6 @@ export default function PostApplyScreen({ postId }: PostApplyScreenProps) {
       setIsSubmitting(false);
     }
   };
-
-  const handleComplete = async () => {
-    if (!post || isCompleting) return;
-
-    setIsCompleting(true);
-    try {
-      await completeGathering(post.id);
-      setPost((prev) =>
-        prev ? { ...prev, status: POST_STATUS.COMPLETED } : prev,
-      );
-      setIsCompletePromptVisible(true);
-    } catch (error) {
-      Alert.alert(
-        "완료 처리 실패",
-        error instanceof Error ? error.message : "다시 시도해주세요.",
-      );
-    } finally {
-      setIsCompleting(false);
-    }
-  };
-
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
@@ -609,80 +611,43 @@ export default function PostApplyScreen({ postId }: PostApplyScreenProps) {
                   (!canBoost || isBoosting) && styles.boostTitleDisabled,
                 ]}
               >
-                {isPostBoosted
-                  ? "부스트 적용 중"
+                {hasPostBeenBoosted
+                  ? isPostBoosted
+                    ? "부스트 적용 중"
+                    : "부스트 사용 완료"
                   : isBoosting
                     ? "부스트 처리 중..."
                     : "모집글 부스트"}
               </Text>
               <Text style={styles.boostDescription}>
-                25P 사용 · 24시간 상단 노출
+                {hasPostBeenBoosted
+                  ? "이미 부스트를 사용한 모집글입니다"
+                  : "25P 사용 · 24시간 상단 노출"}
               </Text>
             </View>
           </Pressable>
         ) : null}
 
         {canEdit ? (
-          <>
-            <View style={styles.ownerButtonRow}>
-              <Pressable
-                accessibilityRole="button"
-                onPress={handleSave}
-                disabled={isSaving}
-                style={[styles.editButton, isSaving && styles.buttonDisabled]}
-              >
-                <Text style={styles.editButtonText}>
-                  {isSaving ? "저장 중..." : "수정하기"}
-                </Text>
-              </Pressable>
-              <Pressable
-                accessibilityRole="button"
-                onPress={handleDelete}
-                style={styles.deleteButton}
-              >
-                <Text style={styles.deleteButtonText}>매칭 취소</Text>
-              </Pressable>
-            </View>
-            {canComplete ? (
-              <Pressable
-                accessibilityRole="button"
-                disabled={isCompleting}
-                onPress={handleComplete}
-                style={[
-                  styles.completeButton,
-                  isCompleting && styles.buttonDisabled,
-                ]}
-              >
-                <Ionicons
-                  name="checkmark-circle-outline"
-                  size={20}
-                  color="#FFFFFF"
-                />
-                <Text style={styles.completeButtonText}>
-                  {isCompleting ? "완료 처리 중..." : "운동 완료하기"}
-                </Text>
-              </Pressable>
-            ) : null}
-          </>
-        ) : canComplete ? (
-          <Pressable
-            accessibilityRole="button"
-            disabled={isCompleting}
-            onPress={handleComplete}
-            style={[
-              styles.completeButton,
-              isCompleting && styles.buttonDisabled,
-            ]}
-          >
-            <Ionicons
-              name="checkmark-circle-outline"
-              size={20}
-              color="#FFFFFF"
-            />
-            <Text style={styles.completeButtonText}>
-              {isCompleting ? "완료 처리 중..." : "운동 완료하기"}
-            </Text>
-          </Pressable>
+          <View style={styles.ownerButtonRow}>
+            <Pressable
+              accessibilityRole="button"
+              onPress={handleSave}
+              disabled={isSaving}
+              style={[styles.editButton, isSaving && styles.buttonDisabled]}
+            >
+              <Text style={styles.editButtonText}>
+                {isSaving ? "저장 중..." : "수정하기"}
+              </Text>
+            </Pressable>
+            <Pressable
+              accessibilityRole="button"
+              onPress={handleDelete}
+              style={styles.deleteButton}
+            >
+              <Text style={styles.deleteButtonText}>매칭 취소</Text>
+            </Pressable>
+          </View>
         ) : canApply ? (
           <Pressable
             accessibilityRole="button"
@@ -704,26 +669,6 @@ export default function PostApplyScreen({ postId }: PostApplyScreenProps) {
         )}
         </ScrollView>
       </KeyboardAvoidingView>
-      <WorkoutCompleteModal
-        visible={isCompletePromptVisible}
-        onLaterPress={() => setIsCompletePromptVisible(false)}
-        onReviewPress={() => {
-          setIsCompletePromptVisible(false);
-          const name = encodeURIComponent(post.hostName ?? "");
-          const img = encodeURIComponent(post.hostProfileImageUrl ?? "");
-          const startAt = toDate(post.scheduledAt);
-          const endAt = toDate(post.scheduledEndAt);
-          const exerciseTypes = encodeURIComponent(
-            `${post.sportType ?? ""} · ${post.venue ?? ""}`
-          );
-          const time = encodeURIComponent(
-            `${formatCreatePostDayLabel(startAt)} ${formatCreatePostTimeRangeLabel(startAt, endAt)}`
-          );
-          router.push(
-            `/review/${post.id}?type=gathering&partnerName=${name}&partnerProfileImageUrl=${img}&exerciseTypes=${exerciseTypes}&scheduledTime=${time}` as any,
-          );
-        }}
-      />
       <ApplicantPanel
         visible={isApplicantPanelOpen}
         applicants={toApplicants(participants)}
@@ -739,16 +684,7 @@ export default function PostApplyScreen({ postId }: PostApplyScreenProps) {
             name: post.hostName,
             profileImageUrl: post.hostProfileImageUrl,
             exerciseTypes: post.sportType ? [post.sportType] : undefined,
-            matchStatus: canComplete ? "IN_PROGRESS" : undefined,
           }}
-          onComplete={
-            canComplete
-              ? () => {
-                  setIsProfileModalVisible(false);
-                  void handleComplete();
-                }
-              : undefined
-          }
         />
       )}
     </>
@@ -1119,22 +1055,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
     lineHeight: 24,
     color: "#EF4444",
-    fontWeight: "800",
-  },
-  completeButton: {
-    minHeight: 60,
-    borderRadius: 16,
-    backgroundColor: "#16A34A",
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-    marginTop: 6,
-  },
-  completeButtonText: {
-    fontSize: 18,
-    lineHeight: 24,
-    color: "#FFFFFF",
     fontWeight: "800",
   },
   submitButton: {

@@ -22,9 +22,11 @@ import {
   requestPartnerMatch,
   toggleMatching,
 } from "@/services/matching/matchingService";
+import { getChatRooms } from "@/services/chat/chatService";
 import { normalizeImageUrl } from "@/lib/utils/imageUrl";
 import { getMyProfile } from "@/services/user/userService";
 import { useAuthStore } from "@/stores/auth/authStore";
+import { useChatStore } from "@/stores/chat/chatStore";
 import { useMatchingStore } from "@/stores/matching/matchingStore";
 import { useUserStore } from "@/stores/user/userStore";
 import { createNewCardPreviewPartners } from "@/utils/homeNewCard";
@@ -60,6 +62,7 @@ export default function HomePage() {
   const [survey, setSurvey] = React.useState<Survey | null>(null);
   const [scheduleRanges, setScheduleRanges] = React.useState<UserTimetableRange[]>([]);
   const isTogglingRef = React.useRef(false);
+  const matchPollRef = React.useRef<ReturnType<typeof setInterval> | null>(null);
 
   const [hasTimetable, setHasTimetable] = React.useState<boolean | null>(
     () => getHasScheduleCache(),
@@ -124,6 +127,13 @@ export default function HomePage() {
   const currentState = getHomeStatusVariant();
   const reviewTestRoute = "/review-complete-test" as const;
 
+  // Cleanup poll on unmount
+  React.useEffect(() => {
+    return () => {
+      if (matchPollRef.current) clearInterval(matchPollRef.current);
+    };
+  }, []);
+
   const handleMatchRequest = React.useCallback(async (opponentId: number) => {
     try {
       const res = await requestPartnerMatch(opponentId);
@@ -136,13 +146,54 @@ export default function HomePage() {
         "매칭 요청 완료",
         `매칭 요청을 보냈어요. ${secondsLeft}초 안에 상대방이 수락하면 매칭이 시작돼요.`,
       );
+
+      // WS MATCH_ACCEPTED가 오지 않을 경우를 대비한 폴링 폴백.
+      // 요청 시점의 채팅방 ID를 기록해두고, 새 방이 생기면 직접 이동한다.
+      const knownRoomIds = new Set(
+        useChatStore.getState().chatRooms.map((r) => r.id),
+      );
+      const expiresAtMs = expiresAt.getTime();
+
+      if (matchPollRef.current) clearInterval(matchPollRef.current);
+
+      matchPollRef.current = setInterval(async () => {
+        // WS가 이미 처리했으면 중단
+        if (!useAuthStore.getState().matching) {
+          clearInterval(matchPollRef.current!);
+          matchPollRef.current = null;
+          return;
+        }
+        // 요청 만료 시 중단 (5초 여유)
+        if (Date.now() > expiresAtMs + 5000) {
+          clearInterval(matchPollRef.current!);
+          matchPollRef.current = null;
+          return;
+        }
+        try {
+          const rooms = await getChatRooms();
+          const newRoom = rooms.find((r) => !knownRoomIds.has(r.id));
+          if (newRoom) {
+            clearInterval(matchPollRef.current!);
+            matchPollRef.current = null;
+            setMatching(false);
+            setCandidates([]);
+            // 채팅방을 store에 먼저 추가 — ChatRoomScreen detail 로드 실패 시에도
+            // 채팅 목록에 방이 즉시 노출되고, 빈 채팅방으로 진입할 수 있음
+            useChatStore.getState().upsertChatRoom(newRoom);
+            toggleMatching(false).catch(() => {});
+            router.push(`/chat/${newRoom.id}`);
+          }
+        } catch {
+          // 폴링 실패는 무시하고 재시도
+        }
+      }, 3000);
     } catch (err) {
       Alert.alert(
         "요청 실패",
         err instanceof Error ? err.message : "다시 시도해주세요.",
       );
     }
-  }, []);
+  }, [setMatching, setCandidates]);
 
   const handlePass = React.useCallback(
     async (userProfileId: number) => {

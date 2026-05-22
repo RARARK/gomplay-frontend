@@ -39,7 +39,9 @@ export function connectMatchWs(): void {
         null,
         { transports: ["websocket"] },
       ),
-    reconnectDelay: 5000,
+    reconnectDelay: 2000,
+    heartbeatIncoming: 4000,
+    heartbeatOutgoing: 4000,
     onConnect: () => {
       useMatchingStore.getState().setWsConnected(true);
       subscription = client!.subscribe("/user/queue/match", (message) => {

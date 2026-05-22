@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Image,
+  Keyboard,
   KeyboardAvoidingView,
   Modal,
   Platform,
@@ -14,7 +15,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
-import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 import ChatHeader from "./ChatHeader";
 import PostMatchReviewCard from "./PostMatchReviewCard";
@@ -43,7 +44,7 @@ import {
 import { normalizeImageUrl } from "@/lib/utils/imageUrl";
 import { MATCH_STATUS } from "@/types/domain/match";
 
-const PARTNER_IMAGE = require("../../assets/chat/Profileimage.png");
+import PARTNER_IMAGE from "../../assets/chat/Profileimage.png";
 
 type ChatNoticeItem = {
   id: number;
@@ -82,8 +83,6 @@ const INITIAL_NOTICES: ChatNoticeItem[] = [];
 const INITIAL_SCHEDULES: ChatScheduleItem[] = [];
 
 export default function ChatRoomScreen() {
-  const insets = useSafeAreaInsets();
-  const inputBottomPadding = Math.max(insets.bottom - 12, 8);
   const params = useLocalSearchParams<{ chatRoomId?: string | string[] }>();
   const chatRoomId = parseChatRoomId(params.chatRoomId);
 
@@ -358,6 +357,17 @@ export default function ChatRoomScreen() {
   };
 
   useEffect(() => {
+    const subscription = Keyboard.addListener("keyboardDidHide", () => {
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          scrollViewRef.current?.scrollToEnd({ animated: false });
+        });
+      });
+    });
+    return () => subscription.remove();
+  }, []);
+
+  useEffect(() => {
     connectChatWs();
 
     let isMounted = true;
@@ -366,12 +376,28 @@ export default function ChatRoomScreen() {
       setIsLoading(true);
 
       try {
-        const details = await getChatRoomDetails(chatRoomId);
+        // 매칭 직후 방이 서버에서 아직 준비되지 않을 수 있으므로 최대 3회 재시도
+        let details = await getChatRoomDetails(chatRoomId);
+        for (let attempt = 1; attempt < 3 && !details; attempt++) {
+          await new Promise((resolve) => setTimeout(resolve, 1500));
+          if (!isMounted) return;
+          details = await getChatRoomDetails(chatRoomId);
+        }
 
         if (!isMounted) return;
 
         if (!details) {
-          router.replace("/(tabs)/chat");
+          // store에 방 정보가 있으면(매칭 직후 upsert된 경우) 리다이렉트하지 않고
+          // 빈 채팅방으로 유지 — WS 수신 메시지가 실시간으로 표시됨
+          const inStore = useChatStore.getState().chatRooms.some(
+            (r) => r.id === chatRoomId,
+          );
+          if (!inStore) {
+            router.replace("/(tabs)/chat");
+            return;
+          }
+          setSelectedChatRoomId(chatRoomId);
+          clearUnreadCount(chatRoomId);
           return;
         }
 
@@ -462,12 +488,12 @@ export default function ChatRoomScreen() {
   return (
     <SafeAreaView
       style={styles.safeArea}
-      edges={["top", "left", "right"]}
+      edges={["top", "left", "right", "bottom"]}
     >
       <KeyboardAvoidingView
-        style={[styles.container, { paddingBottom: inputBottomPadding }]}
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        keyboardVerticalOffset={Platform.OS === "ios" ? insets.bottom : 0}
+        style={styles.container}
+        behavior="padding"
+        keyboardVerticalOffset={0}
       >
         <ChatHeader
           title={displayRoomTitle}
@@ -487,6 +513,8 @@ export default function ChatRoomScreen() {
           style={styles.messageScrollView}
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode={Platform.OS === "ios" ? "interactive" : "on-drag"}
           onContentSizeChange={() => scrollViewRef.current?.scrollToEnd({ animated: false })}
         >
           <View style={styles.messageList}>

@@ -2,11 +2,15 @@ import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { router } from "expo-router";
 
 import { Border, Color, FontFamily, FontSize } from "../GlobalStyles";
+import { normalizeImageUrl } from "@/lib/utils/imageUrl";
 import {
   getChatRoomParticipantDisplayName,
+  getChatRoomPrimaryParticipant,
   type ChatRoom,
 } from "@/types/domain/chatRoom";
 import { MATCH_STATUS } from "@/types/domain/match";
+
+const DEFAULT_PROFILE_IMAGE = require("../../assets/chat/Profileimage.png");
 
 export type ChatroomProps = {
   chatRoom: ChatRoom;
@@ -40,6 +44,8 @@ export default function Chatroom({ chatRoom, onPress }: ChatroomProps) {
     unreadMessageCount,
   } = chatRoom;
   const partnerDisplayName = getChatRoomParticipantDisplayName(participants);
+  const partner = getChatRoomPrimaryParticipant(participants);
+  const partnerProfileImageUrl = normalizeImageUrl(partner?.profileImageUrl);
   const badge = getStatusBadge(chatRoom);
 
   const handlePress = () => {
@@ -59,7 +65,11 @@ export default function Chatroom({ chatRoom, onPress }: ChatroomProps) {
     >
       <View style={styles.content}>
         <Image
-          source={require("../../assets/chat/Profileimage.png")}
+          source={
+            partnerProfileImageUrl
+              ? { uri: partnerProfileImageUrl }
+              : DEFAULT_PROFILE_IMAGE
+          }
           style={styles.avatar}
         />
 

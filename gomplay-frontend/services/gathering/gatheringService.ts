@@ -54,7 +54,6 @@ export async function createGathering(
 
     if (isAxiosError(error)) {
       const errorBody = getBackendErrorBody(error.response?.data);
-
       if (errorBody?.code === 4000) {
         throw new ApiError("데이터베이스 연결에 실패하였습니다.");
       }
@@ -98,7 +97,6 @@ export async function getGatheringPosts(
 
     if (isAxiosError(error)) {
       const errorBody = getBackendErrorBody(error.response?.data);
-
       if (errorBody?.code === 4000) {
         throw new ApiError("데이터베이스 연결에 실패하였습니다.");
       }
@@ -149,7 +147,6 @@ export async function getGatheringDetail(
 
     if (isAxiosError(error)) {
       const errorBody = getBackendErrorBody(error.response?.data);
-
       if (errorBody?.code === 4000) {
         throw new ApiError("데이터베이스 연결에 실패하였습니다.");
       }
@@ -504,14 +501,26 @@ export async function getGatheringHistory(): Promise<GatheringHistoryItem[]> {
   }
 }
 
-export async function deleteGathering(postId: number, body: DeleteGatheringRequest): Promise<void> {
+export async function deleteGathering(
+  postId: number,
+  body?: DeleteGatheringRequest,
+): Promise<void> {
   try {
-    await apiClient.delete(`/api/gathering/${postId}`, { data: body });
+    await apiClient.delete(
+      `/api/gathering/${postId}`,
+      body ? { data: body } : undefined,
+    );
   } catch (error) {
     if (error instanceof ApiError) throw error;
 
     if (isAxiosError(error)) {
       const errorBody = getBackendErrorBody(error.response?.data);
+      console.log("[gatheringService] delete gathering error", {
+        postId,
+        requestBody: body,
+        status: error.response?.status,
+        responseData: error.response?.data,
+      });
 
       if (errorBody?.code === 4000) {
         throw new ApiError("데이터베이스 연결에 실패하였습니다.");
@@ -523,11 +532,27 @@ export async function deleteGathering(postId: number, body: DeleteGatheringReque
         );
       }
 
+      if (error.response?.status === 403) {
+        throw new ApiError(
+          errorBody?.message ?? "모집글 작성자만 취소할 수 있습니다.",
+        );
+      }
+
+      if (error.response?.status === 404) {
+        throw new ApiError(
+          errorBody?.message ?? "모집글을 찾을 수 없습니다.",
+        );
+      }
+
       if (error.response?.status === 500) {
         throw new ApiError("서버 내부 오류", "Internal server error");
       }
+
+      if (errorBody?.message) {
+        throw new ApiError(errorBody.message);
+      }
     }
 
-    throw new ApiError("알 수 없는 오류가 발생하였습니다.");
+    throw new ApiError("매칭 취소에 실패했습니다.");
   }
 }

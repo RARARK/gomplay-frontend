@@ -46,6 +46,50 @@ export type Match = {
   createdAt: string;
 };
 
+export type ActiveMatchType = "GATHERING" | "PARTNER" | "Gathering" | "Partner";
+export type ActiveMatchRole = "HOST" | "GUEST" | "host" | "guest" | null;
+export type ActiveMatchStatus =
+  | "PENDING"
+  | "IN_PROGRESS"
+  | "COMPLETED"
+  | "CANCELLED"
+  | "pending"
+  | "in_progress"
+  | "completed"
+  | "cancelled";
+
+export type ActiveMatch = {
+  canComplete: boolean;
+  chatRoomId: number | null;
+  difficulty: string | null;
+  id: number;
+  hostDepartment?: string | null;
+  hostName?: string | null;
+  hostProfileImageUrl?: string | null;
+  hostStudentNumber?: string | number | null;
+  location: string | null;
+  matchedAt: string | null;
+  partnerDepartment: string | null;
+  partnerName: string;
+  partnerProfileImageUrl: string | null;
+  partnerStudentNumber: string | number | null;
+  pendingCount: number;
+  reviewed: boolean;
+  role?: ActiveMatchRole;
+  scheduledAt?: string | null;
+  scheduledEndAt: string | null;
+  scheduledTime: string | null;
+  sportType: string | null;
+  status: ActiveMatchStatus;
+  type: ActiveMatchType;
+};
+
+export type ActiveMatchesResponse = {
+  success: boolean;
+  message: string;
+  data: ActiveMatch[];
+};
+
 export type CompleteMatchInput = {
   matchId: number;
   action: MatchCompleteAction;

@@ -12,15 +12,17 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { normalizeImageUrl } from "@/lib/utils/imageUrl";
+import { getChatRooms } from "@/services/chat/chatService";
 import {
   acceptMatchRequest,
   rejectMatchRequest,
   toggleMatching,
 } from "@/services/matching/matchingService";
 import { useAuthStore } from "@/stores/auth/authStore";
+import { useChatStore } from "@/stores/chat/chatStore";
 import { useMatchingStore } from "@/stores/matching/matchingStore";
 
-const DEFAULT_AVATAR = require("../../../assets/match/Ellipse-12.png");
+import DEFAULT_AVATAR from "../../../assets/match/Ellipse-12.png";
 const SLIDE_MS = 320;
 const SPRING_CONFIG = { tension: 120, friction: 14, useNativeDriver: true } as const;
 
@@ -128,11 +130,26 @@ export default function MatchRequestToast() {
         setPendingMatchRequest(null);
         setIsAccepting(false);
       });
-      if (roomId) {
-        router.push(`/chat/${encodeURIComponent(roomId)}`);
-      } else {
-        router.push("/(tabs)/chat");
-      }
+      const { setChatRooms } = useChatStore.getState();
+      getChatRooms()
+        .then((rooms) => {
+          setChatRooms(rooms);
+          const targetId = roomId ?? rooms
+            .filter((r) => r.status === "ACTIVE")
+            .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0]?.id;
+          if (targetId) {
+            router.push(`/chat/${encodeURIComponent(targetId)}`);
+          } else {
+            router.push("/(tabs)/chat");
+          }
+        })
+        .catch(() => {
+          if (roomId) {
+            router.push(`/chat/${encodeURIComponent(roomId)}`);
+          } else {
+            router.push("/(tabs)/chat");
+          }
+        });
     } catch (error) {
       setIsAccepting(false);
       Alert.alert(

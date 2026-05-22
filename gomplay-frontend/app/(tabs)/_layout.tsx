@@ -65,11 +65,16 @@ export default function TabsLayout() {
       setMatching(false);
       setCandidates([]);
       toggleMatching(false).catch(() => {});
-      router.push(`/chat/${encodeURIComponent(roomId)}`);
+      // 이동 전 방 목록을 store에 반영 → ChatRoomScreen이 detail 로드 실패해도
+      // store에서 방을 찾아 빈 채팅방으로 유지할 수 있음
+      getChatRooms()
+        .then(setChatRooms)
+        .catch(() => {})
+        .finally(() => router.push(`/chat/${encodeURIComponent(roomId)}`));
     } else if (!accepted) {
       Alert.alert("매칭 거절", "상대방이 매칭을 거절했어요.");
     }
-  }, [lastResolvedMatchRequest, clearLastResolvedMatchRequest, setCandidates, setMatching]);
+  }, [lastResolvedMatchRequest, clearLastResolvedMatchRequest, setCandidates, setMatching, setChatRooms]);
 
   useSyncNotificationUnread();
 

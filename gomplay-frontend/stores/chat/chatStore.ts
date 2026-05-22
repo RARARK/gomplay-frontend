@@ -48,13 +48,19 @@ export const useChatStore = create<ChatState>((set) => ({
   connectionStatusByRoomId: {},
 
   setChatRooms: (chatRooms) =>
-    set((state) => ({
-      chatRooms: chatRooms.map((room) =>
+    set((state) => {
+      const mapped = chatRooms.map((room) =>
         state.reviewedMatchIds.includes(room.matchId)
           ? { ...room, reviewed: true }
           : room,
-      ),
-    })),
+      );
+      mapped.sort((a, b) => {
+        const aTime = new Date(a.lastMessageAt ?? a.createdAt).getTime();
+        const bTime = new Date(b.lastMessageAt ?? b.createdAt).getTime();
+        return bTime - aTime;
+      });
+      return { chatRooms: mapped };
+    }),
 
   markReviewCompleted: (matchId) =>
     set((state) => ({
@@ -66,12 +72,20 @@ export const useChatStore = create<ChatState>((set) => ({
 
   upsertChatRoom: (chatRoom) =>
     set((state) => {
-      const normalizedChatRoom = state.reviewedMatchIds.includes(chatRoom.matchId)
+      const normalized = state.reviewedMatchIds.includes(chatRoom.matchId)
         ? { ...chatRoom, reviewed: true }
         : chatRoom;
-      const hasExistingRoom = state.chatRooms.some(
-        (item) => item.id === normalizedChatRoom.id,
-      );
+      const existing = state.chatRooms.find((item) => item.id === normalized.id);
+      // Preserve lastMessage/lastMessageAt if the incoming data omits them
+      // (e.g. detail API doesn't always return these fields)
+      const normalizedChatRoom = existing
+        ? {
+            ...normalized,
+            lastMessage: normalized.lastMessage ?? existing.lastMessage,
+            lastMessageAt: normalized.lastMessageAt ?? existing.lastMessageAt,
+          }
+        : normalized;
+      const hasExistingRoom = existing !== undefined;
       const nextChatRooms = hasExistingRoom
         ? state.chatRooms.map((item) =>
             item.id === normalizedChatRoom.id ? normalizedChatRoom : item,

@@ -14,7 +14,9 @@ export type MatchItem = {
   id: string;
   sourceType: MatchSourceType;
   status: MatchStatus;
-  role: MatchRole;
+  role?: MatchRole | null;
+  canComplete?: boolean;
+  reviewed?: boolean;
   partnerName: string;
   partnerProfileImageUrl?: string | null;
   partnerDepartment?: string;
@@ -71,15 +73,21 @@ export default function MatchStatusCard({
   const badgeColor = isPost ? "#10B981" : "#4C5BE2";
   const statusLabel = isCompleted ? "완료" : isInProgress ? "진행중" : "수락 대기";
 
-  const location = isPost ? (item.location ?? "") : "장소 협의";
-  const scheduledTime = isPost ? (item.scheduledTime ?? "") : "시간 협의";
-  const difficulty = isPost ? (item.difficulty ?? "") : "난이도 협의";
-  const exerciseType = isPost ? (item.exerciseType ?? "") : "종목 협의";
+  const location = isPost ? (item.location ?? "") : (item.location ?? "상의 후 결정");
+  const scheduledTime = isPost
+    ? (item.scheduledTime ?? "")
+    : (item.scheduledTime ?? "상의 후 결정");
+  const difficulty = isPost ? (item.difficulty ?? "") : (item.difficulty ?? "");
+  const exerciseType = isPost
+    ? (item.exerciseType ?? "")
+    : (item.exerciseType ?? "상의 후 결정");
 
   const postCompleteEnabled =
-    item.scheduledEndAt ? now > new Date(item.scheduledEndAt).getTime() : false;
+    item.canComplete ??
+    (item.scheduledEndAt ? now > new Date(item.scheduledEndAt).getTime() : false);
   const partnerCompleteEnabled =
-    item.matchedAt ? now > new Date(item.matchedAt).getTime() + COMPLETE_DELAY_MS : false;
+    item.canComplete ??
+    (item.matchedAt ? now > new Date(item.matchedAt).getTime() + COMPLETE_DELAY_MS : false);
 
   return (
     <Pressable style={styles.container} onPress={onViewProfile}>
@@ -171,7 +179,7 @@ export default function MatchStatusCard({
               ) : null}
               {exerciseType ? (
                 <View style={styles.detailItem}>
-                  {exerciseType === "종목 협의" ? (
+                  {exerciseType === "상의 후 결정" ? (
                     <MaterialCommunityIcons name="swap-horizontal" size={16} color="#413F46" />
                   ) : (
                     <MaterialCommunityIcons name={getSportIcon(exerciseType)} size={16} color="#413F46" />
@@ -225,7 +233,7 @@ export default function MatchStatusCard({
                   </Pressable>
                 </>
               )
-            ) : isHost && isPost ? (
+            ) : isHost && isPost && onViewApplicants ? (
               <Pressable
                 style={[styles.actionButton, styles.applicantButton]}
                 onPress={onViewApplicants}
