@@ -50,10 +50,14 @@ export type ActiveMatchType = "GATHERING" | "PARTNER" | "Gathering" | "Partner";
 export type ActiveMatchRole = "HOST" | "GUEST" | "host" | "guest" | null;
 export type ActiveMatchStatus =
   | "PENDING"
+  | "ACCEPTED"
+  | "CLOSED"
   | "IN_PROGRESS"
   | "COMPLETED"
   | "CANCELLED"
   | "pending"
+  | "accepted"
+  | "closed"
   | "in_progress"
   | "completed"
   | "cancelled";

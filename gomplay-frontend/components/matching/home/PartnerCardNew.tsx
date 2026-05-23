@@ -101,8 +101,6 @@ export default function PartnerCardNew({
   matchScore,
   matchInsight,
   width,
-  activeIndex = 0,
-  totalCount = 4,
   onReject,
   onAccept,
 }: StoryPartnerCardProps) {
@@ -112,7 +110,6 @@ export default function PartnerCardNew({
   const shownAge = age ?? compactStudentId(studentId);
   const partnerLabel = preferredPartnerLabel ?? partnerStyle ?? "함께 즐기는 파트너";
   const styleLabel = exerciseStyleLabel ?? exerciseReason ?? "가볍게 즐겨요";
-  const progressCount = Math.max(totalCount, sports.length, 4);
   const insightText =
     matchInsight ??
     "운동 스타일과 강도가 잘 맞고, 선호하는 종목도 겹쳐요. 함께라면 꾸준히 운동할 수 있을 거예요.";
@@ -166,18 +163,6 @@ export default function PartnerCardNew({
           locations={[0, 0.36, 0.72, 1]}
           style={StyleSheet.absoluteFill}
         />
-
-        <View style={styles.progressRow}>
-          {Array.from({ length: progressCount }).map((_, index) => (
-            <View
-              key={index}
-              style={[
-                styles.progressTrack,
-                index === activeIndex && styles.progressTrackActive,
-              ]}
-            />
-          ))}
-        </View>
 
         {matchScore != null && (
           <>
@@ -347,25 +332,6 @@ const styles = StyleSheet.create({
   },
   cardImage: {
     borderRadius: CARD_RADIUS,
-  },
-  progressRow: {
-    position: "absolute",
-    top: 22,
-    left: "29%",
-    right: "29%",
-    height: 8,
-    flexDirection: "row",
-    gap: 6,
-    zIndex: 2,
-  },
-  progressTrack: {
-    flex: 1,
-    height: 5,
-    borderRadius: 999,
-    backgroundColor: "rgba(255, 255, 255, 0.28)",
-  },
-  progressTrackActive: {
-    backgroundColor: "#FFFFFF",
   },
   infoButton: {
     position: "absolute",

@@ -128,8 +128,11 @@ export async function getGatheringPosts(
     const res = await apiClient.get<GatheringListResponse>("/api/gathering", {
       params: query,
     });
+    const now = Date.now();
     const openContent = res.data.content.filter(
-      (item) => item.status === POST_STATUS.OPEN,
+      (item) =>
+        item.status === POST_STATUS.OPEN &&
+        new Date(item.scheduledAt).getTime() > now,
     );
 
     return {
@@ -513,7 +516,12 @@ export async function getGatheringRecommendations(): Promise<GatheringRecommendI
     const res = await apiClient.get<GatheringRecommendItem[]>("/api/gathering/recommend", {
       headers: { "Cache-Control": "no-cache" },
     });
-    return res.data.filter((item) => item.status === POST_STATUS.OPEN);
+    const now = Date.now();
+    return res.data.filter(
+      (item) =>
+        item.status === POST_STATUS.OPEN &&
+        new Date(item.scheduledAt).getTime() > now,
+    );
   } catch (error) {
     if (error instanceof ApiError) throw error;
 

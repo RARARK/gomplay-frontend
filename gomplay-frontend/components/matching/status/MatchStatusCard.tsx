@@ -7,7 +7,7 @@ import DifficultyIcon from "@/assets/match/heroicons-chart-bar-16-solid.svg";
 import { getSportIcon } from "@/lib/utils/sportIconMap";
 
 export type MatchSourceType = "POST" | "PARTNER";
-export type MatchStatus = "IN_PROGRESS" | "PENDING" | "COMPLETED";
+export type MatchStatus = "IN_PROGRESS" | "PENDING" | "ACCEPTED" | "COMPLETED";
 export type MatchRole = "HOST" | "GUEST";
 
 export type MatchItem = {
@@ -24,21 +24,13 @@ export type MatchItem = {
   location?: string;
   scheduledDate?: string;
   scheduledTime?: string;
+  scheduledAt?: string;
   scheduledEndAt?: string;
   matchedAt?: string;
   difficulty?: string;
   exerciseType?: string;
   applicantCount?: number;
   chatRoomId?: number;
-  // Extended partner profile (optional)
-  partnerIsVerified?: boolean;
-  partnerMannerTemperature?: number;
-  partnerMatchCount?: number;
-  partnerNoShowCount?: number;
-  partnerStyle?: string;
-  partnerExerciseIntensity?: string;
-  partnerExerciseReason?: string;
-  partnerExerciseTypes?: string[];
 };
 
 type MatchStatusCardProps = {
@@ -46,7 +38,6 @@ type MatchStatusCardProps = {
   onComplete?: () => void;
   onChat?: () => void;
   onViewApplicants?: () => void;
-  onViewProfile?: () => void;
 };
 
 const COMPLETE_DELAY_MS = 60 * 60 * 1000; // 1시간
@@ -56,7 +47,6 @@ export default function MatchStatusCard({
   onComplete,
   onChat,
   onViewApplicants,
-  onViewProfile,
 }: MatchStatusCardProps) {
   const [now, setNow] = React.useState(() => Date.now());
 
@@ -67,12 +57,13 @@ export default function MatchStatusCard({
   }, [item.status]);
 
   const isInProgress = item.status === "IN_PROGRESS";
+  const isAccepted = item.status === "ACCEPTED";
   const isCompleted = item.status === "COMPLETED";
   const isHost = item.role === "HOST";
   const isPost = item.sourceType === "POST";
 
   const badgeColor = isPost ? "#10B981" : "#4C5BE2";
-  const statusLabel = isCompleted ? "완료" : isInProgress ? "진행중" : "수락 대기";
+  const statusLabel = isCompleted ? "완료" : isInProgress ? "진행중" : isAccepted ? "모집중" : "수락 대기";
 
   const location = isPost ? (item.location ?? "") : (item.location ?? "상의 후 결정");
   const scheduledDateText = item.scheduledDate ?? "";
@@ -92,7 +83,7 @@ export default function MatchStatusCard({
     (item.matchedAt ? now > new Date(item.matchedAt).getTime() + COMPLETE_DELAY_MS : false);
 
   return (
-    <Pressable style={styles.container} onPress={onViewProfile}>
+    <View style={styles.container}>
       <View style={[styles.card, { borderLeftColor: badgeColor }]}>
         <Image
           source={
@@ -125,7 +116,9 @@ export default function MatchStatusCard({
                     ? styles.statusPillCompleted
                     : isInProgress
                       ? styles.statusPillActive
-                      : styles.statusPillPending,
+                      : isAccepted
+                        ? styles.statusPillAccepted
+                        : styles.statusPillPending,
                 ]}
               >
                 <Text
@@ -135,7 +128,9 @@ export default function MatchStatusCard({
                       ? styles.statusTextCompleted
                       : isInProgress
                         ? styles.statusTextActive
-                        : styles.statusTextPending,
+                        : isAccepted
+                          ? styles.statusTextAccepted
+                          : styles.statusTextPending,
                   ]}
                 >
                   {statusLabel}
@@ -208,10 +203,12 @@ export default function MatchStatusCard({
                       <Text style={styles.primaryActionText}>운동 완료하기</Text>
                     </Pressable>
                   ) : null}
-                  <Pressable style={styles.actionButton} onPress={onChat}>
-                    <Ionicons name="chatbubble-outline" size={14} color="#4C5BE2" />
-                    <Text style={styles.actionText}>채팅</Text>
-                  </Pressable>
+                  {onChat ? (
+                    <Pressable style={styles.actionButton} onPress={onChat}>
+                      <Ionicons name="chatbubble-outline" size={14} color="#4C5BE2" />
+                      <Text style={styles.actionText}>채팅</Text>
+                    </Pressable>
+                  ) : null}
                 </>
               ) : (
                 <>
@@ -229,6 +226,18 @@ export default function MatchStatusCard({
                     <Text style={styles.actionText}>채팅</Text>
                   </Pressable>
                 </>
+              )
+            ) : isAccepted ? (
+              onChat ? (
+                <Pressable style={styles.actionButton} onPress={onChat}>
+                  <Ionicons name="chatbubble-outline" size={14} color="#4C5BE2" />
+                  <Text style={styles.actionText}>채팅</Text>
+                </Pressable>
+              ) : (
+                <View style={[styles.actionButton, styles.acceptedActionButton]}>
+                  <Ionicons name="checkmark-circle-outline" size={14} color="#10B981" />
+                  <Text style={[styles.actionText, styles.acceptedActionText]}>모집 확정</Text>
+                </View>
               )
             ) : isHost && isPost && onViewApplicants ? (
               <Pressable
@@ -249,7 +258,7 @@ export default function MatchStatusCard({
           </View>
         </View>
       </View>
-    </Pressable>
+    </View>
   );
 }
 
@@ -330,6 +339,7 @@ const styles = StyleSheet.create({
   },
   statusPillActive: { backgroundColor: "#EEF2FF" },
   statusPillPending: { backgroundColor: "#F3F4F6" },
+  statusPillAccepted: { backgroundColor: "#ECFDF5" },
   statusPillCompleted: { backgroundColor: "#F0FDF4" },
   statusText: {
     fontSize: 11,
@@ -338,6 +348,7 @@ const styles = StyleSheet.create({
   },
   statusTextActive: { color: "#4C5BE2" },
   statusTextPending: { color: "#6B7280" },
+  statusTextAccepted: { color: "#10B981" },
   statusTextCompleted: { color: "#16A34A" },
   openIndicator: {
     width: 24,
@@ -422,6 +433,11 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontWeight: "700",
   },
+  acceptedActionButton: {
+    borderColor: "#BBF7D0",
+    backgroundColor: "#ECFDF5",
+  },
+  acceptedActionText: { color: "#10B981" },
   pendingActionText: { color: "#9CA3AF" },
   completedActionText: { color: "#16A34A" },
 });

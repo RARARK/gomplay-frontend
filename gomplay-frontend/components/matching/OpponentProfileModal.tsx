@@ -140,11 +140,6 @@ export default function OpponentProfileModal({
             <Pressable onPress={onClose} style={styles.closeBtn} hitSlop={12}>
               <Ionicons name="close" size={22} color="#FFFFFF" />
             </Pressable>
-            <View style={styles.dotRow}>
-              {[0, 1, 2, 3].map((i) => (
-                <View key={i} style={[styles.dot, i === 0 && styles.dotActive]} />
-              ))}
-            </View>
             {/* spacer for symmetry */}
             <View style={styles.topBarSpacer} />
           </View>
@@ -362,20 +357,6 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0,0,0,0.45)",
     alignItems: "center",
     justifyContent: "center",
-  },
-  dotRow: {
-    flexDirection: "row",
-    gap: 6,
-    alignItems: "center",
-  },
-  dot: {
-    width: 28,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: "rgba(255,255,255,0.4)",
-  },
-  dotActive: {
-    backgroundColor: "#FFFFFF",
   },
   topBarSpacer: {
     width: 36,

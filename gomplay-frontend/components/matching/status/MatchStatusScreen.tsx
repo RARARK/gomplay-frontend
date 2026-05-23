@@ -17,9 +17,6 @@ import ApplicantPanel, {
 import MatchStatusCard, {
   type MatchItem,
 } from "@/components/matching/status/MatchStatusCard";
-import OpponentProfileModal, {
-  type OpponentProfileData,
-} from "@/components/matching/OpponentProfileModal";
 import WorkoutCompleteModal from "@/components/matching/WorkoutCompleteModal";
 import {
   acceptParticipant,
@@ -53,7 +50,8 @@ const normalizeMatchStatus = (
 ): MatchItem["status"] | null => {
   const normalized = String(status).toUpperCase();
   if (normalized === "PENDING") return "PENDING";
-  if (normalized === "IN_PROGRESS") return "IN_PROGRESS";
+  if (normalized === "ACCEPTED") return "ACCEPTED";
+  if (normalized === "IN_PROGRESS" || normalized === "CLOSED") return "IN_PROGRESS";
   return null;
 };
 
@@ -194,6 +192,7 @@ const mapActiveMatchToItem = (
     scheduledTime:
       match.scheduledTime ??
       formatTimeRange(match.scheduledAt, match.scheduledEndAt),
+    scheduledAt: match.scheduledAt ?? undefined,
     scheduledEndAt: match.scheduledEndAt ?? undefined,
     matchedAt: match.matchedAt ?? undefined,
     difficulty: match.difficulty ?? undefined,
@@ -212,10 +211,6 @@ export default function MatchStatusScreen({
   const [sourceFilter, setSourceFilter] = React.useState<SourceFilter>(null);
   const [statusFilter, setStatusFilter] = React.useState<StatusFilter>(null);
   const [panelMatchId, setPanelMatchId] = React.useState<string | null>(null);
-  const [profileModal, setProfileModal] = React.useState<{
-    data: OpponentProfileData;
-    item: MatchItem;
-  } | null>(null);
   const [matches, setMatches] = React.useState<MatchItem[]>(
     initialMatches ?? [],
   );
@@ -303,16 +298,27 @@ export default function MatchStatusScreen({
   );
 
   const filtered = React.useMemo(
-    () =>
-      matchesWithApplicantCount.filter((m) => {
-        if (m.status !== "IN_PROGRESS" && m.status !== "PENDING") return false;
+    () => {
+      const now = Date.now();
+      return matchesWithApplicantCount.filter((m) => {
+        if (m.status !== "IN_PROGRESS" && m.status !== "PENDING" && m.status !== "ACCEPTED") return false;
         if (m.sourceType === "PARTNER" && m.status === "PENDING") return false;
+        if (m.status === "PENDING" && m.sourceType === "POST") {
+          const expiryTime =
+            m.scheduledAt
+              ? new Date(m.scheduledAt).getTime()
+              : m.scheduledEndAt
+                ? new Date(m.scheduledEndAt).getTime()
+                : null;
+          if (expiryTime !== null && expiryTime < now) return false;
+        }
         if (sourceFilter === "일반 매칭" && m.sourceType !== "POST") return false;
         if (sourceFilter === "퀵 매치" && m.sourceType !== "PARTNER") return false;
         if (statusFilter === "진행중" && m.status !== "IN_PROGRESS") return false;
         if (statusFilter === "수락 대기" && m.status !== "PENDING") return false;
         return true;
-      }),
+      });
+    },
     [matchesWithApplicantCount, sourceFilter, statusFilter],
   );
 
@@ -345,29 +351,6 @@ export default function MatchStatusScreen({
       setApplicantsLoading(false);
     }
   }, []);
-
-  const handleViewProfile = (item: MatchItem) => {
-    setProfileModal({
-      item,
-      data: {
-        name: item.partnerName,
-        department: item.partnerDepartment,
-        studentId: item.partnerStudentNumber,
-        profileImageUrl: item.partnerProfileImageUrl,
-        isVerified: item.partnerIsVerified,
-        partnerStyle: item.partnerStyle,
-        exerciseIntensity: item.partnerExerciseIntensity,
-        exerciseReason: item.partnerExerciseReason,
-        exerciseTypes:
-          item.partnerExerciseTypes ??
-          (item.exerciseType ? [item.exerciseType] : undefined),
-        mannerTemperature: item.partnerMannerTemperature,
-        matchCount: item.partnerMatchCount,
-        noShowCount: item.partnerNoShowCount,
-        matchStatus: item.status,
-      },
-    });
-  };
 
   const handleViewApplicants = (matchId: string) => {
     setPanelMatchId(matchId);
@@ -571,7 +554,6 @@ export default function MatchStatusScreen({
                     ? () => handleViewApplicants(item.id)
                     : undefined
                 }
-                onViewProfile={() => handleViewProfile(item)}
               />
             ))}
           </View>
@@ -598,30 +580,6 @@ export default function MatchStatusScreen({
           router.push(`/review/${targetId}?type=gathering` as any);
         }}
       />
-      {profileModal && (
-        <OpponentProfileModal
-          visible
-          data={profileModal.data}
-          onClose={() => setProfileModal(null)}
-          onComplete={
-            profileModal.item.sourceType === "POST" &&
-            profileModal.item.status === "IN_PROGRESS"
-              ? () => {
-                  setProfileModal(null);
-                  void handleComplete(profileModal.item);
-                }
-              : undefined
-          }
-          onChat={
-            profileModal.item.chatRoomId
-              ? () => {
-                  setProfileModal(null);
-                  router.push(`/chat/${profileModal.item.chatRoomId}` as any);
-                }
-              : undefined
-          }
-        />
-      )}
     </>
   );
 }
