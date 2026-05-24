@@ -87,8 +87,11 @@ function handleNotificationPress(item: NotificationItem) {
     case "match_auto_ended":
       router.push("/(tabs)/match" as any);
       break;
+    case "review":
+      router.push("/matches/history" as any);
+      break;
     case "point":
-      router.push("/point" as any);
+      router.push("/point-logs" as any);
       break;
     default:
       break;

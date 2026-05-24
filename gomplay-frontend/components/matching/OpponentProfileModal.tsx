@@ -24,12 +24,20 @@ const STYLE_VERSUS = [
     label: "독립형",
     icon: "person-outline" as const,
     desc: "혼자서도 계획적으로\n운동을 즐겨요",
+    activeBg: "#F0FDF4",
+    activeIcon: "#15803D",
+    activeName: "#15803D",
+    activeDesc: "#166534",
   },
   {
     key: "소통형",
     label: "소통형",
     icon: "people-outline" as const,
     desc: "함께 대화하며\n운동하는 걸 좋아해요",
+    activeBg: "#EFF6FF",
+    activeIcon: "#2563EB",
+    activeName: "#1D4ED8",
+    activeDesc: "#1E40AF",
   },
 ];
 
@@ -38,9 +46,21 @@ const EXERCISE_STYLE_MAP: Record<string, { title: string; desc: string }> = {
     title: "꾸준함이 중요해요",
     desc: "주 2~3회, 계획을 세워 꾸준히 운동해요.\n정해진 약속은 꼭 지키는 편이에요.",
   },
+  적당히: {
+    title: "꾸준함이 중요해요",
+    desc: "주 2~3회, 계획을 세워 꾸준히 운동해요.\n정해진 약속은 꼭 지키는 편이에요.",
+  },
   강도형: {
     title: "강하게 밀어붙여요",
     desc: "운동할 때는 끝까지 강도 높게 집중해요.",
+  },
+  제대로: {
+    title: "강하게 밀어붙여요",
+    desc: "운동할 때는 끝까지 강도 높게 집중해요.",
+  },
+  한계까지: {
+    title: "한계까지 밀어붙여요",
+    desc: "최대 강도로 자신의 한계에 도전해요.",
   },
   가볍게: {
     title: "가볍게 즐겨요",
@@ -53,6 +73,10 @@ const EXERCISE_REASON_MAP: Record<string, { title: string; desc: string }> = {
     title: "체력 향상 & 건강 관리",
     desc: "지속 가능한 운동을 통해 체력을 올리고\n건강한 습관을 만들고 싶어요.",
   },
+  체력: {
+    title: "체력 향상 & 건강 관리",
+    desc: "지속 가능한 운동을 통해 체력을 올리고\n건강한 습관을 만들고 싶어요.",
+  },
   다이어트: {
     title: "다이어트 & 체형 관리",
     desc: "꾸준한 운동으로 원하는 체형을 만들어요.",
@@ -60,6 +84,18 @@ const EXERCISE_REASON_MAP: Record<string, { title: string; desc: string }> = {
   스트레스해소: {
     title: "스트레스 해소",
     desc: "운동으로 일상의 스트레스를 날려버려요.",
+  },
+  스트레스: {
+    title: "스트레스 해소",
+    desc: "운동으로 일상의 스트레스를 날려버려요.",
+  },
+  친해지려고: {
+    title: "함께 즐기는 운동",
+    desc: "운동을 통해 새로운 사람들과 친해지는 걸 좋아해요.",
+  },
+  경쟁: {
+    title: "경쟁하며 성장해요",
+    desc: "더 강해지기 위해 도전적인 운동을 즐겨요.",
   },
 };
 
@@ -184,18 +220,18 @@ export default function OpponentProfileModal({
                         <View
                           style={[
                             styles.vsSide,
-                            active ? styles.vsSideActive : styles.vsSideInactive,
+                            { backgroundColor: active ? side.activeBg : "#FFFFFF" },
                           ]}
                         >
                           <Ionicons
                             name={side.icon}
                             size={22}
-                            color={active ? "#15803D" : "#9CA3AF"}
+                            color={active ? side.activeIcon : "#9CA3AF"}
                           />
                           <Text
                             style={[
                               styles.vsName,
-                              active ? styles.vsNameActive : styles.vsNameInactive,
+                              { color: active ? side.activeName : "#9CA3AF" },
                             ]}
                           >
                             {side.label}
@@ -203,7 +239,7 @@ export default function OpponentProfileModal({
                           <Text
                             style={[
                               styles.vsDesc,
-                              active ? styles.vsDescActive : styles.vsDescInactive,
+                              { color: active ? side.activeDesc : "#9CA3AF" },
                             ]}
                           >
                             {side.desc}
@@ -445,26 +481,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     gap: 4,
   },
-  vsSideActive: {
-    backgroundColor: "#F0FDF4",
-  },
-  vsSideInactive: {
-    backgroundColor: "#FFFFFF",
-  },
   vsName: {
     fontSize: 15,
     fontWeight: "800",
   },
-  vsNameActive: { color: "#15803D" },
-  vsNameInactive: { color: "#9CA3AF" },
   vsDesc: {
     fontSize: 11,
     lineHeight: 16,
     fontWeight: "500",
     textAlign: "center",
   },
-  vsDescActive: { color: "#166534" },
-  vsDescInactive: { color: "#9CA3AF" },
   vsDivider: {
     width: 1,
     backgroundColor: "#E5E7EB",

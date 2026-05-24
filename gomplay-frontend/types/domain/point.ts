@@ -4,11 +4,14 @@ export type PointLogReason =
   | "gathering"
   | "attendance"
   | "review"
+  | "review_detail"
   | "no_show"
   | "first_match"
   | "match_complete"
+  | "exercise_complete"
   | "recommendation_refresh"
-  | "post_boost";
+  | "post_boost"
+  | "mutual_review";
 
 export type PointLog = {
   id: number;
@@ -16,8 +19,4 @@ export type PointLog = {
   balanceSnapshot: number;
   reason: PointLogReason;
   createdAt: string;
-};
-
-export type PointLogsResponse = {
-  logs: PointLog[];
 };

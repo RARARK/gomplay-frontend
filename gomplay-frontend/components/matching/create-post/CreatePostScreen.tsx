@@ -55,6 +55,8 @@ import { createGathering } from "@/services/gathering/gatheringService";
 import { POST_DIFFICULTY, type CreatePostInput } from "@/types/domain/post";
 import { validateCreatePostInput } from "@/utils/validateCreatePost";
 
+const TEST_OPEN_CHAT_URL = "https://open.kakao.com/o/gomplaytest";
+
 const createInitialFormState = (): CreatePostFormState => ({
   title: "",
   exerciseType: "러닝",
@@ -62,6 +64,7 @@ const createInitialFormState = (): CreatePostFormState => ({
   scheduledStartAt: getRoundedFutureDate(1),
   scheduledEndAt: getRoundedFutureDate(3),
   capacity: 1,
+  openChatUrl: TEST_OPEN_CHAT_URL,
   message: "",
   difficulty: POST_DIFFICULTY.INTRODUCTORY,
 });
@@ -103,6 +106,7 @@ export default function CreatePostScreen() {
       scheduledStartAt: form.scheduledStartAt.toISOString(),
       scheduledEndAt: form.scheduledEndAt.toISOString(),
       capacity: form.capacity,
+      openChatUrl: form.openChatUrl.trim(),
       message: form.message.trim() || undefined,
       difficulty: form.difficulty,
       tags: selectedTags.length > 0 ? selectedTags : undefined,
@@ -314,6 +318,7 @@ export default function CreatePostScreen() {
         scheduledAt: formatGatheringDateTime(form.scheduledStartAt),
         scheduledEndAt: formatGatheringDateTime(form.scheduledEndAt),
         maxParticipants: payload.capacity,
+        openChatUrl: payload.openChatUrl,
         description: payload.message || undefined,
         tags: payload.tags && payload.tags.length > 0 ? payload.tags.join(" ") : undefined,
       });
@@ -478,6 +483,33 @@ export default function CreatePostScreen() {
           </View>
 
           <View style={styles.section}>
+            <Text style={styles.sectionLabel}>
+              오픈채팅 링크{" "}
+              <Text style={styles.sectionLabelRequired}>*</Text>
+            </Text>
+            <TextInput
+              autoCapitalize="none"
+              autoCorrect={false}
+              keyboardType="url"
+              onChangeText={(value) => updateForm("openChatUrl", value)}
+              placeholder="https://open.kakao.com/o/..."
+              placeholderTextColor="#8F95A1"
+              style={[
+                styles.singleLineInput,
+                visibleErrors.openChatUrl ? styles.inputError : null,
+              ]}
+              value={form.openChatUrl}
+            />
+            {visibleErrors.openChatUrl ? (
+              <Text style={styles.errorText}>{visibleErrors.openChatUrl}</Text>
+            ) : (
+              <Text style={styles.inputHint}>
+                참여자들이 입장할 카카오 오픈채팅방 링크를 입력해주세요.
+              </Text>
+            )}
+          </View>
+
+          <View style={styles.section}>
             <Text style={styles.sectionLabel}>추가 설명</Text>
             <TextInput
               multiline
@@ -614,6 +646,18 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     color: "#111827",
     fontWeight: "800",
+  },
+  sectionLabelRequired: {
+    color: "#E53935",
+  },
+  inputError: {
+    borderColor: "#E53935",
+    borderWidth: 1.5,
+  },
+  inputHint: {
+    fontSize: 13,
+    lineHeight: 18,
+    color: "#8F95A1",
   },
   singleLineInput: {
     minHeight: 50,

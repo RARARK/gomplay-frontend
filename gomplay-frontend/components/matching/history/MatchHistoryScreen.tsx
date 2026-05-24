@@ -1,4 +1,3 @@
-import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React from "react";
 import {
@@ -17,168 +16,146 @@ import MatchHistoryCard, {
 import OpponentProfileModal, {
   type OpponentProfileData,
 } from "@/components/matching/OpponentProfileModal";
-const MOCK_HISTORY: MatchHistoryItem[] = [
-  {
-    id: "1",
-    sourceType: "POST",
-    partnerName: "김단국",
-    partnerDepartment: "소프트웨어학과",
-    partnerStudentNumber: "20학번",
-    completedAt: "2026-04-04",
-    location: "체육관",
-    scheduledTime: "19:00 ~ 21:00",
-    difficulty: "초보자",
-    exerciseType: "풋살",
-    reviewed: false,
-    chatRoomId: 3,
-    partnerIsVerified: true,
-    partnerMannerTemperature: 92,
-    partnerMatchCount: 18,
-    partnerNoShowCount: 0,
-    partnerStyle: "독립형",
-    partnerExerciseIntensity: "꾸준형",
-    partnerExerciseReason: "건강관리",
-    partnerExerciseTypes: ["풋살", "헬스", "러닝", "배드민턴", "농구"],
-  },
-  {
-    id: "2",
-    sourceType: "PARTNER",
-    partnerName: "이서윤",
-    partnerDepartment: "체육교육과",
-    partnerStudentNumber: "21학번",
-    completedAt: "2026-04-04",
-    reviewed: true,
-    chatRoomId: 7,
-  },
-  {
-    id: "3",
-    sourceType: "POST",
-    partnerName: "박지훈",
-    partnerDepartment: "컴퓨터공학과",
-    partnerStudentNumber: "22학번",
-    completedAt: "2026-04-02",
-    location: "서양대 체육관",
-    scheduledTime: "18:30 ~ 20:00",
-    difficulty: "가볍게",
-    exerciseType: "배드민턴",
-    reviewed: true,
-    chatRoomId: 5,
-  },
-  {
-    id: "4",
-    sourceType: "PARTNER",
-    partnerName: "최민준",
-    partnerDepartment: "스포츠과학과",
-    partnerStudentNumber: "23학번",
-    completedAt: "2026-03-28",
-    reviewed: false,
-    chatRoomId: 9,
-  },
-];
+import { getMatchHistory } from "@/services/matching/matchingService";
+import type { MatchHistoryEntry } from "@/types/domain/match";
 
-function formatDate(iso: string) {
+function formatDate(iso: string): string {
   const d = new Date(iso);
-  const y = d.getFullYear();
+  if (Number.isNaN(d.getTime())) return "";
   const m = String(d.getMonth() + 1).padStart(2, "0");
   const day = String(d.getDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
+  return `${m}.${day}`;
 }
 
-function formatTimeRange(start: string, end: string) {
-  const fmt = (iso: string) =>
-    new Date(iso).toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: false,
-    });
-  return `${fmt(start)}~${fmt(end)}`;
+function formatTime(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  return d.toLocaleTimeString("ko-KR", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
+}
+
+function mapEntryToItem(entry: MatchHistoryEntry): MatchHistoryItem {
+  const isGathering = entry.type === "GATHERING";
+  const dateSource = isGathering ? entry.scheduledAt : entry.matchedAt;
+  return {
+    id: String(entry.id),
+    sourceType: isGathering ? "POST" : "PARTNER",
+    partnerName: entry.partnerName,
+    partnerProfileImageUrl: entry.partnerProfileImageUrl,
+    partnerDepartment: entry.partnerDepartment,
+    partnerStudentNumber: entry.partnerStudentNumber,
+    completedAt: dateSource ? formatDate(dateSource) : "",
+    location: entry.location ?? undefined,
+    scheduledTime: entry.scheduledAt ? formatTime(entry.scheduledAt) : undefined,
+    exerciseType: entry.sportType ?? undefined,
+    reviewed: entry.reviewed,
+    gatheringId: isGathering ? entry.id : undefined,
+    partnerIsVerified: entry.partnerIsVerified,
+    partnerMannerTemperature: entry.partnerMannerTemperature,
+    partnerMatchCount: entry.partnerMatchCount,
+    partnerNoShowCount: entry.partnerNoShowCount,
+    partnerStyle: entry.partnerStyle,
+    partnerExerciseIntensity: entry.partnerExerciseIntensity,
+    partnerExerciseReason: entry.partnerExerciseReason,
+    partnerExerciseTypes: entry.partnerExerciseTypes,
+  };
+}
+
+function mapItemToProfileData(item: MatchHistoryItem): OpponentProfileData {
+  return {
+    name: item.partnerName,
+    department: item.partnerDepartment,
+    studentId: item.partnerStudentNumber,
+    profileImageUrl: item.partnerProfileImageUrl,
+    isVerified: item.partnerIsVerified,
+    partnerStyle: item.partnerStyle,
+    exerciseIntensity: item.partnerExerciseIntensity,
+    exerciseReason: item.partnerExerciseReason,
+    exerciseTypes: item.partnerExerciseTypes ?? (item.exerciseType ? [item.exerciseType] : undefined),
+    mannerTemperature: item.partnerMannerTemperature,
+    matchCount: item.partnerMatchCount,
+    noShowCount: item.partnerNoShowCount,
+    matchStatus: "COMPLETED",
+  };
 }
 
 export default function MatchHistoryScreen() {
   const insets = useSafeAreaInsets();
-  const [history, setHistory] = React.useState<MatchHistoryItem[]>(MOCK_HISTORY);
-  const [isLoading, setIsLoading] = React.useState(false);
+  const [history, setHistory] = React.useState<MatchHistoryItem[]>([]);
+  const [isLoading, setIsLoading] = React.useState(true);
   const [profileModal, setProfileModal] = React.useState<OpponentProfileData | null>(null);
 
-  const handleBackPress = () => {
-    if (router.canGoBack()) {
-      router.back();
-      return;
-    }
-
-    router.replace("/" as any);
-  };
+  React.useEffect(() => {
+    getMatchHistory()
+      .then((data) => {
+        const seen = new Set<number>();
+        const deduped = data.filter((entry) => {
+          if (seen.has(entry.id)) return false;
+          seen.add(entry.id);
+          return true;
+        });
+        const sorted = deduped.sort((a, b) => {
+          const dateA = a.scheduledAt ?? a.matchedAt ?? "";
+          const dateB = b.scheduledAt ?? b.matchedAt ?? "";
+          return dateB.localeCompare(dateA);
+        });
+        setHistory(sorted.map(mapEntryToItem));
+      })
+      .finally(() => setIsLoading(false));
+  }, []);
 
   return (
     <>
-    <ScrollView
-      style={styles.screen}
-      contentContainerStyle={[styles.content, { paddingBottom: 32 + insets.bottom }]}
-      showsVerticalScrollIndicator={false}
-    >
-      <View style={styles.headerRow}>
-        <View style={styles.backButton} />
-        <Text pointerEvents="none" style={styles.headerTitle}>매치 히스토리</Text>
-        <View style={styles.headerSpacer} />
-      </View>
+      <ScrollView
+        style={styles.screen}
+        contentContainerStyle={[styles.content, { paddingBottom: 32 + insets.bottom }]}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.headerRow}>
+          <View style={styles.backButton} />
+          <Text pointerEvents="none" style={styles.headerTitle}>매치 히스토리</Text>
+          <View style={styles.headerSpacer} />
+        </View>
 
-      {isLoading ? (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator color="#4C5BE2" />
-        </View>
-      ) : history.length > 0 ? (
-        <View style={styles.list}>
-          {history.map((item) => (
-            <MatchHistoryCard
-              key={item.id}
-              item={item}
-              onChat={
-                item.chatRoomId
-                  ? () => router.push(`/chat/${item.chatRoomId}` as any)
-                  : undefined
-              }
-              onReview={
-                item.reviewed
-                  ? undefined
-                  : () =>
-                      router.push(
-                        `/review/${item.gatheringId}?type=gathering` as any,
-                      )
-              }
-              onViewProfile={() =>
-                setProfileModal({
-                  name: item.partnerName,
-                  department: item.partnerDepartment,
-                  studentId: item.partnerStudentNumber,
-                  profileImageUrl: item.partnerProfileImageUrl,
-                  isVerified: item.partnerIsVerified,
-                  partnerStyle: item.partnerStyle,
-                  exerciseIntensity: item.partnerExerciseIntensity,
-                  exerciseReason: item.partnerExerciseReason,
-                  exerciseTypes:
-                    item.partnerExerciseTypes ??
-                    (item.exerciseType ? [item.exerciseType] : undefined),
-                  mannerTemperature: item.partnerMannerTemperature,
-                  matchCount: item.partnerMatchCount,
-                  noShowCount: item.partnerNoShowCount,
-                  matchStatus: "COMPLETED",
-                })
-              }
-            />
-          ))}
-        </View>
-      ) : (
-        <View style={styles.empty}>
-          <Text style={styles.emptyText}>해당하는 매치 기록이 없어요.</Text>
-        </View>
-      )}
-    </ScrollView>
-    {profileModal && (
-      <OpponentProfileModal
-        visible
-        data={profileModal}
-        onClose={() => setProfileModal(null)}
-      />
+        {isLoading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator color="#4C5BE2" />
+          </View>
+        ) : history.length > 0 ? (
+          <View style={styles.list}>
+            {history.map((item) => (
+              <MatchHistoryCard
+                key={item.id}
+                item={item}
+                onChat={
+                  item.chatRoomId
+                    ? () => router.push(`/chat/${item.chatRoomId}` as any)
+                    : undefined
+                }
+                onReview={
+                  !item.reviewed && item.gatheringId != null
+                    ? () => router.push(`/review/${item.gatheringId}?type=gathering` as any)
+                    : undefined
+                }
+                onViewProfile={() => setProfileModal(mapItemToProfileData(item))}
+              />
+            ))}
+          </View>
+        ) : (
+          <View style={styles.empty}>
+            <Text style={styles.emptyText}>해당하는 매치 기록이 없어요.</Text>
+          </View>
+        )}
+      </ScrollView>
+      {profileModal && (
+        <OpponentProfileModal
+          visible
+          data={profileModal}
+          onClose={() => setProfileModal(null)}
+        />
     )}
     </>
   );
@@ -202,11 +179,6 @@ const styles = StyleSheet.create({
   },
   backButton: {
     width: 40,
-    height: 40,
-    borderRadius: 999,
-    alignItems: "center",
-    justifyContent: "center",
-    zIndex: 1,
   },
   headerTitle: {
     position: "absolute",

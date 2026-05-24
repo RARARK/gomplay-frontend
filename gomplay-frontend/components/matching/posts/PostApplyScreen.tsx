@@ -767,7 +767,12 @@ export default function PostApplyScreen({ postId }: PostApplyScreenProps) {
             department: hostProfile?.department,
             studentId: hostProfile?.studentId,
             mannerTemperature: hostProfile?.mannerTemperature,
-            exerciseTypes: post.sportType ? [post.sportType] : undefined,
+            exerciseTypes: hostProfile?.exerciseTypes ?? (post.sportType ? [post.sportType] : undefined),
+            partnerStyle: hostProfile?.partnerStyle,
+            exerciseIntensity: hostProfile?.exerciseIntensity,
+            exerciseReason: hostProfile?.exerciseReason,
+            matchCount: hostProfile?.matchCount,
+            noShowCount: hostProfile?.noShowCount,
           }}
         />
       )}

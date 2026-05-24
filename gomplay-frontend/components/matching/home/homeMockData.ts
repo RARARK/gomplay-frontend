@@ -14,14 +14,9 @@ export const homeBanners: Banner[] = [
     onPress: () => router.push("/posts" as any),
   },
   {
-    id: "banner-ad-gym",
-    image: require("../../../assets/home/ad-gym.jpg"),
-    isAd: true,
-  },
-  {
-    id: "banner-ad-protein",
-    image: require("../../../assets/home/ad-protien.jpg"),
-    isAd: true,
+    id: "banner-daily-check",
+    image: require("../../../assets/home/herobanner_dailycheck.jpg"),
+    onPress: () => router.push("/attendance" as any),
   },
 ];
 

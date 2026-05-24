@@ -1,6 +1,6 @@
 import * as React from "react";
 import { router, useFocusEffect } from "expo-router";
-import { Alert, ScrollView, StyleSheet, Pressable, Text, View } from "react-native";
+import { Alert, Modal, ScrollView, StyleSheet, Pressable, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import HomeHeader from "@/components/matching/home/HomeHeader";
@@ -30,7 +30,8 @@ import { useAuthStore } from "@/stores/auth/authStore";
 import { useChatStore } from "@/stores/chat/chatStore";
 import { useMatchingStore } from "@/stores/matching/matchingStore";
 import { useUserStore } from "@/stores/user/userStore";
-import { createNewCardPreviewPartners } from "@/utils/homeNewCard";
+import { createNewCardPreviewPartners, getCurrentFreeTimeLabel } from "@/utils/homeNewCard";
+import PartnerCardNew from "@/components/matching/home/PartnerCardNew";
 import type { Banner } from "@/types/ui/homeBanner";
 import type { PartnerCardProps } from "@/types/ui/homeCards";
 import type { HomeStatusVariant } from "@/types/ui/homeStatus";
@@ -56,6 +57,7 @@ export default function HomePage() {
   const [isQuickMatchOn, setIsQuickMatchOn] = React.useState(storedMatching);
   const [isWorkoutCompleteTestVisible, setIsWorkoutCompleteTestVisible] =
     React.useState(false);
+  const [isPartnerCardTestVisible, setIsPartnerCardTestVisible] = React.useState(false);
   const [isProfileModalVisible, setIsProfileModalVisible] = React.useState(false);
   const [banners] = React.useState<Banner[]>(homeBanners);
   const [noMoreCandidates, setNoMoreCandidates] = React.useState(false);
@@ -218,8 +220,9 @@ export default function HomePage() {
   );
 
   const mappedCandidates = React.useMemo(
-    () =>
-      candidates.map((c): PartnerCardProps => {
+    () => {
+      const freeTimeLabel = getCurrentFreeTimeLabel(scheduleRanges);
+      return candidates.map((c): PartnerCardProps => {
         const imageUrl = normalizeImageUrl(c.profileImageUrl);
         return {
           userProfileId: c.userProfileId,
@@ -232,12 +235,14 @@ export default function HomePage() {
           exerciseReason: c.exerciseReason,
           exerciseTypes: c.exerciseTypes,
           matchScore: c.compatibilityScore ?? c.matchScore,
+          freeTimeLabel,
           disconnected: disconnectedCandidateIds.includes(c.userProfileId),
           onAccept: () => handleMatchRequest(c.userProfileId),
           onReject: () => handlePass(c.userProfileId),
         };
-      }),
-    [candidates, disconnectedCandidateIds, handleMatchRequest, handlePass],
+      });
+    },
+    [candidates, disconnectedCandidateIds, handleMatchRequest, handlePass, scheduleRanges],
   );
 
   const newCardPreviewPartners = React.useMemo(() => {
@@ -327,6 +332,15 @@ export default function HomePage() {
               리포트 테스트
             </Text>
           </Pressable>
+          <Pressable
+            accessibilityRole="button"
+            style={[styles.testButton, styles.testButtonPartnerCard]}
+            onPress={() => setIsPartnerCardTestVisible(true)}
+          >
+            <Text style={[styles.testButtonText, styles.testButtonPartnerCardText]}>
+              파트너 카드
+            </Text>
+          </Pressable>
         </View>
         <HeroBanner banners={banners} />
 
@@ -352,6 +366,30 @@ export default function HomePage() {
           router.push(reviewTestRoute as any);
         }}
       />
+      <Modal
+        visible={isPartnerCardTestVisible}
+        animationType="slide"
+        onRequestClose={() => setIsPartnerCardTestVisible(false)}
+      >
+        <SafeAreaView edges={["top"]} style={styles.partnerCardTestModal}>
+          <View style={styles.partnerCardTestHeader}>
+            <Text style={styles.partnerCardTestTitle}>파트너 카드 미리보기</Text>
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => setIsPartnerCardTestVisible(false)}
+              style={styles.partnerCardTestClose}
+            >
+              <Text style={styles.partnerCardTestCloseText}>닫기</Text>
+            </Pressable>
+          </View>
+          <ScrollView
+            contentContainerStyle={styles.partnerCardTestContent}
+            showsVerticalScrollIndicator={false}
+          >
+            <PartnerCardNew {...(newCardPreviewPartners[0] ?? {})} />
+          </ScrollView>
+        </SafeAreaView>
+      </Modal>
       <OpponentProfileModal
         visible={isProfileModalVisible}
         onClose={() => setIsProfileModalVisible(false)}
@@ -445,6 +483,44 @@ const styles = StyleSheet.create({
   },
   testButtonProfileText: {
     color: "#0891B2",
+  },
+  testButtonPartnerCard: {
+    borderColor: "#D97706",
+  },
+  testButtonPartnerCardText: {
+    color: "#D97706",
+  },
+  partnerCardTestModal: {
+    flex: 1,
+    backgroundColor: "#0F172A",
+  },
+  partnerCardTestHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 20,
+    paddingVertical: 14,
+  },
+  partnerCardTestTitle: {
+    fontSize: 17,
+    fontWeight: "700",
+    color: "#FFFFFF",
+  },
+  partnerCardTestClose: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.3)",
+  },
+  partnerCardTestCloseText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#FFFFFF",
+  },
+  partnerCardTestContent: {
+    paddingHorizontal: 16,
+    paddingBottom: 40,
   },
   sectionTitle: {
     paddingHorizontal: 20,

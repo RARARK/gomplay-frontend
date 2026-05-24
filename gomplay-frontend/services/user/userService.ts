@@ -19,6 +19,12 @@ export type OpponentProfile = {
   department: string;
   studentId: string;
   mannerTemperature: number;
+  exerciseTypes?: string[];
+  partnerStyle?: string;
+  exerciseIntensity?: string;
+  exerciseReason?: string;
+  matchCount?: number;
+  noShowCount?: number;
 };
 
 export async function getUserProfile(userProfileId: number): Promise<OpponentProfile> {

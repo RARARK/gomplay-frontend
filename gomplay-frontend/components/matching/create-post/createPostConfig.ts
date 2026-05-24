@@ -7,6 +7,7 @@ export type CreatePostFormState = {
   scheduledStartAt: Date;
   scheduledEndAt: Date;
   capacity: number;
+  openChatUrl: string;
   message: string;
   difficulty: PostDifficulty;
 };

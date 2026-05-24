@@ -47,6 +47,7 @@ export type CreateGatheringRequest = {
   scheduledAt: string;
   scheduledEndAt: string;
   maxParticipants: number;
+  openChatUrl: string;
   description?: string;
   tags?: string;
 };
@@ -58,6 +59,7 @@ export type UpdateGatheringRequest = {
   title?: string;
   description?: string;
   tags?: string;
+  openChatUrl?: string;
 };
 
 export type GatheringPostDetailResponse = {

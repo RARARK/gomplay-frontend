@@ -15,6 +15,8 @@ import type { PartnerCardProps } from "@/types/ui/homeCards";
 
 const DEFAULT_PROFILE_IMAGE = require("../../../assets/home/PartnerProfileImage.png");
 const CARD_RADIUS = 28;
+const DEFAULT_MATCH_INSIGHT =
+  "시간표가 잘 맞고, 선호 운동 종목과 운동 성향이 비슷한 파트너예요. 매너온도와 학과, 학번 같은 친밀도 요소도 함께 반영해 추천했어요.";
 
 type StoryPartnerCardProps = PartnerCardProps & {
   activeIndex?: number;
@@ -68,7 +70,7 @@ function DetailItem({
   return (
     <View style={styles.detailItem}>
       <View style={styles.detailLabelRow}>
-        <Ionicons name={icon} size={19} color="#FFFFFF" />
+        <Ionicons name={icon} size={16} color="#FFFFFF" />
         <Text style={styles.detailLabel} numberOfLines={2}>
           {label}
         </Text>
@@ -110,9 +112,7 @@ export default function PartnerCardNew({
   const shownAge = age ?? compactStudentId(studentId);
   const partnerLabel = preferredPartnerLabel ?? partnerStyle ?? "함께 즐기는 파트너";
   const styleLabel = exerciseStyleLabel ?? exerciseReason ?? "가볍게 즐겨요";
-  const insightText =
-    matchInsight ??
-    "운동 스타일과 강도가 잘 맞고, 선호하는 종목도 겹쳐요. 함께라면 꾸준히 운동할 수 있을 거예요.";
+  const insightText = DEFAULT_MATCH_INSIGHT;
 
   React.useEffect(() => {
     Animated.timing(insightProgress, {
@@ -221,6 +221,11 @@ export default function PartnerCardNew({
               </Text>
               <Text style={styles.age}>{shownAge}</Text>
             </View>
+            {department ? (
+              <Text style={styles.department} numberOfLines={1}>
+                {department}
+              </Text>
+            ) : null}
 
             <View style={styles.sportRow}>
               <SportChip label={sports[0] ?? "풋살"} icon="football-outline" />
@@ -471,6 +476,13 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: "#FFFFFF",
   },
+  department: {
+    fontSize: 15,
+    lineHeight: 21,
+    fontWeight: "600",
+    color: "rgba(255, 255, 255, 0.72)",
+    marginTop: -4,
+  },
   sportRow: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -542,37 +554,37 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
   },
   glassPanel: {
-    minHeight: 128,
-    borderRadius: 22,
+    minHeight: 104,
+    borderRadius: 18,
     backgroundColor: "rgba(255, 255, 255, 0.14)",
     borderWidth: 1,
     borderColor: "rgba(255, 255, 255, 0.08)",
     flexDirection: "row",
-    paddingVertical: 18,
-    paddingHorizontal: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 10,
     overflow: "hidden",
   },
   detailItem: {
     flex: 1,
-    gap: 6,
-    paddingHorizontal: 6,
+    gap: 5,
+    paddingHorizontal: 5,
   },
   detailLabelRow: {
     flexDirection: "row",
     alignItems: "flex-start",
-    gap: 7,
-    minHeight: 34,
+    gap: 5,
+    minHeight: 30,
   },
   detailLabel: {
     flexShrink: 1,
-    fontSize: 12,
-    lineHeight: 16,
+    fontSize: 11,
+    lineHeight: 15,
     fontWeight: "800",
     color: "#FFFFFF",
   },
   detailValue: {
-    fontSize: 17,
-    lineHeight: 23,
+    fontSize: 15,
+    lineHeight: 20,
     fontWeight: "900",
     color: "#FFFFFF",
   },

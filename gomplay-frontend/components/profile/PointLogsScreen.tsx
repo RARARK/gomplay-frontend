@@ -13,10 +13,11 @@ import {
 } from "react-native";
 
 import { getPointLogs } from "@/services/point/pointService";
+import { getMyProfile } from "@/services/user/userService";
 import { useUserStore } from "@/stores/user/userStore";
-import type { PointLog } from "@/types/domain/point";
+import type { PointLog, PointLogReason } from "@/types/domain/point";
 
-const POINT_BEAR = require("../../assets/home/pointbear.png");
+import POINT_BEAR from "../../assets/home/pointbear.png";
 
 const PRIMARY = "#4C5BE2";
 
@@ -28,20 +29,13 @@ type ReasonConfig = {
   iconColor: string;
 };
 
-const REASON_CONFIG: Record<string, ReasonConfig> = {
-  match_complete: {
-    label: "운동 완료",
-    iconName: "run-fast",
-    iconFamily: "material",
-    iconBg: "#DCFCE7",
-    iconColor: "#16A34A",
-  },
-  review: {
-    label: "리뷰 작성",
-    iconName: "create-outline",
+const REASON_CONFIG: Record<PointLogReason, ReasonConfig> = {
+  signup: {
+    label: "가입 보너스",
+    iconName: "gift-outline",
     iconFamily: "ion",
-    iconBg: "#DCFCE7",
-    iconColor: "#16A34A",
+    iconBg: "#F3E8FF",
+    iconColor: "#9333EA",
   },
   quick_match: {
     label: "퀵 매치 시작",
@@ -57,26 +51,19 @@ const REASON_CONFIG: Record<string, ReasonConfig> = {
     iconBg: "#DCFCE7",
     iconColor: "#16A34A",
   },
-  post_boost: {
-    label: "모집글 부스트",
-    iconName: "rocket-outline",
-    iconFamily: "ion",
-    iconBg: "#F3E8FF",
-    iconColor: "#7C3AED",
-  },
   attendance: {
-    label: "출석체크",
+    label: "출석 체크",
     iconName: "calendar-check",
     iconFamily: "material",
     iconBg: "#DBEAFE",
     iconColor: "#2563EB",
   },
-  signup: {
-    label: "가입 보너스",
-    iconName: "gift-outline",
+  review: {
+    label: "리뷰 작성",
+    iconName: "create-outline",
     iconFamily: "ion",
-    iconBg: "#F3E8FF",
-    iconColor: "#9333EA",
+    iconBg: "#DCFCE7",
+    iconColor: "#16A34A",
   },
   no_show: {
     label: "노쇼",
@@ -86,11 +73,53 @@ const REASON_CONFIG: Record<string, ReasonConfig> = {
     iconColor: "#EF4444",
   },
   first_match: {
-    label: "첫 매칭",
+    label: "첫 매칭 완료",
     iconName: "star-outline",
     iconFamily: "ion",
     iconBg: "#FEF3C7",
     iconColor: "#D97706",
+  },
+  match_complete: {
+    label: "운동 완료",
+    iconName: "run-fast",
+    iconFamily: "material",
+    iconBg: "#DCFCE7",
+    iconColor: "#16A34A",
+  },
+  exercise_complete: {
+    label: "운동 완료",
+    iconName: "run-fast",
+    iconFamily: "material",
+    iconBg: "#DCFCE7",
+    iconColor: "#16A34A",
+  },
+  review_detail: {
+    label: "상세 후기 작성",
+    iconName: "create-outline",
+    iconFamily: "ion",
+    iconBg: "#DCFCE7",
+    iconColor: "#16A34A",
+  },
+  recommendation_refresh: {
+    label: "추천 새로고침",
+    iconName: "refresh-outline",
+    iconFamily: "ion",
+    iconBg: "#F3F4F6",
+    iconColor: "#6B7280",
+  },
+  post_boost: {
+    label: "모집글 부스트",
+    iconName: "rocket-outline",
+    iconFamily: "ion",
+    iconBg: "#F3E8FF",
+    iconColor: "#7C3AED",
+  },
+  mutual_review: {
+    label: "상호 리뷰 완료",
+    iconName: "people-outline",
+    iconFamily: "ion",
+    iconBg: "#DCFCE7",
+    iconColor: "#16A34A",
   },
 };
 
@@ -105,7 +134,6 @@ const USAGE_ITEMS = [
     key: "quick",
     name: "퀵 매치 시작",
     icon: "flash",
-    iconFamily: "ion" as const,
     iconBg: "#EEF2FF",
     iconColor: PRIMARY,
     cost: "10P",
@@ -117,7 +145,6 @@ const USAGE_ITEMS = [
     key: "boost",
     name: "모집글 부스트",
     icon: "rocket-outline",
-    iconFamily: "ion" as const,
     iconBg: "#F3E8FF",
     iconColor: "#7C3AED",
     cost: "30P",
@@ -127,42 +154,60 @@ const USAGE_ITEMS = [
   },
 ];
 
+const EARN_GUIDE = [
+  { action: "회원가입", point: 100 },
+  { action: "첫 매칭 완료", point: 30 },
+  { action: "운동 완료", point: 4 },
+  { action: "리뷰 작성", point: 2 },
+  { action: "모집글 등록", point: 2 },
+  { action: "출석", point: 1 },
+];
+
+const POINT_SPEND_GUIDE = [
+  { action: "퀵 매치", point: -10 },
+  { action: "모집글 부스트", point: -30 },
+];
+
+type Tab = (typeof TABS)[number]["key"];
+
 function getWeekRange() {
   const now = new Date();
   const day = now.getDay();
   const monday = new Date(now);
   monday.setDate(now.getDate() - (day === 0 ? 6 : day - 1));
   monday.setHours(0, 0, 0, 0);
+
   const sunday = new Date(monday);
   sunday.setDate(monday.getDate() + 6);
   sunday.setHours(23, 59, 59, 999);
-  const fmt = (d: Date) =>
-    `${String(d.getMonth() + 1).padStart(2, "0")}.${String(d.getDate()).padStart(2, "0")}`;
+
+  const formatShort = (date: Date) =>
+    `${String(date.getMonth() + 1).padStart(2, "0")}.${String(date.getDate()).padStart(2, "0")}`;
+
   return {
     start: monday,
     end: sunday,
-    label: `${fmt(monday)} - ${fmt(sunday)}`,
+    label: `${formatShort(monday)} - ${formatShort(sunday)}`,
   };
 }
 
 function formatDate(iso: string) {
-  const d = new Date(iso);
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  const h = String(d.getHours()).padStart(2, "0");
-  const min = String(d.getMinutes()).padStart(2, "0");
-  return `${m}.${day} ${h}:${min}`;
+  const date = new Date(iso);
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+  return `${month}.${day} ${hours}:${minutes}`;
 }
 
-function LogIcon({ reason }: { reason: string }) {
-  const cfg = REASON_CONFIG[reason];
-  if (!cfg) {
-    return (
-      <View style={[styles.logIcon, { backgroundColor: "#F3F4F6" }]}>
-        <Ionicons name="ellipse-outline" size={20} color="#9CA3AF" />
-      </View>
-    );
-  }
+function formatPoint(value: number, withPlus = false) {
+  const prefix = withPlus && value > 0 ? "+" : "";
+  return `${prefix}${value.toLocaleString("ko-KR")}P`;
+}
+
+function LogIcon({ reason }: { reason: PointLogReason }) {
+  const cfg = REASON_CONFIG[reason] ?? FALLBACK_CONFIG;
+
   return (
     <View style={[styles.logIcon, { backgroundColor: cfg.iconBg }]}>
       {cfg.iconFamily === "ion" ? (
@@ -178,32 +223,35 @@ function LogIcon({ reason }: { reason: string }) {
   );
 }
 
+const FALLBACK_CONFIG: ReasonConfig = {
+  label: "포인트 변동",
+  iconName: "ellipse-outline",
+  iconFamily: "ion",
+  iconBg: "#F3F4F6",
+  iconColor: "#6B7280",
+};
+
 function LogItem({ item }: { item: PointLog }) {
-  const isPos = item.delta >= 0;
-  const cfg = REASON_CONFIG[item.reason];
+  const isPositive = item.delta >= 0;
+  const cfg = REASON_CONFIG[item.reason] ?? FALLBACK_CONFIG;
 
   return (
     <View style={styles.logItem}>
       <LogIcon reason={item.reason} />
       <View style={styles.logContent}>
-        <Text style={styles.logLabel}>{cfg?.label ?? item.reason}</Text>
+        <Text style={styles.logLabel}>{cfg.label}</Text>
         <Text style={styles.logDate}>{formatDate(item.createdAt)}</Text>
       </View>
-      <View style={styles.logRight}>
-        <Text
-          style={[styles.logDelta, isPos ? styles.deltaPos : styles.deltaNeg]}
-        >
-          {isPos ? `+${item.delta}P` : `${item.delta}P`}
-        </Text>
-      </View>
+      <Text style={[styles.logDelta, isPositive ? styles.deltaPos : styles.deltaNeg]}>
+        {formatPoint(item.delta, true)}
+      </Text>
     </View>
   );
 }
 
-type Tab = (typeof TABS)[number]["key"];
-
 export default function PointLogsScreen() {
-  const profile = useUserStore((s) => s.profile);
+  const profile = useUserStore((state) => state.profile);
+  const setProfile = useUserStore((state) => state.setProfile);
   const [logs, setLogs] = useState<PointLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -212,58 +260,92 @@ export default function PointLogsScreen() {
   const [showGuide, setShowGuide] = useState(false);
   const [week, setWeek] = useState(() => getWeekRange());
 
-  const balance = profile?.pointBalance ?? 0;
-
   useFocusEffect(
     React.useCallback(() => {
+      let isActive = true;
+
       setWeek(getWeekRange());
-    }, []),
+      setLoading(true);
+      setError(null);
+
+      Promise.allSettled([getPointLogs(), getMyProfile()])
+        .then(([logsResult, profileResult]) => {
+          if (!isActive) return;
+
+          if (logsResult.status === "fulfilled") {
+            setLogs(logsResult.value ?? []);
+          } else {
+            const reason = logsResult.reason;
+            setError(
+              reason instanceof Error
+                ? reason.message
+                : "포인트 내역을 불러올 수 없습니다.",
+            );
+          }
+
+          if (profileResult.status === "fulfilled") {
+            setProfile(profileResult.value);
+          }
+        })
+        .finally(() => {
+          if (isActive) setLoading(false);
+        });
+
+      return () => {
+        isActive = false;
+      };
+    }, [setProfile]),
   );
 
-  React.useEffect(() => {
-    getPointLogs()
-      .then((data) => setLogs(data ?? []))
-      .catch((e) =>
-        setError(e instanceof Error ? e.message : "오류가 발생했습니다."),
-      )
-      .finally(() => setLoading(false));
-  }, []);
-
-  const visibleLogs = useMemo(
-    () => (logs ?? []).filter((log) => log.reason !== "recommendation_refresh"),
+  const sortedLogs = useMemo(
+    () =>
+      [...logs].sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      ),
     [logs],
   );
 
+  const visibleLogs = useMemo(
+    () => sortedLogs.filter((log) => log.reason !== "recommendation_refresh"),
+    [sortedLogs],
+  );
+
+  const latestBalanceSnapshot = visibleLogs[0]?.balanceSnapshot;
+  const balance = profile?.pointBalance ?? latestBalanceSnapshot ?? 0;
+
   const { weekEarned, weekSpent } = useMemo(() => {
-    const wl = visibleLogs.filter((l) => {
-      const d = new Date(l.createdAt);
-      return d >= week.start && d <= week.end;
+    const weekLogs = visibleLogs.filter((log) => {
+      const createdAt = new Date(log.createdAt);
+      return createdAt >= week.start && createdAt <= week.end;
     });
+
     return {
-      weekEarned: wl
-        .filter((l) => l.delta > 0)
-        .reduce((s, l) => s + l.delta, 0),
-      weekSpent: wl.filter((l) => l.delta < 0).reduce((s, l) => s + l.delta, 0),
+      weekEarned: weekLogs
+        .filter((log) => log.delta > 0)
+        .reduce((sum, log) => sum + log.delta, 0),
+      weekSpent: weekLogs
+        .filter((log) => log.delta < 0)
+        .reduce((sum, log) => sum + log.delta, 0),
     };
   }, [visibleLogs, week]);
 
   const weekNet = weekEarned + weekSpent;
 
-  const filtered = useMemo(() => {
-    if (tab === "earned") return visibleLogs.filter((l) => l.delta > 0);
-    if (tab === "spent") return visibleLogs.filter((l) => l.delta < 0);
+  const filteredLogs = useMemo(() => {
+    if (tab === "earned") return visibleLogs.filter((log) => log.delta > 0);
+    if (tab === "spent") return visibleLogs.filter((log) => log.delta < 0);
     return visibleLogs;
-  }, [visibleLogs, tab]);
+  }, [tab, visibleLogs]);
 
-  const displayed = showAll ? filtered : filtered.slice(0, 6);
-
-
+  const displayedLogs = showAll ? filteredLogs : filteredLogs.slice(0, 6);
 
   return (
     <View style={styles.container}>
-      {/* Header */}
       <View style={styles.header}>
-        <View style={styles.backBtn} />
+        <Pressable hitSlop={8} style={styles.backBtn} onPress={() => router.back()}>
+          <Ionicons name="chevron-back" size={24} color="#111827" />
+        </Pressable>
         <Text style={styles.headerTitle}>포인트 내역</Text>
         <Pressable hitSlop={8} style={styles.guideBtn} onPress={() => setShowGuide(true)}>
           <Text style={styles.guideText}>포인트 가이드</Text>
@@ -278,30 +360,27 @@ export default function PointLogsScreen() {
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
       >
-        {/* Current Balance Card */}
         <View style={[styles.card, styles.balanceCard]}>
           <View style={styles.balanceLeft}>
             <Text style={styles.balanceLabel}>현재 보유 포인트</Text>
-            <Text style={styles.balanceValue}>{balance}P</Text>
+            <Text style={styles.balanceValue}>{formatPoint(balance)}</Text>
             <View style={styles.weekBadge}>
               <Text style={styles.weekBadgeText}>
-                이번 주 {weekNet >= 0 ? "+" : ""}
-                {weekNet}P
+                이번 주 {formatPoint(weekNet, true)}
               </Text>
-              <Ionicons name="chevron-up" size={12} color={PRIMARY} />
+              <Ionicons
+                name={weekNet >= 0 ? "chevron-up" : "chevron-down"}
+                size={12}
+                color={PRIMARY}
+              />
             </View>
             <Text style={styles.balanceDesc}>
-              {"운동 완료와 리뷰 작성으로\n포인트를 획득했어요!"}
+              {"실제 포인트 내역과 프로필 정보를\n기준으로 표시하고 있어요."}
             </Text>
           </View>
-          <Image
-            source={POINT_BEAR}
-            style={styles.mascotImage}
-            contentFit="contain"
-          />
+          <Image source={POINT_BEAR} style={styles.mascotImage} contentFit="contain" />
         </View>
 
-        {/* Weekly Summary */}
         <View style={styles.card}>
           <View style={styles.weekHeader}>
             <Text style={styles.cardTitle}>이번 주 포인트 요약</Text>
@@ -310,24 +389,20 @@ export default function PointLogsScreen() {
           <View style={styles.weekStats}>
             <View style={styles.weekStat}>
               <View style={[styles.statIcon, { backgroundColor: "#DCFCE7" }]}>
-                <Text style={[styles.statIconText, { color: "#16A34A" }]}>
-                  +
-                </Text>
+                <Text style={[styles.statIconText, { color: "#16A34A" }]}>+</Text>
               </View>
               <Text style={styles.statLabel}>획득</Text>
               <Text style={[styles.statValue, { color: "#16A34A" }]}>
-                +{weekEarned}P
+                {formatPoint(weekEarned, true)}
               </Text>
             </View>
             <View style={styles.weekStat}>
               <View style={[styles.statIcon, { backgroundColor: "#FEE2E2" }]}>
-                <Text style={[styles.statIconText, { color: "#EF4444" }]}>
-                  -
-                </Text>
+                <Text style={[styles.statIconText, { color: "#EF4444" }]}>-</Text>
               </View>
               <Text style={styles.statLabel}>사용</Text>
               <Text style={[styles.statValue, { color: "#EF4444" }]}>
-                {weekSpent}P
+                {formatPoint(weekSpent)}
               </Text>
             </View>
             <View style={styles.weekStat}>
@@ -336,63 +411,45 @@ export default function PointLogsScreen() {
               </View>
               <Text style={styles.statLabel}>증감</Text>
               <Text style={[styles.statValue, { color: PRIMARY }]}>
-                {weekNet >= 0 ? "+" : ""}
-                {weekNet}P
+                {formatPoint(weekNet, true)}
               </Text>
             </View>
             <View style={styles.weekStat}>
               <View style={[styles.statIcon, { backgroundColor: "#F3E8FF" }]}>
-                <Text style={[styles.statIconText, { color: "#7C3AED" }]}>
-                  P
-                </Text>
+                <Text style={[styles.statIconText, { color: "#7C3AED" }]}>P</Text>
               </View>
-              <Text style={styles.statLabel}>누적</Text>
+              <Text style={styles.statLabel}>보유</Text>
               <Text style={[styles.statValue, { color: "#7C3AED" }]}>
-                {balance}P
+                {formatPoint(balance)}
               </Text>
             </View>
           </View>
         </View>
 
-        {/* Point Usage */}
         <View style={styles.card}>
-          <Text style={[styles.cardTitle, { marginBottom: 14 }]}>
-            포인트 사용하기
-          </Text>
+          <Text style={[styles.cardTitle, { marginBottom: 14 }]}>포인트 사용하기</Text>
           <View style={styles.usageRow}>
-            {USAGE_ITEMS.map((u) => (
-              <Pressable
-                key={u.key}
-                style={styles.usageCard}
-                onPress={u.onPress}
-              >
-                <View
-                  style={[styles.usageIconBox, { backgroundColor: u.iconBg }]}
-                >
-                  <Ionicons
-                    name={u.icon as any}
-                    size={22}
-                    color={u.iconColor}
-                  />
+            {USAGE_ITEMS.map((item) => (
+              <Pressable key={item.key} style={styles.usageCard} onPress={item.onPress}>
+                <View style={[styles.usageIconBox, { backgroundColor: item.iconBg }]}>
+                  <Ionicons name={item.icon as any} size={22} color={item.iconColor} />
                 </View>
                 <View style={styles.usageNameRow}>
                   <Text style={styles.usageName} numberOfLines={1}>
-                    {u.name}
+                    {item.name}
                   </Text>
                   <Ionicons name="chevron-forward" size={11} color="#9CA3AF" />
                 </View>
-                <Text style={[styles.usageCost, { color: u.costColor }]}>
-                  {u.cost}
+                <Text style={[styles.usageCost, { color: item.costColor }]}>
+                  {item.cost}
                 </Text>
-                <Text style={styles.usageDesc}>{u.desc}</Text>
+                <Text style={styles.usageDesc}>{item.desc}</Text>
               </Pressable>
             ))}
           </View>
         </View>
 
-        {/* History */}
         <View style={[styles.card, styles.historyCard]}>
-          {/* Tabs */}
           <View style={styles.tabRow}>
             {TABS.map(({ key, label }) => (
               <Pressable
@@ -403,12 +460,7 @@ export default function PointLogsScreen() {
                   setShowAll(false);
                 }}
               >
-                <Text
-                  style={[
-                    styles.tabLabel,
-                    tab === key && styles.tabLabelActive,
-                  ]}
-                >
+                <Text style={[styles.tabLabel, tab === key && styles.tabLabelActive]}>
                   {label}
                 </Text>
               </Pressable>
@@ -423,29 +475,26 @@ export default function PointLogsScreen() {
             <View style={styles.center}>
               <Text style={styles.errorText}>{error}</Text>
             </View>
-          ) : displayed.length === 0 ? (
+          ) : displayedLogs.length === 0 ? (
             <View style={styles.center}>
               <Text style={styles.emptyText}>포인트 내역이 없어요</Text>
             </View>
           ) : (
             <>
               <View style={styles.logList}>
-                {displayed.map((item, i) => (
+                {displayedLogs.map((item, index) => (
                   <React.Fragment key={item.id}>
-                    {i > 0 && <View style={styles.separator} />}
+                    {index > 0 && <View style={styles.separator} />}
                     <LogItem item={item} />
                   </React.Fragment>
                 ))}
               </View>
-              {!showAll && filtered.length > 6 && (
-                <Pressable
-                  style={styles.showMore}
-                  onPress={() => setShowAll(true)}
-                >
+              {!showAll && filteredLogs.length > 6 ? (
+                <Pressable style={styles.showMore} onPress={() => setShowAll(true)}>
                   <Text style={styles.showMoreText}>더 많은 내역 보기</Text>
                   <Ionicons name="chevron-down" size={14} color="#6B7280" />
                 </Pressable>
-              )}
+              ) : null}
             </>
           )}
         </View>
@@ -453,7 +502,6 @@ export default function PointLogsScreen() {
         <View style={{ height: 32 }} />
       </ScrollView>
 
-      {/* 포인트 가이드 모달 */}
       <Modal
         visible={showGuide}
         transparent
@@ -472,22 +520,27 @@ export default function PointLogsScreen() {
 
             <Text style={styles.guideSectionLabel}>포인트 획득</Text>
             <View style={styles.guideTable}>
-              {EARN_GUIDE.map((row, i) => (
-                <View key={i} style={[styles.guideRow, i % 2 === 1 && styles.guideRowAlt]}>
+              {EARN_GUIDE.map((row, index) => (
+                <View
+                  key={row.action}
+                  style={[styles.guideRow, index % 2 === 1 && styles.guideRowAlt]}
+                >
                   <Text style={styles.guideRowAction}>{row.action}</Text>
                   <Text style={styles.guideRowEarn}>+{row.point}P</Text>
                 </View>
               ))}
             </View>
 
-            <Text style={[styles.guideSectionLabel, { marginTop: 20 }]}>포인트 소비</Text>
+            <Text style={[styles.guideSectionLabel, { marginTop: 20 }]}>
+              포인트 소비
+            </Text>
             <View style={styles.guideTable}>
-              {SPEND_GUIDE.map((row, i) => (
-                <View key={i} style={[styles.guideRow, i % 2 === 1 && styles.guideRowAlt]}>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.guideRowAction}>{row.action}</Text>
-                    {row.desc ? <Text style={styles.guideRowDesc}>{row.desc}</Text> : null}
-                  </View>
+              {POINT_SPEND_GUIDE.map((row, index) => (
+                <View
+                  key={row.action}
+                  style={[styles.guideRow, index % 2 === 1 && styles.guideRowAlt]}
+                >
+                  <Text style={styles.guideRowAction}>{row.action}</Text>
                   <Text style={styles.guideRowSpend}>{row.point}P</Text>
                 </View>
               ))}
@@ -500,22 +553,6 @@ export default function PointLogsScreen() {
     </View>
   );
 }
-
-const EARN_GUIDE = [
-  { action: "회원가입", point: 100 },
-  { action: "첫 매칭 완료", point: 30 },
-  { action: "운동 완료", point: 4 },
-  { action: "리뷰 작성", point: 2 },
-  { action: "상세 후기 작성", point: 1 },
-  { action: "상호 리뷰 완료", point: 1 },
-  { action: "모집글 등록", point: 2 },
-  { action: "출석 체크", point: 1 },
-];
-
-const SPEND_GUIDE = [
-  { action: "퀵 매치 세션 시작", point: -10, desc: undefined },
-  { action: "모집글 부스트", point: -30, desc: "일정 시간 동안 내 모집글 상단 노출" },
-];
 
 const styles = StyleSheet.create({
   container: {
@@ -534,9 +571,6 @@ const styles = StyleSheet.create({
   backBtn: {
     width: 32,
     height: 32,
-    alignItems: "center",
-    justifyContent: "center",
-    zIndex: 1,
   },
   headerTitle: {
     flex: 1,
@@ -544,9 +578,7 @@ const styles = StyleSheet.create({
     fontSize: 17,
     fontWeight: "700",
     color: "#111827",
-    letterSpacing: -0.3,
   },
-
   guideBtn: {
     flexDirection: "row",
     alignItems: "center",
@@ -591,7 +623,6 @@ const styles = StyleSheet.create({
     padding: 0,
     overflow: "hidden",
   },
-  // Balance card
   balanceCard: {
     flexDirection: "row",
     alignItems: "center",
@@ -610,7 +641,6 @@ const styles = StyleSheet.create({
     fontSize: 36,
     fontWeight: "800",
     color: PRIMARY,
-    letterSpacing: -1,
   },
   weekBadge: {
     flexDirection: "row",
@@ -638,7 +668,6 @@ const styles = StyleSheet.create({
     height: 180,
     paddingVertical: 4,
   },
-  // Weekly Summary
   weekHeader: {
     flexDirection: "row",
     alignItems: "center",
@@ -649,7 +678,6 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: "700",
     color: "#111827",
-    letterSpacing: -0.2,
   },
   weekRange: {
     fontSize: 12,
@@ -683,9 +711,7 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: 13,
     fontWeight: "700",
-    letterSpacing: -0.2,
   },
-  // Usage
   usageRow: {
     flexDirection: "row",
     gap: 12,
@@ -723,14 +749,12 @@ const styles = StyleSheet.create({
     fontSize: 18,
     lineHeight: 24,
     fontWeight: "800",
-    letterSpacing: -0.3,
   },
   usageDesc: {
     fontSize: 11,
     color: "#9CA3AF",
     lineHeight: 16,
   },
-  // Tabs
   tabRow: {
     flexDirection: "row",
     borderBottomWidth: 1,
@@ -755,7 +779,6 @@ const styles = StyleSheet.create({
     color: PRIMARY,
     fontWeight: "700",
   },
-  // Log list
   logList: {
     paddingHorizontal: 20,
   },
@@ -780,20 +803,14 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "600",
     color: "#111827",
-    letterSpacing: -0.2,
   },
   logDate: {
     fontSize: 12,
     color: "#9CA3AF",
   },
-  logRight: {
-    alignItems: "flex-end",
-    gap: 4,
-  },
   logDelta: {
     fontSize: 15,
     fontWeight: "700",
-    letterSpacing: -0.3,
   },
   deltaPos: {
     color: PRIMARY,
@@ -833,7 +850,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#9CA3AF",
   },
-  // 포인트 가이드 모달
   guideOverlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.4)",
@@ -865,15 +881,12 @@ const styles = StyleSheet.create({
     fontSize: 17,
     fontWeight: "700",
     color: "#111827",
-    letterSpacing: -0.3,
   },
   guideSectionLabel: {
     fontSize: 13,
     fontWeight: "700",
     color: "#6B7280",
     marginBottom: 8,
-    textTransform: "uppercase",
-    letterSpacing: 0.4,
   },
   guideTable: {
     borderRadius: 12,
@@ -896,11 +909,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#111827",
     fontWeight: "500",
-  },
-  guideRowDesc: {
-    fontSize: 11,
-    color: "#9CA3AF",
-    marginTop: 2,
   },
   guideRowEarn: {
     fontSize: 14,

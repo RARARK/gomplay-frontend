@@ -497,7 +497,6 @@ export default function ChatRoomScreen() {
       >
         <ChatHeader
           title={displayRoomTitle}
-          showBackButton={false}
           onPressMenu={() => setIsMenuOpen(true)}
         />
 

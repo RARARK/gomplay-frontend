@@ -28,6 +28,7 @@ import {
 } from "@/services/post/postService";
 
 const BIO_MAX_LENGTH = 200;
+const KAKAO_OPEN_CHAT_PREFIX = "https://open.kakao.com/o/";
 
 export default function EditPostRoute() {
   const { postId: postIdParam } = useLocalSearchParams<{ postId?: string }>();
@@ -41,6 +42,7 @@ export default function EditPostRoute() {
   const [tags, setTags] = React.useState<string[]>([]);
   const [capacity, setCapacity] = React.useState(1);
   const [message, setMessage] = React.useState("");
+  const [openChatUrl, setOpenChatUrl] = React.useState("");
   const [isTagSelectorExpanded, setIsTagSelectorExpanded] = React.useState(false);
   const scrollViewRef = React.useRef<ScrollView>(null);
 
@@ -60,6 +62,7 @@ export default function EditPostRoute() {
         setTags(post.tags ?? []);
         setCapacity(post.capacity);
         setMessage(post.message ?? "");
+        setOpenChatUrl(post.openChatUrl ?? "");
         setMinCapacity(Math.max(1, currentCount));
       })
       .finally(() => setIsLoading(false));
@@ -74,6 +77,11 @@ export default function EditPostRoute() {
   };
 
   const handleSave = async () => {
+    const trimmedUrl = openChatUrl.trim();
+    if (trimmedUrl && !trimmedUrl.startsWith(KAKAO_OPEN_CHAT_PREFIX)) {
+      Alert.alert("링크 오류", "카카오 오픈채팅 링크만 사용할 수 있어요.\n(https://open.kakao.com/o/...)");
+      return;
+    }
     setIsSaving(true);
     try {
       await updatePost(postId, {
@@ -81,6 +89,7 @@ export default function EditPostRoute() {
         tags: tags.length > 0 ? tags : undefined,
         capacity,
         message: message.trim() || undefined,
+        openChatUrl: trimmedUrl || undefined,
       });
       router.back();
     } catch (err) {
@@ -168,6 +177,21 @@ export default function EditPostRoute() {
                 현재 참여자 {minCapacity}명 이상으로만 설정할 수 있어요.
               </Text>
             ) : null}
+          </View>
+
+          <View style={styles.section}>
+            <Text style={styles.sectionLabel}>오픈채팅 링크</Text>
+            <TextInput
+              value={openChatUrl}
+              onChangeText={setOpenChatUrl}
+              placeholder="https://open.kakao.com/o/..."
+              placeholderTextColor="#8F95A1"
+              keyboardType="url"
+              autoCapitalize="none"
+              autoCorrect={false}
+              style={styles.singleLineInput}
+            />
+            <Text style={styles.inputHint}>카카오 오픈채팅 링크를 입력해주세요.</Text>
           </View>
 
           <View style={styles.section}>
@@ -281,6 +305,11 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "#6B7280",
     fontWeight: "500",
+  },
+  inputHint: {
+    fontSize: 13,
+    lineHeight: 18,
+    color: "#8F95A1",
   },
   messageInput: {
     minHeight: 132,

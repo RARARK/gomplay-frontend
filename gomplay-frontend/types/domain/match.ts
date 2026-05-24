@@ -187,3 +187,34 @@ export type AcceptMatchRequestResponse = {
 };
 
 export type RejectMatchRequestResponse = AcceptMatchRequestResponse;
+
+export type MatchHistoryEntry = {
+  id: number;
+  type: "GATHERING" | "PARTNER";
+  status: "COMPLETED";
+  role: "HOST" | "GUEST" | null;
+  partnerName: string;
+  partnerProfileImageUrl: string | null;
+  partnerDepartment: string;
+  partnerStudentNumber: string;
+  location: string | null;
+  sportType: string | null;
+  scheduledAt: string | null;
+  matchedAt: string | null;
+  reviewed: boolean;
+  // Extended partner profile fields
+  partnerIsVerified?: boolean;
+  partnerMannerTemperature?: number;
+  partnerMatchCount?: number;
+  partnerNoShowCount?: number;
+  partnerStyle?: string;
+  partnerExerciseIntensity?: string;
+  partnerExerciseReason?: string;
+  partnerExerciseTypes?: string[];
+};
+
+export type MatchHistoryResponse = {
+  success: boolean;
+  message: string;
+  data: MatchHistoryEntry[];
+};

@@ -55,13 +55,17 @@ function mapRecommendToCard(
 const MatchSection = React.memo(function MatchSection() {
   const [items, setItems] = React.useState<GatheringRecommendItem[]>([]);
   const [loading, setLoading] = React.useState(true);
+  const hasMountedRef = React.useRef(false);
 
   useFocusEffect(
     React.useCallback(() => {
       let active = true;
-      setLoading(true);
+      // 첫 진입만 로딩 스피너 표시, 이후 재포커스 시 카드를 유지한 채 백그라운드 갱신
+      if (!hasMountedRef.current) {
+        setLoading(true);
+      }
       getGatheringRecommendations()
-        .then((data) => { if (active) setItems(data); })
+        .then((data) => { if (active) { setItems(data); hasMountedRef.current = true; } })
         .catch(() => { if (active) setItems([]); })
         .finally(() => { if (active) setLoading(false); });
       return () => { active = false; };
@@ -76,10 +80,16 @@ const MatchSection = React.memo(function MatchSection() {
     router.push(`/posts/${id}` as any);
   }, []);
 
-  const cardData = React.useMemo(
-    () => items.map((item) => ({ ...mapRecommendToCard(item, () => handleCardPress(item.id)), id: item.id })),
-    [items, handleCardPress],
-  );
+  const cardData = React.useMemo(() => {
+    const seen = new Set<number>();
+    return items
+      .filter((item) => {
+        if (seen.has(item.id)) return false;
+        seen.add(item.id);
+        return true;
+      })
+      .map((item) => ({ ...mapRecommendToCard(item, () => handleCardPress(item.id)), id: item.id }));
+  }, [items, handleCardPress]);
 
   return (
     <View style={styles.container}>

@@ -1,4 +1,4 @@
-import { router } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import React from "react";
 import {
   ActivityIndicator,
@@ -146,34 +146,30 @@ const mapActiveMatchToItem = (
   if (!status) return null;
   const isGathering = sourceType === "POST";
   const role = normalizeMatchRole(match.role);
-  const shouldUseCurrentUserAsHostFallback = isGathering && role === "HOST";
+  const isHost = isGathering && role === "HOST";
+
+  // 일반 매칭은 항상 HOST 기준 정보를 표시한다.
+  // HOST일 때: hostName → 내 프로필 (partnerName은 게스트이므로 건너뜀)
+  // GUEST일 때: hostName → partnerName (게스트 입장에서 partner = 호스트)
   const displayName = isGathering
-    ? getDisplayValue(
-        match.hostName,
-        match.partnerName,
-        shouldUseCurrentUserAsHostFallback ? currentUserProfile?.name : undefined,
-      )
+    ? isHost
+      ? getDisplayValue(match.hostName, currentUserProfile?.name)
+      : getDisplayValue(match.hostName, match.partnerName)
     : match.partnerName;
   const displayProfileImageUrl = isGathering
-    ? getDisplayValue(
-        match.hostProfileImageUrl,
-        match.partnerProfileImageUrl,
-        shouldUseCurrentUserAsHostFallback ? currentUserProfile?.profileImageUrl : undefined,
-      )
+    ? isHost
+      ? getDisplayValue(match.hostProfileImageUrl, currentUserProfile?.profileImageUrl)
+      : getDisplayValue(match.hostProfileImageUrl, match.partnerProfileImageUrl)
     : match.partnerProfileImageUrl;
   const displayDepartment = isGathering
-    ? getDisplayValue(
-        match.hostDepartment,
-        match.partnerDepartment,
-        shouldUseCurrentUserAsHostFallback ? currentUserProfile?.department : undefined,
-      )
+    ? isHost
+      ? getDisplayValue(match.hostDepartment, currentUserProfile?.department)
+      : getDisplayValue(match.hostDepartment, match.partnerDepartment)
     : match.partnerDepartment;
   const displayStudentNumber = isGathering
-    ? getDisplayValue(
-        match.hostStudentNumber,
-        match.partnerStudentNumber,
-        shouldUseCurrentUserAsHostFallback ? currentUserProfile?.studentId : undefined,
-      )
+    ? isHost
+      ? getDisplayValue(match.hostStudentNumber, currentUserProfile?.studentId)
+      : getDisplayValue(match.hostStudentNumber, match.partnerStudentNumber)
     : match.partnerStudentNumber;
 
   return {
@@ -276,10 +272,19 @@ export default function MatchStatusScreen({
     };
   }, [currentUserProfile, setCurrentUserProfile]);
 
-  React.useEffect(() => {
-    if (initialMatches) return;
-    void loadActiveMatches();
-  }, [initialMatches, loadActiveMatches]);
+  const hasMountedRef = React.useRef(false);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      if (initialMatches) return;
+      if (!hasMountedRef.current) {
+        hasMountedRef.current = true;
+        void loadActiveMatches();
+      } else {
+        void loadActiveMatches(true);
+      }
+    }, [initialMatches, loadActiveMatches]),
+  );
 
   const matchesWithApplicantCount = React.useMemo(
     () =>
@@ -339,7 +344,9 @@ export default function MatchStatusScreen({
       const participants = await getGatheringParticipants(gatheringId);
       setApplicantsByMatch((prev) => ({
         ...prev,
-        [matchId]: participants.map(mapParticipantToApplicant),
+        [matchId]: participants
+          .filter((p) => p.status === "PENDING")
+          .map(mapParticipantToApplicant),
       }));
     } catch (error) {
       setApplicantsError(
