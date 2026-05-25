@@ -65,7 +65,7 @@ export default function LoginForm({
 
       {savedCredentials.length > 0 ? (
         <View style={styles.savedAccountArea}>
-          <Text style={styles.savedAccountTitle}>Recent test accounts</Text>
+          <Text style={styles.savedAccountTitle}>최근 테스트 계정</Text>
           <View style={styles.savedAccountList}>
             {savedCredentials.map((credential) => (
               <Pressable

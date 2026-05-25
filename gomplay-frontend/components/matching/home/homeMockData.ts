@@ -2,7 +2,6 @@ import { router } from "expo-router";
 
 import type {
   ModernMatchCardProps,
-  PartnerCardProps,
   RecommendationMatchCardProps,
 } from "@/types/ui/homeCards";
 import type { Banner } from "@/types/ui/homeBanner";
@@ -125,38 +124,5 @@ export const modernRecommendationCards: ModernMatchCardProps[] = [
     difficulty: "All Levels",
     currentParticipants: 5,
     maxParticipants: 12,
-  },
-];
-
-export const matchedPartners: PartnerCardProps[] = [
-  {
-    name: "Minjun Kim",
-    department: "컴퓨터공학과",
-    studentId: "22학번",
-    partnerStyle: "같이",
-    exerciseIntensity: "가볍게",
-    exerciseReason: "스트레스 해소",
-    exerciseTypes: ["테니스", "배드민턴", "농구"],
-    matchScore: 87,
-  },
-  {
-    name: "Seoyoon Lee",
-    department: "경영학과",
-    studentId: "21학번",
-    partnerStyle: "각자",
-    exerciseIntensity: "적당히",
-    exerciseReason: "체력 유지",
-    exerciseTypes: ["배드민턴", "헬스", "수영"],
-    matchScore: 82,
-  },
-  {
-    name: "Jiwon Park",
-    department: "체육교육과",
-    studentId: "23학번",
-    partnerStyle: "같이",
-    exerciseIntensity: "제대로",
-    exerciseReason: "경쟁",
-    exerciseTypes: ["러닝", "사이클", "축구"],
-    matchScore: 79,
   },
 ];

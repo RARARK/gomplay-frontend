@@ -14,9 +14,9 @@ export default function ChatSegment({
   if (items.length === 0) {
     return (
       <View style={styles.emptyState}>
-        <Text style={styles.emptyTitle}>No chats yet</Text>
+        <Text style={styles.emptyTitle}>아직 채팅이 없어요</Text>
         <Text style={styles.emptyDescription}>
-          Your active conversations will show up here.
+          매칭이 성사되면 여기에 채팅방이 나타나요.
         </Text>
       </View>
     );

@@ -5,7 +5,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import HomeHeader from "@/components/matching/home/HomeHeader";
 import HeroBanner from "@/components/matching/home/HeroBanner";
-import { homeBanners, matchedPartners } from "@/components/matching/home/homeMockData";
+import { homeBanners } from "@/components/matching/home/homeMockData";
 import HomeStatusSection from "@/components/matching/home/HomeStatusSection";
 import MatchSection from "@/components/matching/home/MatchSection";
 
@@ -239,7 +239,7 @@ export default function HomePage() {
 
   const newCardPreviewPartners = React.useMemo(() => {
     return createNewCardPreviewPartners({
-      basePartners: matchedPartners,
+      basePartners: [],
       profile: userProfile,
       survey,
       scheduleRanges,

@@ -6,7 +6,6 @@ import {
   View,
   type LayoutChangeEvent,
 } from "react-native";
-import { matchedPartners } from "./homeMockData";
 import type { PartnerCardProps } from "@/types/ui/homeCards";
 import PartnerCardNew from "./PartnerCardNew";
 
@@ -244,7 +243,7 @@ const carouselStyles = StyleSheet.create({
 });
 
 const MatchedContentNew = ({
-  partners = matchedPartners,
+  partners = [],
   initialIndex = 0,
   onPartnerIndexChange,
 }: MatchedContentNewProps) => {

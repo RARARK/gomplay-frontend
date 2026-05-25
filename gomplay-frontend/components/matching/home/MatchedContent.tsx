@@ -1,7 +1,6 @@
 import * as React from "react";
 import { StyleSheet, Text, View } from "react-native";
 import SuccessIcon from "@/assets/home/Success-Icon.svg";
-import { matchedPartners } from "./homeMockData";
 import PartnerCarousel from "./PartnerCarousel";
 import type { PartnerCardProps } from "@/types/ui/homeCards";
 import {
@@ -20,9 +19,9 @@ export type MatchedContentProps = {
 };
 
 const MatchedContent = React.memo(function MatchedContent({
-  title = "Partner found!",
-  description = "Your match is ready. Connect right away.",
-  partners = matchedPartners,
+  title = "파트너를 찾았어요!",
+  description = "매칭이 완료됐어요. 지금 바로 연결해보세요.",
+  partners = [],
   initialIndex = 0,
   onPartnerIndexChange,
 }: MatchedContentProps) {

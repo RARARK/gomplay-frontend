@@ -46,6 +46,7 @@ import {
 import { getUserProfile, type OpponentProfile } from "@/services/user/userService";
 import { useAuthStore } from "@/stores/auth/authStore";
 import { useBoostStore } from "@/stores/gathering/boostStore";
+import { useUserStore } from "@/stores/user/userStore";
 import type { GatheringParticipant, GatheringPostDetailResponse } from "@/types/domain/gathering";
 import { POST_STATUS } from "@/types/domain/post";
 
@@ -76,6 +77,7 @@ const getParticipantMannerTemperature = (
 export default function PostApplyScreen({ postId }: PostApplyScreenProps) {
   const insets = useSafeAreaInsets();
   const userId = useAuthStore((s) => s.userId);
+  const profileId = useUserStore((s) => s.profile?.id ?? null);
   const getBoostExpiresAt = useBoostStore((s) => s.getBoostExpiresAt);
   const hasBoosted = useBoostStore((s) => s.hasBoosted);
   const markBoosted = useBoostStore((s) => s.markBoosted);
@@ -109,6 +111,7 @@ export default function PostApplyScreen({ postId }: PostApplyScreenProps) {
             responsePostId: nextPost.id,
             responseHostId: nextPost.hostId,
             currentUserId: userId,
+            currentProfileId: profileId,
             status: nextPost.status,
           });
 
@@ -131,7 +134,7 @@ export default function PostApplyScreen({ postId }: PostApplyScreenProps) {
     };
   }, [postId, userId]);
 
-  const isOwner = userId !== null && post?.hostId === userId;
+  const isOwner = profileId !== null && post?.hostId === profileId;
   const postIdForParticipants = post?.id;
 
   React.useEffect(() => {

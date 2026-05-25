@@ -87,7 +87,7 @@ export default function Chatroom({ chatRoom, onPress }: ChatroomProps) {
             ) : null}
           </View>
           <Text numberOfLines={1} style={styles.previewMessage}>
-            {lastMessage ?? "No messages yet."}
+            {lastMessage ?? "아직 메시지가 없어요."}
           </Text>
         </View>
       </View>

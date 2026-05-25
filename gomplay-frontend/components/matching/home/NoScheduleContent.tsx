@@ -15,9 +15,9 @@ const NoScheduleContent = () => {
       />
 
       <View style={styles.content}>
-        <Text style={styles.title}>Add your timetable to start matching</Text>
+        <Text style={styles.title}>시간표를 등록하고 매칭을 시작해보세요</Text>
         <Text style={styles.subtitle}>
-          Set your available hours so quick match can find better partners.
+          가능한 시간대를 설정하면 더 잘 맞는 파트너를 찾을 수 있어요.
         </Text>
 
         <Pressable
@@ -25,11 +25,11 @@ const NoScheduleContent = () => {
           onPress={() => router.push("/timetable")}
         >
           <Materialsymbolscheck width={24} height={24} />
-          <Text style={styles.buttonText}>Go to timetable</Text>
+          <Text style={styles.buttonText}>시간표 등록하기</Text>
         </Pressable>
 
         <Text style={styles.caption}>
-          Register now and start matching right away.
+          지금 등록하고 바로 매칭을 시작해보세요.
         </Text>
       </View>
     </>

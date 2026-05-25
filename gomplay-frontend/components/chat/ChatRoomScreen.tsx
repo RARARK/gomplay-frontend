@@ -23,6 +23,7 @@ import { Color, FontFamily, FontSize } from "../GlobalStyles";
 import {
   connectChatWs,
   getChatRoomDetails,
+  getChatRooms,
   markChatRoomAsRead,
   sendChatMessage,
   subscribeToChatMessages,
@@ -376,10 +377,10 @@ export default function ChatRoomScreen() {
       setIsLoading(true);
 
       try {
-        // 매칭 직후 방이 서버에서 아직 준비되지 않을 수 있으므로 최대 3회 재시도
+        // 매칭 직후 방이 서버에서 아직 준비되지 않을 수 있으므로 최대 5회 재시도
         let details = await getChatRoomDetails(chatRoomId);
-        for (let attempt = 1; attempt < 3 && !details; attempt++) {
-          await new Promise((resolve) => setTimeout(resolve, 1500));
+        for (let attempt = 1; attempt < 5 && !details; attempt++) {
+          await new Promise((resolve) => setTimeout(resolve, 2000));
           if (!isMounted) return;
           details = await getChatRoomDetails(chatRoomId);
         }
@@ -387,11 +388,23 @@ export default function ChatRoomScreen() {
         if (!isMounted) return;
 
         if (!details) {
-          // store에 방 정보가 있으면(매칭 직후 upsert된 경우) 리다이렉트하지 않고
-          // 빈 채팅방으로 유지 — WS 수신 메시지가 실시간으로 표시됨
-          const inStore = useChatStore.getState().chatRooms.some(
+          // getChatRoomDetails 실패 시 getChatRooms로 방 존재 여부 재확인
+          // (매칭 직후 타이밍 이슈로 방이 store에 없을 수 있음)
+          let inStore = useChatStore.getState().chatRooms.some(
             (r) => r.id === chatRoomId,
           );
+          if (!inStore) {
+            for (let i = 0; i < 3 && !inStore; i++) {
+              await new Promise((resolve) => setTimeout(resolve, 2000));
+              if (!isMounted) return;
+              const rooms = await getChatRooms();
+              const found = rooms.find((r) => r.id === chatRoomId);
+              if (found) {
+                upsertChatRoom(found);
+                inStore = true;
+              }
+            }
+          }
           if (!inStore) {
             router.replace("/(tabs)/chat");
             return;
@@ -530,9 +543,9 @@ export default function ChatRoomScreen() {
 
         <PostMatchReviewCard
           showReviewPrompt={chatRoom.matchStatus === MATCH_STATUS.COMPLETED && !chatRoom.reviewed}
-          title="Workout finished!"
-          description="How was the session today? Please leave a review for your partner."
-          buttonLabel="Leave review"
+          title="운동이 완료되었어요!"
+          description="오늘 운동은 어떠셨나요? 파트너에게 평가를 남겨주세요."
+          buttonLabel="평가하러 가기"
           onPressReview={() => {
             const opponent = getChatRoomPrimaryParticipant(chatRoom.participants);
             const name = encodeURIComponent(opponent?.name ?? "");
@@ -542,7 +555,7 @@ export default function ChatRoomScreen() {
             );
           }}
           inputPlaceholder={
-            isReadOnly ? "This chat is read-only." : "Write a message..."
+            isReadOnly ? "읽기 전용 채팅방입니다." : "메시지를 입력하세요..."
           }
           inputDisabled={isReadOnly}
           messageValue={draft}

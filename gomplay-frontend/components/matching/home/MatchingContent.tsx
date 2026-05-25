@@ -171,7 +171,7 @@ const MatchingContent = React.memo(function MatchingContent({
           <>
             <View style={styles.titleRow}>
               <FourPointStar />
-              <Text style={styles.title}>Finding your partner</Text>
+              <Text style={styles.title}>파트너를 찾고 있어요</Text>
               <View style={styles.ellipsisBox}>
                 <EllipsisText />
               </View>

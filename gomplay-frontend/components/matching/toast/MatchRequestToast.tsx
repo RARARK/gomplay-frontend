@@ -12,7 +12,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { normalizeImageUrl } from "@/lib/utils/imageUrl";
-import { getChatRooms } from "@/services/chat/chatService";
+import { connectChatWs, getChatRooms } from "@/services/chat/chatService";
 import {
   acceptMatchRequest,
   rejectMatchRequest,
@@ -126,6 +126,7 @@ export default function MatchRequestToast() {
       setMatching(false);
       setCandidates([]);
       toggleMatching(false).catch(() => {});
+      connectChatWs();
       slideOut(() => {
         setPendingMatchRequest(null);
         setIsAccepting(false);

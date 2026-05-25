@@ -65,8 +65,9 @@ export default function TabsLayout() {
       setMatching(false);
       setCandidates([]);
       toggleMatching(false).catch(() => {});
-      // 이동 전 방 목록을 store에 반영 → ChatRoomScreen이 detail 로드 실패해도
-      // store에서 방을 찾아 빈 채팅방으로 유지할 수 있음
+      // 채팅 WS를 이동 전에 미리 연결 — ChatRoomScreen 마운트 전에 연결이 완료되어야
+      // 방 생성 직후 백엔드가 보내는 WS 메시지를 놓치지 않음
+      connectChatWs();
       getChatRooms()
         .then(setChatRooms)
         .catch(() => {})

@@ -18,10 +18,10 @@ type PostMatchReviewCardProps = {
 };
 
 export default function PostMatchReviewCard({
-  title = "Workout finished!",
-  description = "How was the session today? Leave a quick review for your match partner.",
-  buttonLabel = "Leave review",
-  inputPlaceholder = "Write a message...",
+  title = "운동이 완료되었어요!",
+  description = "오늘 운동은 어떠셨나요? 파트너에게 평가를 남겨주세요.",
+  buttonLabel = "평가하러 가기",
+  inputPlaceholder = "메시지를 입력하세요...",
   onPressReview,
   messageValue = "",
   onChangeMessage,
