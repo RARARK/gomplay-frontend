@@ -3,6 +3,22 @@ import { isAxiosError } from "axios";
 import apiClient, { ApiError } from "@/lib/api/client";
 import type { NotificationItem, NotificationTab } from "@/types/domain/notification";
 
+export async function markNotificationRead(id: number): Promise<void> {
+  try {
+    await apiClient.patch(`/api/notifications/${id}/read`);
+  } catch (error) {
+    if (error instanceof ApiError) throw error;
+    if (isAxiosError(error)) {
+      const message =
+        (error.response?.data as { message?: string })?.message ??
+        "읽음 처리에 실패했습니다.";
+      if (error.response?.status === 400) throw new ApiError(message);
+      if (error.response?.status === 500) throw new ApiError("서버 내부 오류");
+    }
+    throw new ApiError("알 수 없는 오류가 발생하였습니다.");
+  }
+}
+
 export async function markAllNotificationsRead(): Promise<void> {
   try {
     await apiClient.patch("/api/notifications/read-all");

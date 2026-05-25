@@ -31,7 +31,7 @@ import type { GatheringParticipant } from "@/types/domain/gathering";
 import type { ActiveMatch } from "@/types/domain/match";
 import type { UserProfile } from "@/types/domain/user";
 
-const SOURCE_FILTERS = ["일반 매칭", "퀵 매치"] as const;
+const SOURCE_FILTERS = ["운동 모집", "퀵 매치"] as const;
 const STATUS_FILTERS = ["진행중", "수락 대기"] as const;
 
 type SourceFilter = (typeof SOURCE_FILTERS)[number] | null;
@@ -84,8 +84,8 @@ const mapParticipantToApplicant = (
   id: String(participant.id),
   name: participant.userName,
   profileImageUrl: participant.userProfileImageUrl,
-  department: "",
-  studentNumber: "",
+  department: participant.department ?? "",
+  studentNumber: participant.studentNumber ?? "",
   tags: [],
   trustScore: getParticipantMannerTemperature(participant),
   status: participantStatusToApplicantStatus(participant.status),
@@ -148,7 +148,7 @@ const mapActiveMatchToItem = (
   const role = normalizeMatchRole(match.role);
   const isHost = isGathering && role === "HOST";
 
-  // 일반 매칭은 항상 HOST 기준 정보를 표시한다.
+  // 운동 모집은 항상 HOST 기준 정보를 표시한다.
   // HOST일 때: hostName → 내 프로필 (partnerName은 게스트이므로 건너뜀)
   // GUEST일 때: hostName → partnerName (게스트 입장에서 partner = 호스트)
   const displayName = isGathering
@@ -172,6 +172,10 @@ const mapActiveMatchToItem = (
       : getDisplayValue(match.hostStudentNumber, match.partnerStudentNumber)
     : match.partnerStudentNumber;
 
+  const revieweeId = isGathering
+    ? (isHost ? (match.partnerUserId ?? null) : (match.hostUserId ?? null))
+    : (match.partnerUserId ?? null);
+
   return {
     id: String(match.id),
     sourceType,
@@ -179,6 +183,7 @@ const mapActiveMatchToItem = (
     role,
     canComplete: match.canComplete,
     reviewed: match.reviewed,
+    revieweeId,
     partnerName: displayName ?? "",
     partnerProfileImageUrl: displayProfileImageUrl,
     partnerDepartment: displayDepartment ?? undefined,
@@ -213,9 +218,8 @@ export default function MatchStatusScreen({
   const [matchesLoading, setMatchesLoading] = React.useState(!initialMatches);
   const [matchesRefreshing, setMatchesRefreshing] = React.useState(false);
   const [matchesError, setMatchesError] = React.useState<string | null>(null);
-  const [completedGatheringId, setCompletedGatheringId] = React.useState<
-    string | null
-  >(null);
+  const [completedItem, setCompletedItem] = React.useState<MatchItem | null>(null);
+  const [completedByMeIds, setCompletedByMeIds] = React.useState<Set<string>>(new Set());
   const [applicantsByMatch, setApplicantsByMatch] = React.useState<
     Record<string, Applicant[]>
   >(initialApplicantsByMatch);
@@ -235,11 +239,13 @@ export default function MatchStatusScreen({
 
       try {
         const activeMatches = await getActiveMatches();
-        setMatches(
-          activeMatches
-            .map((match) => mapActiveMatchToItem(match, currentUserProfile))
-            .filter(isMatchItem),
-        );
+        const seen = new Set<number>();
+        const deduped = activeMatches.filter((m) => {
+          if (seen.has(m.id)) return false;
+          seen.add(m.id);
+          return true;
+        });
+        setMatches(deduped.map((match) => mapActiveMatchToItem(match, currentUserProfile)).filter(isMatchItem));
       } catch (error) {
         setMatchesError(
           error instanceof Error
@@ -306,8 +312,12 @@ export default function MatchStatusScreen({
     () => {
       const now = Date.now();
       return matchesWithApplicantCount.filter((m) => {
-        if (m.status !== "IN_PROGRESS" && m.status !== "PENDING" && m.status !== "ACCEPTED") return false;
-        if (m.sourceType === "PARTNER" && m.status === "PENDING") return false;
+        if (m.status !== "IN_PROGRESS" && m.status !== "PENDING" && m.status !== "ACCEPTED") {
+          return false;
+        }
+        if (m.sourceType === "PARTNER" && m.status === "PENDING") {
+          return false;
+        }
         if (m.status === "PENDING" && m.sourceType === "POST") {
           const expiryTime =
             m.scheduledAt
@@ -315,13 +325,23 @@ export default function MatchStatusScreen({
               : m.scheduledEndAt
                 ? new Date(m.scheduledEndAt).getTime()
                 : null;
-          if (expiryTime !== null && expiryTime < now) return false;
+          if (expiryTime !== null && expiryTime < now) {
+            return false;
+          }
         }
-        if (sourceFilter === "일반 매칭" && m.sourceType !== "POST") return false;
+        if (sourceFilter === "운동 모집" && m.sourceType !== "POST") return false;
         if (sourceFilter === "퀵 매치" && m.sourceType !== "PARTNER") return false;
         if (statusFilter === "진행중" && m.status !== "IN_PROGRESS") return false;
         if (statusFilter === "수락 대기" && m.status !== "PENDING") return false;
         return true;
+      }).sort((a, b) => {
+        const timeA = a.matchedAt ? new Date(a.matchedAt).getTime()
+          : a.scheduledAt ? new Date(a.scheduledAt).getTime()
+          : Number(a.id);
+        const timeB = b.matchedAt ? new Date(b.matchedAt).getTime()
+          : b.scheduledAt ? new Date(b.scheduledAt).getTime()
+          : Number(b.id);
+        return timeB - timeA;
       });
     },
     [matchesWithApplicantCount, sourceFilter, statusFilter],
@@ -402,11 +422,10 @@ export default function MatchStatusScreen({
 
   const handleComplete = async (item: MatchItem) => {
     try {
-      if (item.sourceType === "POST") {
-        await completeGathering(Number(item.id));
-      }
-      setMatches((prev) => prev.filter((match) => match.id !== item.id));
-      setCompletedGatheringId(item.id);
+      await completeGathering(Number(item.id));
+      setCompletedByMeIds((prev) => new Set(prev).add(item.id));
+      setCompletedItem(item);
+      void loadActiveMatches(true);
     } catch (error) {
       Alert.alert(
         "완료 처리 실패",
@@ -419,7 +438,6 @@ export default function MatchStatusScreen({
     <>
       <View style={styles.headerContainer}>
         <View style={styles.headerRow}>
-          <View style={styles.backButton} />
           <Text pointerEvents="none" style={styles.headerTitle}>매칭 현황</Text>
           <Pressable
             accessibilityRole="button"
@@ -474,7 +492,7 @@ export default function MatchStatusScreen({
           </Pressable>
           {SOURCE_FILTERS.map((f) => {
             const selected = sourceFilter === f;
-            const isMint = f === "일반 매칭";
+            const isMint = f === "운동 모집";
             return (
               <Pressable
                 key={f}
@@ -546,6 +564,7 @@ export default function MatchStatusScreen({
               <MatchStatusCard
                 key={item.id}
                 item={item}
+                completedByMe={completedByMeIds.has(item.id)}
                 onComplete={
                   item.sourceType === "POST"
                     ? () => handleComplete(item)
@@ -578,13 +597,21 @@ export default function MatchStatusScreen({
         onRetry={panelMatchId ? () => void loadApplicants(panelMatchId) : undefined}
       />
       <WorkoutCompleteModal
-        visible={completedGatheringId !== null}
-        onLaterPress={() => setCompletedGatheringId(null)}
+        visible={completedItem !== null}
+        onLaterPress={() => setCompletedItem(null)}
         onReviewPress={() => {
-          if (!completedGatheringId) return;
-          const targetId = completedGatheringId;
-          setCompletedGatheringId(null);
-          router.push(`/review/${targetId}?type=gathering` as any);
+          if (!completedItem) return;
+          const item = completedItem;
+          setCompletedItem(null);
+          const params = new URLSearchParams({ type: "gathering" });
+          if (item.revieweeId) params.set("revieweeId", String(item.revieweeId));
+          if (item.partnerName) params.set("partnerName", item.partnerName);
+          if (item.partnerProfileImageUrl) params.set("partnerProfileImageUrl", item.partnerProfileImageUrl);
+          if (item.partnerDepartment) params.set("partnerDepartment", item.partnerDepartment);
+          if (item.partnerStudentNumber) params.set("partnerStudentId", item.partnerStudentNumber);
+          if (item.exerciseType) params.set("exerciseTypes", item.exerciseType);
+          if (item.scheduledTime) params.set("scheduledTime", item.scheduledTime);
+          router.push(`/review/${item.id}?${params.toString()}` as any);
         }}
       />
     </>
@@ -615,24 +642,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
   },
-  backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 999,
-    alignItems: "center",
-    justifyContent: "center",
-    zIndex: 1,
-  },
   headerTitle: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    alignSelf: "center",
+    flex: 1,
     fontSize: 20,
     lineHeight: 28,
     color: "#111827",
     fontWeight: "800",
-    textAlign: "center",
   },
   myButton: {
     width: 48,

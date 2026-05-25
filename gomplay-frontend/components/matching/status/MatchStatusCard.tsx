@@ -17,6 +17,7 @@ export type MatchItem = {
   role?: MatchRole | null;
   canComplete?: boolean;
   reviewed?: boolean;
+  revieweeId?: number | null;
   partnerName: string;
   partnerProfileImageUrl?: string | null;
   partnerDepartment?: string;
@@ -35,6 +36,7 @@ export type MatchItem = {
 
 type MatchStatusCardProps = {
   item: MatchItem;
+  completedByMe?: boolean;
   onComplete?: () => void;
   onChat?: () => void;
   onViewApplicants?: () => void;
@@ -44,6 +46,7 @@ const COMPLETE_DELAY_MS = 60 * 60 * 1000; // 1시간
 
 export default function MatchStatusCard({
   item,
+  completedByMe,
   onComplete,
   onChat,
   onViewApplicants,
@@ -75,11 +78,12 @@ export default function MatchStatusCard({
     ? (item.exerciseType ?? "")
     : (item.exerciseType ?? "상의 후 결정");
 
-  const postCompleteEnabled =
-    item.canComplete ??
-    (item.scheduledEndAt ? now > new Date(item.scheduledEndAt).getTime() : false);
+  const postCompleteEnabled = true; // TODO: 테스트용 시간제한 임시 해제
+  // const postCompleteEnabled =
+  //   item.canComplete ||
+  //   (item.scheduledEndAt ? now > new Date(item.scheduledEndAt).getTime() : false);
   const partnerCompleteEnabled =
-    item.canComplete ??
+    item.canComplete ||
     (item.matchedAt ? now > new Date(item.matchedAt).getTime() + COMPLETE_DELAY_MS : false);
 
   return (
@@ -194,7 +198,12 @@ export default function MatchStatusCard({
             ) : isInProgress ? (
               isPost ? (
                 <>
-                  {postCompleteEnabled && onComplete ? (
+                  {completedByMe ? (
+                    <View style={[styles.actionButton, styles.waitingCompleteButton]}>
+                      <Ionicons name="time-outline" size={14} color="#9CA3AF" />
+                      <Text style={[styles.actionText, styles.waitingCompleteText]}>다른 사람이 아직 완료하지 않았어요</Text>
+                    </View>
+                  ) : postCompleteEnabled && onComplete ? (
                     <Pressable
                       style={[styles.actionButton, styles.primaryActionButton]}
                       onPress={onComplete}
@@ -440,4 +449,9 @@ const styles = StyleSheet.create({
   acceptedActionText: { color: "#10B981" },
   pendingActionText: { color: "#9CA3AF" },
   completedActionText: { color: "#16A34A" },
+  waitingCompleteButton: {
+    borderColor: "#E5E7EB",
+    backgroundColor: "#F9FAFB",
+  },
+  waitingCompleteText: { color: "#9CA3AF" },
 });

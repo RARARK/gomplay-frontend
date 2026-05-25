@@ -52,12 +52,14 @@ export type ActiveMatchStatus =
   | "PENDING"
   | "ACCEPTED"
   | "CLOSED"
+  | "EXPIRED"
   | "IN_PROGRESS"
   | "COMPLETED"
   | "CANCELLED"
   | "pending"
   | "accepted"
   | "closed"
+  | "expired"
   | "in_progress"
   | "completed"
   | "cancelled";
@@ -67,12 +69,14 @@ export type ActiveMatch = {
   chatRoomId: number | null;
   difficulty: string | null;
   id: number;
+  hostUserId?: number | null;
   hostDepartment?: string | null;
   hostName?: string | null;
   hostProfileImageUrl?: string | null;
   hostStudentNumber?: string | number | null;
   location: string | null;
   matchedAt: string | null;
+  partnerUserId?: number | null;
   partnerDepartment: string | null;
   partnerName: string;
   partnerProfileImageUrl: string | null;
@@ -202,7 +206,9 @@ export type MatchHistoryEntry = {
   scheduledAt: string | null;
   matchedAt: string | null;
   reviewed: boolean;
-  // Extended partner profile fields
+  chatRoomId?: number | null;
+  partnerUserId?: number | null;
+  // Extended partner profile fields (optional)
   partnerIsVerified?: boolean;
   partnerMannerTemperature?: number;
   partnerMatchCount?: number;

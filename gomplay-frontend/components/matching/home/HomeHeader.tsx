@@ -4,7 +4,14 @@ import { router } from "expo-router";
 import * as React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
+import { useNotificationStore } from "@/stores/notification/notificationStore";
+
 const HomeHeader = React.memo(() => {
+  const unreadCount = useNotificationStore((s) => s.unreadCount);
+  const badgeLabel = unreadCount > 0
+    ? (unreadCount > 99 ? "99+" : String(unreadCount))
+    : null;
+
   return (
     <View style={styles.header}>
       <Image
@@ -21,6 +28,11 @@ const HomeHeader = React.memo(() => {
           onPress={() => router.push("/notifications" as any)}
         >
           <Frame91 width={48} height={48} />
+          {badgeLabel !== null && (
+            <View style={styles.badge}>
+              <Text style={styles.badgeText}>{badgeLabel}</Text>
+            </View>
+          )}
         </Pressable>
 
         <Pressable
@@ -65,6 +77,24 @@ const styles = StyleSheet.create({
     lineHeight: 18,
     color: "#111111",
     fontWeight: "900",
+  },
+  badge: {
+    position: "absolute",
+    top: 6,
+    right: 6,
+    minWidth: 16,
+    height: 16,
+    borderRadius: 8,
+    backgroundColor: "#EF4444",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 3,
+  },
+  badgeText: {
+    fontSize: 9,
+    lineHeight: 12,
+    color: "#FFFFFF",
+    fontWeight: "800",
   },
 });
 

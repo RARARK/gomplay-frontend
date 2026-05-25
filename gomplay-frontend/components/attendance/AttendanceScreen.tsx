@@ -199,9 +199,7 @@ export default function AttendanceScreen() {
     >
       {/* 헤더 */}
       <View style={styles.headerRow}>
-        <View style={styles.backButton} />
         <Text style={styles.headerTitle}>출석 체크</Text>
-        <View style={styles.headerSpacer} />
       </View>
 
       {isLoading ? (
@@ -365,21 +363,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
   },
-  backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 999,
-    alignItems: "center",
-    justifyContent: "center",
-  },
   headerTitle: {
     fontSize: 20,
     lineHeight: 28,
     color: "#111827",
     fontWeight: "800",
-  },
-  headerSpacer: {
-    width: 40,
   },
 
   loadingBox: {

@@ -1,6 +1,6 @@
 import * as React from "react";
 import { router, useFocusEffect } from "expo-router";
-import { Alert, Modal, ScrollView, StyleSheet, Pressable, Text, View } from "react-native";
+import { Alert, ScrollView, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import HomeHeader from "@/components/matching/home/HomeHeader";
@@ -8,8 +8,6 @@ import HeroBanner from "@/components/matching/home/HeroBanner";
 import { homeBanners, matchedPartners } from "@/components/matching/home/homeMockData";
 import HomeStatusSection from "@/components/matching/home/HomeStatusSection";
 import MatchSection from "@/components/matching/home/MatchSection";
-import OpponentProfileModal from "@/components/matching/OpponentProfileModal";
-import WorkoutCompleteModal from "@/components/matching/WorkoutCompleteModal";
 
 import { Color } from "@/constants/locofyHomeStyles";
 import {
@@ -31,7 +29,6 @@ import { useChatStore } from "@/stores/chat/chatStore";
 import { useMatchingStore } from "@/stores/matching/matchingStore";
 import { useUserStore } from "@/stores/user/userStore";
 import { createNewCardPreviewPartners, getCurrentFreeTimeLabel } from "@/utils/homeNewCard";
-import PartnerCardNew from "@/components/matching/home/PartnerCardNew";
 import type { Banner } from "@/types/ui/homeBanner";
 import type { PartnerCardProps } from "@/types/ui/homeCards";
 import type { HomeStatusVariant } from "@/types/ui/homeStatus";
@@ -55,10 +52,6 @@ export default function HomePage() {
   const wsConnected = useMatchingStore((s) => s.wsConnected);
 
   const [isQuickMatchOn, setIsQuickMatchOn] = React.useState(storedMatching);
-  const [isWorkoutCompleteTestVisible, setIsWorkoutCompleteTestVisible] =
-    React.useState(false);
-  const [isPartnerCardTestVisible, setIsPartnerCardTestVisible] = React.useState(false);
-  const [isProfileModalVisible, setIsProfileModalVisible] = React.useState(false);
   const [banners] = React.useState<Banner[]>(homeBanners);
   const [noMoreCandidates, setNoMoreCandidates] = React.useState(false);
   const [survey, setSurvey] = React.useState<Survey | null>(null);
@@ -122,7 +115,6 @@ export default function HomePage() {
   };
 
   const currentState = getHomeStatusVariant();
-  const reviewTestRoute = "/review-complete-test" as const;
 
   // Cleanup poll on unmount
   React.useEffect(() => {
@@ -295,53 +287,6 @@ export default function HomePage() {
         scrollEventThrottle={16}
       >
         <HomeHeader />
-        <View style={styles.testButtonRow}>
-          <Pressable
-            accessibilityRole="button"
-            style={[styles.testButton, styles.testButtonProfile]}
-            onPress={() => setIsProfileModalVisible(true)}
-          >
-            <Text style={[styles.testButtonText, styles.testButtonProfileText]}>
-              상대 프로필
-            </Text>
-          </Pressable>
-          <Pressable
-            accessibilityRole="button"
-            style={[styles.testButton, styles.testButtonComplete]}
-            onPress={() => setIsWorkoutCompleteTestVisible(true)}
-          >
-            <Text style={[styles.testButtonText, styles.testButtonCompleteText]}>
-              완료 테스트
-            </Text>
-          </Pressable>
-          <Pressable
-            accessibilityRole="button"
-            style={[styles.testButton, styles.testButtonReview]}
-            onPress={() => router.push(reviewTestRoute as any)}
-          >
-            <Text style={[styles.testButtonText, styles.testButtonReviewText]}>
-              평가 테스트
-            </Text>
-          </Pressable>
-          <Pressable
-            accessibilityRole="button"
-            style={[styles.testButton, styles.testButtonReport]}
-            onPress={() => router.push("/tutorial-report-test" as any)}
-          >
-            <Text style={[styles.testButtonText, styles.testButtonReportText]}>
-              리포트 테스트
-            </Text>
-          </Pressable>
-          <Pressable
-            accessibilityRole="button"
-            style={[styles.testButton, styles.testButtonPartnerCard]}
-            onPress={() => setIsPartnerCardTestVisible(true)}
-          >
-            <Text style={[styles.testButtonText, styles.testButtonPartnerCardText]}>
-              파트너 카드
-            </Text>
-          </Pressable>
-        </View>
         <HeroBanner banners={banners} />
 
 
@@ -358,55 +303,6 @@ export default function HomePage() {
 
         <MatchSection />
       </ScrollView>
-      <WorkoutCompleteModal
-        visible={isWorkoutCompleteTestVisible}
-        onLaterPress={() => setIsWorkoutCompleteTestVisible(false)}
-        onReviewPress={() => {
-          setIsWorkoutCompleteTestVisible(false);
-          router.push(reviewTestRoute as any);
-        }}
-      />
-      <Modal
-        visible={isPartnerCardTestVisible}
-        animationType="slide"
-        onRequestClose={() => setIsPartnerCardTestVisible(false)}
-      >
-        <SafeAreaView edges={["top"]} style={styles.partnerCardTestModal}>
-          <View style={styles.partnerCardTestHeader}>
-            <Text style={styles.partnerCardTestTitle}>파트너 카드 미리보기</Text>
-            <Pressable
-              accessibilityRole="button"
-              onPress={() => setIsPartnerCardTestVisible(false)}
-              style={styles.partnerCardTestClose}
-            >
-              <Text style={styles.partnerCardTestCloseText}>닫기</Text>
-            </Pressable>
-          </View>
-          <ScrollView
-            contentContainerStyle={styles.partnerCardTestContent}
-            showsVerticalScrollIndicator={false}
-          >
-            <PartnerCardNew {...(newCardPreviewPartners[0] ?? {})} />
-          </ScrollView>
-        </SafeAreaView>
-      </Modal>
-      <OpponentProfileModal
-        visible={isProfileModalVisible}
-        onClose={() => setIsProfileModalVisible(false)}
-        data={{
-          name: "김단국",
-          department: "컴퓨터공학과",
-          studentId: "20학번",
-          mannerTemperature: 36.5,
-          exerciseTypes: ["풋살", "헬스", "러닝", "배드민턴", "농구"],
-          partnerStyle: "독립형",
-          exerciseIntensity: "꾸준형",
-          exerciseReason: "건강관리",
-          isVerified: true,
-          matchCount: 12,
-          noShowCount: 0,
-        }}
-      />
     </SafeAreaView>
   );
 }
@@ -428,99 +324,6 @@ const styles = StyleSheet.create({
     justifyContent: "flex-start",
     gap: 28,
     paddingBottom: 36,
-  },
-  testButtonRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "center",
-    gap: 8,
-    paddingHorizontal: 16,
-    marginTop: -42,
-    marginBottom: -42,
-  },
-  testButton: {
-    minHeight: 34,
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: "#4C5BE2",
-    backgroundColor: "#FFFFFF",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 14,
-  },
-  testButtonText: {
-    fontSize: 12,
-    lineHeight: 16,
-    color: "#4C5BE2",
-    fontWeight: "800",
-  },
-  testButtonNew: {
-    borderColor: "#E24CB5",
-  },
-  testButtonNewText: {
-    color: "#E24CB5",
-  },
-  testButtonComplete: {
-    borderColor: "#16A34A",
-  },
-  testButtonCompleteText: {
-    color: "#16A34A",
-  },
-  testButtonReview: {
-    borderColor: "#7C3AED",
-  },
-  testButtonReviewText: {
-    color: "#7C3AED",
-  },
-  testButtonReport: {
-    borderColor: "#25258F",
-  },
-  testButtonReportText: {
-    color: "#25258F",
-  },
-  testButtonProfile: {
-    borderColor: "#0891B2",
-  },
-  testButtonProfileText: {
-    color: "#0891B2",
-  },
-  testButtonPartnerCard: {
-    borderColor: "#D97706",
-  },
-  testButtonPartnerCardText: {
-    color: "#D97706",
-  },
-  partnerCardTestModal: {
-    flex: 1,
-    backgroundColor: "#0F172A",
-  },
-  partnerCardTestHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 20,
-    paddingVertical: 14,
-  },
-  partnerCardTestTitle: {
-    fontSize: 17,
-    fontWeight: "700",
-    color: "#FFFFFF",
-  },
-  partnerCardTestClose: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.3)",
-  },
-  partnerCardTestCloseText: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#FFFFFF",
-  },
-  partnerCardTestContent: {
-    paddingHorizontal: 16,
-    paddingBottom: 40,
   },
   sectionTitle: {
     paddingHorizontal: 20,

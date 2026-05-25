@@ -277,7 +277,6 @@ export default function MyPageScreen() {
     >
       <View style={styles.topSection}>
         <View style={styles.headerRow}>
-          <View style={styles.iconButton} />
           <Text pointerEvents="none" style={styles.headerTitle}>마이페이지</Text>
           <Pressable
             accessibilityRole="button"
@@ -755,15 +754,11 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   headerTitle: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    alignSelf: "center",
+    flex: 1,
     fontSize: 20,
     lineHeight: 28,
     fontWeight: "800",
     color: "#111827",
-    textAlign: "center",
   },
   iconButton: {
     width: 40,

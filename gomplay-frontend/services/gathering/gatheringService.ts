@@ -126,13 +126,10 @@ export async function getGatheringPosts(
 ): Promise<GatheringListResponse> {
   try {
     const res = await apiClient.get<GatheringListResponse>("/api/gathering", {
-      params: query,
+      params: { hideExpired: true, ...query },
     });
-    const now = Date.now();
     const openContent = res.data.content.filter(
-      (item) =>
-        item.status === POST_STATUS.OPEN &&
-        new Date(item.scheduledAt).getTime() > now,
+      (item) => item.status === POST_STATUS.OPEN,
     );
 
     return {

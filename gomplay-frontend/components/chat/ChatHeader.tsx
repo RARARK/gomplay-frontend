@@ -46,9 +46,7 @@ export default function ChatHeader({
           >
             <Ionicons name="chevron-back" size={28} color="#111111" />
           </Pressable>
-        ) : (
-          <View style={styles.backButtonPlaceholder} />
-        )}
+        ) : null}
         <Text pointerEvents="none" numberOfLines={1} style={styles.title}>
           {title}
         </Text>
@@ -61,9 +59,7 @@ export default function ChatHeader({
           >
             <Ionicons name="menu-outline" size={28} color="#111827" />
           </Pressable>
-        ) : (
-          <View style={styles.menuButton} />
-        )}
+        ) : null}
       </View>
     </View>
   );
@@ -89,20 +85,12 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     zIndex: 1,
   },
-  backButtonPlaceholder: {
-    width: 40,
-    height: 40,
-  },
   title: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    alignSelf: "center",
+    flex: 1,
     fontSize: 20,
     lineHeight: 28,
     fontWeight: "800",
     color: "#111827",
-    textAlign: "center",
   },
   menuButton: {
     width: 48,

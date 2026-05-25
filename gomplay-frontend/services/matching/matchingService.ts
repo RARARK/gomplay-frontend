@@ -211,7 +211,8 @@ export async function getActiveMatches(): Promise<ActiveMatch[]> {
       },
     );
 
-    return Array.isArray(res.data) ? res.data : res.data.data;
+    const matches = Array.isArray(res.data) ? res.data : res.data.data;
+    return matches;
   } catch (error) {
     if (error instanceof ApiError) throw error;
 
@@ -219,15 +220,15 @@ export async function getActiveMatches(): Promise<ActiveMatch[]> {
       const errorBody = getBackendErrorBody(error.response?.data);
 
       if (errorBody?.code === 4000) {
-        throw new ApiError("?곗씠?곕쿋?댁뒪 ?곌껐???ㅽ뙣?섏??듬땲??");
+        throw new ApiError("데이터베이스 연결에 실패하였습니다.");
       }
 
       if (error.response?.status === 400) {
-        throw new ApiError(errorBody?.message ?? "?섎せ???붿껌?낅땲??");
+        throw new ApiError(errorBody?.message ?? "잘못된 요청입니다.");
       }
 
       if (error.response?.status === 500) {
-        throw new ApiError("?쒕쾭 ?대? ?ㅻ쪟", "Internal server error");
+        throw new ApiError("서버 내부 오류", "Internal server error");
       }
 
       if (errorBody?.message) {
@@ -304,9 +305,21 @@ const MOCK_MATCH_HISTORY: MatchHistoryEntry[] = [
 
 export async function getMatchHistory(): Promise<MatchHistoryEntry[]> {
   try {
-    const res = await apiClient.get<MatchHistoryResponse>("/api/match/history");
-    return res.data.data;
-  } catch {
+    const res = await apiClient.get<MatchHistoryResponse | MatchHistoryEntry[]>("/api/match/history");
+    const entries = Array.isArray(res.data) ? res.data : res.data.data;
+    console.log("[getMatchHistory]", JSON.stringify(entries.map(e => ({
+      id: e.id, type: e.type, partnerName: e.partnerName,
+      partnerProfileImageUrl: e.partnerProfileImageUrl,
+      partnerDepartment: e.partnerDepartment, partnerStudentNumber: e.partnerStudentNumber,
+    })), null, 2));
+    return entries;
+  } catch (error) {
+    if (isAxiosError(error)) {
+      const errorBody = getBackendErrorBody(error.response?.data);
+      if (errorBody?.code === 4000) throw new ApiError("데이터베이스 연결에 실패하였습니다.");
+      if (error.response?.status === 400) throw new ApiError(errorBody?.message ?? "유저를 찾을 수 없습니다.");
+      if (error.response?.status === 500) throw new ApiError("서버 내부 오류");
+    }
     return MOCK_MATCH_HISTORY;
   }
 }

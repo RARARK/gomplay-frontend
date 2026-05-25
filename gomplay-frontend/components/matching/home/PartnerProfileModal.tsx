@@ -161,11 +161,11 @@ export default function PartnerProfileModal({
                   <View style={M.traitGrid}>
                     {partnerStyle && (
                       <TraitChip
-                        icon="people-outline"
+                        icon={partnerStyle === "독립형" ? "person-outline" : "people-outline"}
                         label="파트너 성향"
                         value={partnerStyle}
-                        color="#7C6FF7"
-                        bg="#EDE9FF"
+                        color="#15803D"
+                        bg="#F0FDF4"
                       />
                     )}
                     {exerciseIntensity && (

@@ -272,9 +272,7 @@ export default function PostListScreen({
     <>
       <View style={styles.screen}>
         <View style={styles.header}>
-          <View style={styles.backButton} />
-
-          <Text pointerEvents="none" style={styles.title} numberOfLines={1}>매칭 리스트</Text>
+          <Text pointerEvents="none" style={styles.title} numberOfLines={1}>운동 모집</Text>
 
           <Pressable
             accessibilityRole="button"
@@ -492,14 +490,6 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     marginBottom: 16,
   },
-  backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 999,
-    alignItems: "center",
-    justifyContent: "center",
-    zIndex: 1,
-  },
   myButton: {
     width: 48,
     height: 48,
@@ -514,15 +504,11 @@ const styles = StyleSheet.create({
     fontWeight: "900",
   },
   title: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    alignSelf: "center",
+    flex: 1,
     fontSize: 20,
     lineHeight: 28,
     color: "#111827",
     fontWeight: "800",
-    textAlign: "center",
   },
   filterScrollView: {
     flexGrow: 0,

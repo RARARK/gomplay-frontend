@@ -34,10 +34,10 @@ const STYLE_VERSUS = [
     label: "소통형",
     icon: "people-outline" as const,
     desc: "함께 대화하며\n운동하는 걸 좋아해요",
-    activeBg: "#EFF6FF",
-    activeIcon: "#2563EB",
-    activeName: "#1D4ED8",
-    activeDesc: "#1E40AF",
+    activeBg: "#F0FDF4",
+    activeIcon: "#15803D",
+    activeName: "#15803D",
+    activeDesc: "#166534",
   },
 ];
 

@@ -13,6 +13,7 @@ import {
 import {
   getNotifications,
   markAllNotificationsRead,
+  markNotificationRead,
 } from "@/services/notification/notificationService";
 import { useNotificationStore } from "@/stores/notification/notificationStore";
 import type {
@@ -70,7 +71,7 @@ function formatRelativeTime(iso: string): string {
 
 // ── 타입별 이동 ───────────────────────────────────────────────────────────────
 
-function handleNotificationPress(item: NotificationItem) {
+function navigateForNotification(item: NotificationItem) {
   const id = item.refId;
   switch (item.type) {
     case "gathering":
@@ -100,13 +101,19 @@ function handleNotificationPress(item: NotificationItem) {
 
 // ── 알림 행 ───────────────────────────────────────────────────────────────────
 
-function NotificationRow({ item }: { item: NotificationItem }) {
+function NotificationRow({
+  item,
+  onPress,
+}: {
+  item: NotificationItem;
+  onPress: () => void;
+}) {
   const iconCfg = TYPE_ICON[item.type] ?? TYPE_ICON.point;
 
   return (
     <Pressable
       accessibilityRole="button"
-      onPress={() => handleNotificationPress(item)}
+      onPress={onPress}
       style={({ pressed }) => [
         styles.row,
         !item.read && styles.rowUnread,
@@ -177,6 +184,25 @@ export default function NotificationsScreen() {
       })
       .catch(() => {});
   }, [clearUnread]);
+
+  const handleNotificationPress = React.useCallback(
+    (item: NotificationItem) => {
+      if (!item.read) {
+        markNotificationRead(item.id)
+          .then(() => {
+            setNotifications((prev) =>
+              prev.map((n) => (n.id === item.id ? { ...n, read: true } : n)),
+            );
+            setUnreadCount(
+              notifications.filter((n) => !n.read && n.id !== item.id).length,
+            );
+          })
+          .catch(() => {});
+      }
+      navigateForNotification(item);
+    },
+    [notifications, setUnreadCount],
+  );
 
   const hasUnread = notifications.some((n) => !n.read);
 
@@ -251,7 +277,10 @@ export default function NotificationsScreen() {
         <View>
           {notifications.map((item, idx) => (
             <React.Fragment key={item.id}>
-              <NotificationRow item={item} />
+              <NotificationRow
+                item={item}
+                onPress={() => handleNotificationPress(item)}
+              />
               {idx < notifications.length - 1 && <View style={styles.divider} />}
             </React.Fragment>
           ))}

@@ -574,7 +574,6 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     flex: 1,
-    textAlign: "center",
     fontSize: 17,
     fontWeight: "700",
     color: "#111827",

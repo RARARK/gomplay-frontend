@@ -13,14 +13,16 @@ export type MatchHistoryItem = {
   partnerProfileImageUrl?: string | null;
   partnerDepartment?: string;
   partnerStudentNumber?: string;
+  partnerUserId?: number | null;
   completedAt: string;
   location?: string;
   scheduledTime?: string;
   difficulty?: string;
   exerciseType?: string;
   reviewed?: boolean;
-  chatRoomId?: number;
+  chatRoomId?: number | null;
   gatheringId?: number;
+  matchId?: number;
   // Extended partner profile (optional)
   partnerIsVerified?: boolean;
   partnerMannerTemperature?: number;
@@ -36,20 +38,18 @@ type MatchHistoryCardProps = {
   item: MatchHistoryItem;
   onChat?: () => void;
   onReview?: () => void;
-  onViewProfile?: () => void;
 };
 
 export default function MatchHistoryCard({
   item,
   onChat,
   onReview,
-  onViewProfile,
 }: MatchHistoryCardProps) {
   const isPost = item.sourceType === "POST";
   const stripeColor = isPost ? "#10B981" : "#4C5BE2";
 
   return (
-    <Pressable style={styles.container} onPress={onViewProfile}>
+    <View style={styles.container}>
       <View style={[styles.card, { borderLeftColor: stripeColor }]}>
         <Image
           source={
@@ -140,25 +140,27 @@ export default function MatchHistoryCard({
               <Ionicons name="chatbubble-outline" size={14} color="#4C5BE2" />
               <Text style={styles.actionText}>채팅 보기</Text>
             </Pressable>
-            <Pressable
-              accessibilityRole="button"
-              onPress={item.reviewed ? undefined : onReview}
-              disabled={item.reviewed}
-              style={[styles.actionButton, item.reviewed && styles.actionButtonDone]}
-            >
-              <Ionicons
-                name={item.reviewed ? "star" : "star-outline"}
-                size={14}
-                color={item.reviewed ? "#9CA3AF" : "#4C5BE2"}
-              />
-              <Text style={[styles.actionText, item.reviewed && styles.actionTextDone]}>
-                {item.reviewed ? "평가완료" : "평가하기"}
-              </Text>
-            </Pressable>
+            {(onReview != null || item.reviewed) ? (
+              <Pressable
+                accessibilityRole="button"
+                onPress={item.reviewed ? undefined : onReview}
+                disabled={item.reviewed}
+                style={[styles.actionButton, item.reviewed && styles.actionButtonDone]}
+              >
+                <Ionicons
+                  name={item.reviewed ? "star" : "star-outline"}
+                  size={14}
+                  color={item.reviewed ? "#9CA3AF" : "#4C5BE2"}
+                />
+                <Text style={[styles.actionText, item.reviewed && styles.actionTextDone]}>
+                  {item.reviewed ? "평가완료" : "평가하기"}
+                </Text>
+              </Pressable>
+            ) : null}
           </View>
         </View>
       </View>
-    </Pressable>
+    </View>
   );
 }
 

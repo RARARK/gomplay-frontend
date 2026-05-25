@@ -1,8 +1,7 @@
-import { router } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import React from "react";
 import {
   ActivityIndicator,
-  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -13,9 +12,6 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import MatchHistoryCard, {
   type MatchHistoryItem,
 } from "@/components/matching/history/MatchHistoryCard";
-import OpponentProfileModal, {
-  type OpponentProfileData,
-} from "@/components/matching/OpponentProfileModal";
 import { getMatchHistory } from "@/services/matching/matchingService";
 import type { MatchHistoryEntry } from "@/types/domain/match";
 
@@ -47,12 +43,15 @@ function mapEntryToItem(entry: MatchHistoryEntry): MatchHistoryItem {
     partnerProfileImageUrl: entry.partnerProfileImageUrl,
     partnerDepartment: entry.partnerDepartment,
     partnerStudentNumber: entry.partnerStudentNumber,
+    partnerUserId: entry.partnerUserId,
     completedAt: dateSource ? formatDate(dateSource) : "",
     location: entry.location ?? undefined,
     scheduledTime: entry.scheduledAt ? formatTime(entry.scheduledAt) : undefined,
     exerciseType: entry.sportType ?? undefined,
     reviewed: entry.reviewed,
+    chatRoomId: entry.chatRoomId ?? undefined,
     gatheringId: isGathering ? entry.id : undefined,
+    matchId: !isGathering ? entry.id : undefined,
     partnerIsVerified: entry.partnerIsVerified,
     partnerMannerTemperature: entry.partnerMannerTemperature,
     partnerMatchCount: entry.partnerMatchCount,
@@ -64,48 +63,32 @@ function mapEntryToItem(entry: MatchHistoryEntry): MatchHistoryItem {
   };
 }
 
-function mapItemToProfileData(item: MatchHistoryItem): OpponentProfileData {
-  return {
-    name: item.partnerName,
-    department: item.partnerDepartment,
-    studentId: item.partnerStudentNumber,
-    profileImageUrl: item.partnerProfileImageUrl,
-    isVerified: item.partnerIsVerified,
-    partnerStyle: item.partnerStyle,
-    exerciseIntensity: item.partnerExerciseIntensity,
-    exerciseReason: item.partnerExerciseReason,
-    exerciseTypes: item.partnerExerciseTypes ?? (item.exerciseType ? [item.exerciseType] : undefined),
-    mannerTemperature: item.partnerMannerTemperature,
-    matchCount: item.partnerMatchCount,
-    noShowCount: item.partnerNoShowCount,
-    matchStatus: "COMPLETED",
-  };
-}
-
 export default function MatchHistoryScreen() {
   const insets = useSafeAreaInsets();
   const [history, setHistory] = React.useState<MatchHistoryItem[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
-  const [profileModal, setProfileModal] = React.useState<OpponentProfileData | null>(null);
 
-  React.useEffect(() => {
-    getMatchHistory()
-      .then((data) => {
-        const seen = new Set<number>();
-        const deduped = data.filter((entry) => {
-          if (seen.has(entry.id)) return false;
-          seen.add(entry.id);
-          return true;
-        });
-        const sorted = deduped.sort((a, b) => {
-          const dateA = a.scheduledAt ?? a.matchedAt ?? "";
-          const dateB = b.scheduledAt ?? b.matchedAt ?? "";
-          return dateB.localeCompare(dateA);
-        });
-        setHistory(sorted.map(mapEntryToItem));
-      })
-      .finally(() => setIsLoading(false));
-  }, []);
+  useFocusEffect(
+    React.useCallback(() => {
+      setIsLoading(true);
+      getMatchHistory()
+        .then((data) => {
+          const seen = new Set<number>();
+          const deduped = data.filter((entry) => {
+            if (seen.has(entry.id)) return false;
+            seen.add(entry.id);
+            return true;
+          });
+          const sorted = deduped.sort((a, b) => {
+            const dateA = a.scheduledAt ?? a.matchedAt ?? "";
+            const dateB = b.scheduledAt ?? b.matchedAt ?? "";
+            return dateB.localeCompare(dateA);
+          });
+          setHistory(sorted.map(mapEntryToItem));
+        })
+        .finally(() => setIsLoading(false));
+    }, []),
+  );
 
   return (
     <>
@@ -115,9 +98,7 @@ export default function MatchHistoryScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.headerRow}>
-          <View style={styles.backButton} />
-          <Text pointerEvents="none" style={styles.headerTitle}>매치 히스토리</Text>
-          <View style={styles.headerSpacer} />
+          <Text pointerEvents="none" style={styles.headerTitle}>매치 내역</Text>
         </View>
 
         {isLoading ? (
@@ -136,11 +117,18 @@ export default function MatchHistoryScreen() {
                     : undefined
                 }
                 onReview={
-                  !item.reviewed && item.gatheringId != null
-                    ? () => router.push(`/review/${item.gatheringId}?type=gathering` as any)
-                    : undefined
+                  item.reviewed
+                    ? undefined
+                    : item.gatheringId != null
+                      ? () => router.push(
+                          `/review/${item.gatheringId}?type=gathering&revieweeId=${item.partnerUserId ?? 0}&partnerName=${encodeURIComponent(item.partnerName)}` as any,
+                        )
+                      : item.matchId != null
+                        ? () => router.push(
+                            `/review/${item.matchId}?type=partner&revieweeId=${item.partnerUserId ?? 0}&partnerName=${encodeURIComponent(item.partnerName)}` as any,
+                          )
+                        : undefined
                 }
-                onViewProfile={() => setProfileModal(mapItemToProfileData(item))}
               />
             ))}
           </View>
@@ -150,13 +138,6 @@ export default function MatchHistoryScreen() {
           </View>
         )}
       </ScrollView>
-      {profileModal && (
-        <OpponentProfileModal
-          visible
-          data={profileModal}
-          onClose={() => setProfileModal(null)}
-        />
-    )}
     </>
   );
 }
@@ -169,30 +150,21 @@ const styles = StyleSheet.create({
   content: {
     flexGrow: 1,
     paddingHorizontal: 16,
-    paddingTop: 8,
+    paddingTop: 18,
     gap: 16,
   },
   headerRow: {
+    height: 48,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
   },
-  backButton: {
-    width: 40,
-  },
   headerTitle: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    alignSelf: "center",
+    flex: 1,
     fontSize: 20,
     lineHeight: 28,
     color: "#111827",
     fontWeight: "800",
-    textAlign: "center",
-  },
-  headerSpacer: {
-    width: 40,
   },
   loadingContainer: {
     flex: 1,

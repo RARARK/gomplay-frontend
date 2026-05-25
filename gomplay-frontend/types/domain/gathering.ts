@@ -35,6 +35,7 @@ export type GatheringListQuery = {
   difficulty?: string;
   page?: number;
   size?: number;
+  hideExpired?: boolean;
 };
 
 export type CreateGatheringRequest = {
@@ -52,7 +53,7 @@ export type CreateGatheringRequest = {
   tags?: string;
 };
 
-export type GatheringStatus = "OPEN" | "CLOSED" | "CANCELLED" | "COMPLETED";
+export type GatheringStatus = "OPEN" | "CLOSED" | "EXPIRED" | "CANCELLED" | "COMPLETED";
 
 export type UpdateGatheringRequest = {
   hostId: number;
@@ -119,6 +120,8 @@ export type GatheringParticipant = {
   userId: number;
   userName: string;
   userProfileImageUrl: string | null;
+  department?: string | null;
+  studentNumber?: string | null;
   status: ParticipantStatus;
   updatedAt: string;
 };
