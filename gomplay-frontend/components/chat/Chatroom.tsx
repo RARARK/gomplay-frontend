@@ -3,6 +3,7 @@ import { router } from "expo-router";
 
 import { Border, Color, FontFamily, FontSize } from "../GlobalStyles";
 import { normalizeImageUrl } from "@/lib/utils/imageUrl";
+import { formatChatListTime } from "@/lib/utils/time";
 import {
   getChatRoomParticipantDisplayName,
   getChatRoomPrimaryParticipant,
@@ -104,22 +105,6 @@ export default function Chatroom({ chatRoom, onPress }: ChatroomProps) {
   );
 }
 
-function formatChatListTime(timestamp?: string) {
-  if (!timestamp) return "";
-
-  const date = new Date(timestamp);
-  const now = new Date();
-  const isSameDay =
-    date.getFullYear() === now.getFullYear() &&
-    date.getMonth() === now.getMonth() &&
-    date.getDate() === now.getDate();
-
-  if (isSameDay) {
-    return date.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
-  }
-
-  return date.toLocaleDateString([], { month: "short", day: "numeric" });
-}
 
 const statusBadgeContainer: Record<BadgeVariant, object> = {
   "outline-primary": {

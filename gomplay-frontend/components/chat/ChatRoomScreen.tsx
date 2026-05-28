@@ -43,6 +43,7 @@ import {
   type ChatRoomParticipant,
 } from "@/types/domain/chatRoom";
 import { normalizeImageUrl } from "@/lib/utils/imageUrl";
+import { formatMessageTime } from "@/lib/utils/time";
 import { MATCH_STATUS } from "@/types/domain/match";
 
 import PARTNER_IMAGE from "../../assets/chat/Profileimage.png";
@@ -1225,13 +1226,6 @@ function parseChatRoomId(value?: string | string[]) {
   const parsedValue = Number(normalizedValue);
 
   return Number.isFinite(parsedValue) ? parsedValue : 1;
-}
-
-function formatMessageTime(timestamp: string) {
-  return new Date(timestamp).toLocaleTimeString([], {
-    hour: "numeric",
-    minute: "2-digit",
-  });
 }
 
 const styles = StyleSheet.create({

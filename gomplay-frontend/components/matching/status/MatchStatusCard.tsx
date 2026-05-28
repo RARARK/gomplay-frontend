@@ -78,10 +78,9 @@ export default function MatchStatusCard({
     ? (item.exerciseType ?? "")
     : (item.exerciseType ?? "상의 후 결정");
 
-  const postCompleteEnabled = true; // TODO: 테스트용 시간제한 임시 해제
-  // const postCompleteEnabled =
-  //   item.canComplete ||
-  //   (item.scheduledEndAt ? now > new Date(item.scheduledEndAt).getTime() : false);
+  const postCompleteEnabled =
+    item.canComplete ||
+    (item.scheduledEndAt ? now > new Date(item.scheduledEndAt).getTime() : false);
   const partnerCompleteEnabled =
     item.canComplete ||
     (item.matchedAt ? now > new Date(item.matchedAt).getTime() + COMPLETE_DELAY_MS : false);
