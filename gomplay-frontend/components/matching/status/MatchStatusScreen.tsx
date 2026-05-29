@@ -574,7 +574,10 @@ export default function MatchStatusScreen({
                 onComplete={() => handleComplete(item)}
                 onChat={
                   item.chatRoomId
-                    ? () => router.push(`/chat/${item.chatRoomId}` as any)
+                    ? () =>
+                        item.sourceType === "POST"
+                          ? router.push(`/group-chat/${item.chatRoomId}` as any)
+                          : router.push(`/chat/${item.chatRoomId}` as any)
                     : undefined
                 }
                 onViewApplicants={

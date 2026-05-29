@@ -155,11 +155,7 @@ export default function PartnerReviewScreen({ matchResultId, gatheringId, review
       });
 
       if (matchResultId) markReviewCompleted(matchResultId);
-      if (onComplete) {
-        onComplete();
-      } else {
-        setIsComplete(true);
-      }
+      setIsComplete(true);
     } catch (err) {
       Alert.alert(
         "제출 실패",
@@ -179,6 +175,7 @@ export default function PartnerReviewScreen({ matchResultId, gatheringId, review
         partnerStudentId={partnerStudentId}
         exerciseTypes={exerciseTypes}
         scheduledTime={scheduledTime}
+        onConfirm={onComplete}
       />
     );
   }
@@ -427,7 +424,7 @@ export default function PartnerReviewScreen({ matchResultId, gatheringId, review
           <Pressable
             accessibilityRole="button"
             style={styles.skipButton}
-            onPress={() => (onBack ? onBack() : router.back())}
+            onPress={() => (onComplete ? onComplete() : onBack ? onBack() : router.back())}
           >
             <Text style={styles.skipButtonText}>건너뛰기</Text>
           </Pressable>

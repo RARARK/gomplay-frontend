@@ -2,6 +2,8 @@ export type GroupChatLastMessage = {
   content?: string | null;
   senderName?: string | null;
   sentAt?: string | null;
+  createdAt?: string | null;
+  lastMessageAt?: string | null;
 };
 
 export type GroupChatRoom = {
@@ -13,6 +15,8 @@ export type GroupChatRoom = {
   lastMessage: GroupChatLastMessage | null;
   createdAt: string;
   hostProfileImageUrl?: string | null;
+  gatheringStatus?: GroupChatGatheringStatus;
+  reviewed?: boolean;
 };
 
 export type GroupChatMessageType = "TEXT" | "NOTICE" | "SCHEDULE";
@@ -37,6 +41,8 @@ export type GroupChatParticipant = {
   isHost: boolean;
 };
 
+export type GroupChatGatheringStatus = "IN_PROGRESS" | "COMPLETED";
+
 export type GroupChatRoomDetails = {
   id: number;
   gatheringId: number;
@@ -44,7 +50,9 @@ export type GroupChatRoomDetails = {
   sportType: string;
   venue: string;
   participantCount: number;
-  isHost?: boolean;
-  participants?: GroupChatParticipant[];
+  isHost: boolean;
+  gatheringStatus: GroupChatGatheringStatus;
+  reviewed: boolean;
+  participants: GroupChatParticipant[];
   messages: GroupChatMessage[];
 };

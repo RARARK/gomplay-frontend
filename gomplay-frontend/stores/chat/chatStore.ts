@@ -6,6 +6,7 @@ import type { ChatRoom } from "@/types/domain/chatRoom";
 type ChatState = {
   chatRooms: ChatRoom[];
   reviewedMatchIds: number[];
+  dismissedGatheringIds: number[];
   selectedChatRoomId: number | null;
   messagesByRoomId: Record<number, ChatMessage[]>;
   draftsByRoomId: Record<number, string>;
@@ -15,6 +16,7 @@ type ChatState = {
   setChatRooms: (chatRooms: ChatRoom[]) => void;
   upsertChatRoom: (chatRoom: ChatRoom) => void;
   markReviewCompleted: (matchId: number) => void;
+  dismissGatheringReview: (gatheringId: number) => void;
   setSelectedChatRoomId: (chatRoomId: number | null) => void;
   setMessages: (chatRoomId: number, messages: ChatMessage[]) => void;
   prependMessages: (
@@ -41,6 +43,7 @@ type ChatState = {
 export const useChatStore = create<ChatState>((set) => ({
   chatRooms: [],
   reviewedMatchIds: [],
+  dismissedGatheringIds: [],
   selectedChatRoomId: null,
   messagesByRoomId: {},
   draftsByRoomId: {},
@@ -68,6 +71,11 @@ export const useChatStore = create<ChatState>((set) => ({
       chatRooms: state.chatRooms.map((room) =>
         room.matchId === matchId ? { ...room, reviewed: true } : room,
       ),
+    })),
+
+  dismissGatheringReview: (gatheringId) =>
+    set((state) => ({
+      dismissedGatheringIds: Array.from(new Set([...state.dismissedGatheringIds, gatheringId])),
     })),
 
   upsertChatRoom: (chatRoom) =>
@@ -219,6 +227,7 @@ export const useChatStore = create<ChatState>((set) => ({
     set({
       chatRooms: [],
       reviewedMatchIds: [],
+      dismissedGatheringIds: [],
       selectedChatRoomId: null,
       messagesByRoomId: {},
       draftsByRoomId: {},

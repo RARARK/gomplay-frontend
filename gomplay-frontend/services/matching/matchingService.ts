@@ -244,7 +244,11 @@ export async function getMatchHistory(): Promise<MatchHistoryEntry[]> {
   try {
     const res = await apiClient.get<MatchHistoryResponse | MatchHistoryEntry[]>("/api/match/history");
     const entries = Array.isArray(res.data) ? res.data : res.data.data;
-    return entries;
+    return entries.map((e) => ({
+      ...e,
+      chatRoomId: e.chatRoomId ?? null,
+      partnerUserId: e.partnerUserId ?? null,
+    }));
   } catch (error) {
     if (isAxiosError(error)) {
       const errorBody = getBackendErrorBody(error.response?.data);

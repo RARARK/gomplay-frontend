@@ -135,10 +135,11 @@ export default function MatchHistoryCard({
             <Pressable
               accessibilityRole="button"
               onPress={onChat}
-              style={styles.actionButton}
+              disabled={!onChat}
+              style={[styles.actionButton, !onChat && styles.actionButtonDone]}
             >
-              <Ionicons name="chatbubble-outline" size={14} color="#4C5BE2" />
-              <Text style={styles.actionText}>채팅 보기</Text>
+              <Ionicons name="chatbubble-outline" size={14} color={onChat ? "#4C5BE2" : "#9CA3AF"} />
+              <Text style={[styles.actionText, !onChat && styles.actionTextDone]}>채팅 보기</Text>
             </Pressable>
             {(onReview != null || item.reviewed) ? (
               <Pressable

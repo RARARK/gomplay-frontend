@@ -6,7 +6,9 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import LoginScreenContent from "@/components/auth/LoginScreenContent";
 import { AuthError, login } from "@/services/auth/authService";
+import { getMyProfile } from "@/services/user/userService";
 import { useAuthStore } from "@/stores/auth/authStore";
+import { useUserStore } from "@/stores/user/userStore";
 
 const DEV_LOGIN_EMAIL = "32201274@dankook.ac.kr";
 const DEV_LOGIN_PASSWORD = "password12345";
@@ -59,6 +61,8 @@ const saveLoginCredential = async (
 
 export default function LoginScreen() {
   const setAuth = useAuthStore((state) => state.setAuth);
+  const clearProfile = useUserStore((state) => state.clearProfile);
+  const setProfile = useUserStore((state) => state.setProfile);
   const [schoolEmail, setSchoolEmail] = React.useState(
     __DEV__ ? DEV_LOGIN_EMAIL : "",
   );
@@ -98,6 +102,7 @@ export default function LoginScreen() {
 
     try {
       const data = await login(schoolEmail.trim(), password);
+      clearProfile();
 
       setAuth({
         userId: data.userId,
@@ -105,6 +110,9 @@ export default function LoginScreen() {
         refreshToken: data.refreshToken,
         matching: data.matching,
       });
+
+      const profile = await getMyProfile();
+      setProfile(profile);
 
       saveLoginCredential(
         { schoolEmail: schoolEmail.trim(), password },

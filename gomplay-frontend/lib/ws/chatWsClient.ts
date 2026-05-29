@@ -27,16 +27,16 @@ type ChatWsEventHandler = (event: ChatWsEvent) => void;
 
 // ─── Group Chat types ─────────────────────────────────────────────────────────
 
-export type GroupChatWsEvent = {
-  type: "NEW_MESSAGE";
-  data: GroupChatMessage;
-};
+export type GroupChatWsEvent =
+  | { type: "NEW_MESSAGE" | "NOTICE" | "SCHEDULE"; data: GroupChatMessage }
+  | { type: "GATHERING_COMPLETED"; data: null };
 
 type GroupChatWsHandler = (event: GroupChatWsEvent) => void;
 
 // ─── Shared client state ──────────────────────────────────────────────────────
 
 let client: Client | null = null;
+let connectedToken: string | null = null;
 
 // 1:1 chat
 let userQueueSub: StompSubscription | null = null;
@@ -86,11 +86,12 @@ export function addChatEventHandler(handler: ChatWsEventHandler): () => void {
 export function connectChatWs(): void {
   const token = useAuthStore.getState().accessToken;
   if (!token) return;
-  if (client?.connected) return;
+  if (client?.connected && connectedToken === token) return;
 
   if (client?.active) {
     client.deactivate();
     client = null;
+    connectedToken = null;
     userQueueSub = null;
     groupStompSubs.clear();
   }
@@ -104,6 +105,7 @@ export function connectChatWs(): void {
       ),
     reconnectDelay: 5000,
     onConnect: () => {
+      connectedToken = token;
       userQueueSub = client!.subscribe("/user/queue/chat", (message) => {
         notifyIndividualHandlers(message.body);
       });
@@ -111,6 +113,7 @@ export function connectChatWs(): void {
       activatePendingGroupSubs();
     },
     onDisconnect: () => {
+      connectedToken = null;
       userQueueSub = null;
       groupStompSubs.clear();
     },
@@ -132,6 +135,7 @@ export function disconnectChatWs(): void {
   groupStompSubs.clear();
   client?.deactivate();
   client = null;
+  connectedToken = null;
 }
 
 // ─── Public API: 1:1 chat ─────────────────────────────────────────────────────

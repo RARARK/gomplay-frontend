@@ -15,6 +15,7 @@ import type {
   GatheringRecommendItem,
   JoinGatheringResponse,
   RejectParticipantResponse,
+  ReviewableGatheringParticipant,
   UpdateGatheringRequest,
   UpdateGatheringResponse,
 } from "@/types/domain/gathering";
@@ -566,6 +567,37 @@ export async function getGatheringHistory(): Promise<GatheringHistoryItem[]> {
     }
 
     throw new ApiError("히스토리를 불러올 수 없습니다.");
+  }
+}
+
+export async function getReviewableGatheringParticipants(
+  gatheringId: number,
+): Promise<ReviewableGatheringParticipant[]> {
+  try {
+    const res = await apiClient.get<ReviewableGatheringParticipant[]>(
+      `/api/gathering/${gatheringId}/participants/reviewable`,
+    );
+    return res.data;
+  } catch (error) {
+    if (error instanceof ApiError) throw error;
+
+    if (isAxiosError(error)) {
+      const errorBody = getBackendErrorBody(error.response?.data);
+
+      if (errorBody?.code === 4000) {
+        throw new ApiError("데이터베이스 연결에 실패하였습니다.");
+      }
+
+      if (error.response?.status === 500) {
+        throw new ApiError("서버 내부 오류", "Internal server error");
+      }
+
+      if (errorBody?.message) {
+        throw new ApiError(errorBody.message);
+      }
+    }
+
+    throw new ApiError("평가 가능한 참여자 목록을 불러올 수 없습니다.");
   }
 }
 

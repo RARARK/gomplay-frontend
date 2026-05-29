@@ -126,6 +126,15 @@ export type GatheringParticipant = {
   updatedAt: string;
 };
 
+export type ReviewableGatheringParticipant = {
+  userId: number;
+  name: string;
+  profileImageUrl: string | null;
+  department: string;
+  studentNumber: string;
+  reviewed: boolean;
+};
+
 export type AcceptParticipantResponse = {
   id: number;
   gatheringId: number;

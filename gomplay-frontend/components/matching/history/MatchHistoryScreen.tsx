@@ -50,7 +50,7 @@ function mapEntryToItem(entry: MatchHistoryEntry): MatchHistoryItem {
     scheduledTime: entry.scheduledAt ? formatTime(entry.scheduledAt) : undefined,
     exerciseType: entry.sportType ?? undefined,
     reviewed: entry.reviewed,
-    chatRoomId: entry.chatRoomId ?? undefined,
+    chatRoomId: entry.chatRoomId,
     gatheringId: isGathering ? entry.id : undefined,
     matchId: !isGathering ? entry.id : undefined,
     partnerIsVerified: entry.partnerIsVerified,

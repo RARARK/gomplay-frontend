@@ -20,8 +20,21 @@ export async function getGroupChatRoomDetails(
       `/api/group-chat/rooms/${roomId}`,
     );
     return response.data;
-  } catch {
+  } catch (err) {
+    if (isAxiosError(err) && err.response?.status === 400) {
+      const message: string =
+        (err.response.data as { message?: string })?.message ??
+        "채팅방에 입장할 수 없습니다.";
+      throw new GroupChatRoomAccessError(message);
+    }
     return null;
+  }
+}
+
+export class GroupChatRoomAccessError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "GroupChatRoomAccessError";
   }
 }
 

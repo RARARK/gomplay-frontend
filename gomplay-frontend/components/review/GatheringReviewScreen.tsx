@@ -1,10 +1,13 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { router } from "expo-router";
-import React, { useState } from "react";
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import React, { useEffect, useState } from "react";
+import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
 import PartnerReviewScreen from "@/components/review/PartnerReviewScreen";
+import ReviewCompleteScreen from "@/components/review/ReviewCompleteScreen";
+import { getReviewableGatheringParticipants } from "@/services/gathering/gatheringService";
+import { useChatStore } from "@/stores/chat/chatStore";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -16,17 +19,7 @@ type Participant = {
   reviewed: boolean;
 };
 
-type Screen = "list" | "review" | "allDone";
-
-// ─── Mock data ────────────────────────────────────────────────────────────────
-
-const MOCK_PARTICIPANTS: Participant[] = [
-  { userId: 1, name: "김형수", info: "런닝 · 20대 · 컴공",   profileImageUrl: null, reviewed: false },
-  { userId: 2, name: "이영희", info: "런닝 · 20대 · 경영",   profileImageUrl: null, reviewed: false },
-  { userId: 3, name: "박민수", info: "런닝 · 20대 · 기계",   profileImageUrl: null, reviewed: false },
-  { userId: 4, name: "최지은", info: "런닝 · 20대 · 디자인", profileImageUrl: null, reviewed: false },
-  { userId: 5, name: "정우진", info: "런닝 · 20대 · 전기",   profileImageUrl: null, reviewed: false },
-];
+type Screen = "list" | "review" | "allDone" | "skipped";
 
 // ─── Avatar ───────────────────────────────────────────────────────────────────
 
@@ -44,11 +37,59 @@ function Avatar({ uri, size = 48 }: { uri?: string | null; size?: number }) {
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
-export default function GatheringReviewScreen({ gatheringId }: { gatheringId: number }) {
+export default function GatheringReviewScreen({
+  gatheringId,
+}: {
+  gatheringId: number;
+}) {
+  const dismissGatheringReview = useChatStore((s) => s.dismissGatheringReview);
+
   const [screen, setScreen]             = useState<Screen>("list");
-  const [participants, setParticipants] = useState<Participant[]>(MOCK_PARTICIPANTS);
+  const [participants, setParticipants] = useState<Participant[]>([]);
   const [selected, setSelected]         = useState<Participant | null>(null);
   const [justReviewedName, setJustReviewedName] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    let mounted = true;
+    setIsLoading(true);
+    setErrorMessage(null);
+
+    getReviewableGatheringParticipants(gatheringId)
+      .then((items) => {
+        if (!mounted) return;
+        const nextParticipants = items.map((participant) => ({
+          userId: participant.userId,
+          name: participant.name,
+          info: [participant.department, participant.studentNumber]
+            .filter(Boolean)
+            .join(" · "),
+          profileImageUrl: participant.profileImageUrl,
+          reviewed: participant.reviewed,
+        }));
+
+        setParticipants(nextParticipants);
+        if (nextParticipants.length === 0 || nextParticipants.every((p) => p.reviewed)) {
+          setScreen("allDone");
+        }
+      })
+      .catch((error) => {
+        if (!mounted) return;
+        setErrorMessage(
+          error instanceof Error
+            ? error.message
+            : "평가 가능한 참여자 목록을 불러올 수 없습니다.",
+        );
+      })
+      .finally(() => {
+        if (mounted) setIsLoading(false);
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, [gatheringId]);
 
   const reviewedCount = participants.filter((p) => p.reviewed).length;
   const total         = participants.length;
@@ -65,10 +106,26 @@ export default function GatheringReviewScreen({ gatheringId }: { gatheringId: nu
     );
     setParticipants(updated);
     setJustReviewedName(selected.name);
-    setScreen(updated.every((p) => p.reviewed) ? "allDone" : "list");
+    const allDone = updated.every((p) => p.reviewed);
+    if (allDone) dismissGatheringReview(gatheringId);
+    setScreen(allDone ? "allDone" : "list");
   };
 
   const handleBack = () => setScreen("list");
+
+  // ── Skipped screen ───────────────────────────────────────────────────────
+
+  if (screen === "skipped") {
+    return (
+      <ReviewCompleteScreen
+        participants={participants.map((p) => ({ name: p.name, profileImageUrl: p.profileImageUrl }))}
+        onConfirm={() => {
+          dismissGatheringReview(gatheringId);
+          router.replace("/(tabs)" as any);
+        }}
+      />
+    );
+  }
 
   // ── Review screen (기존 PartnerReviewScreen 사용) ─────────────────────────
 
@@ -123,8 +180,8 @@ export default function GatheringReviewScreen({ gatheringId }: { gatheringId: nu
             ))}
           </View>
 
-          <Pressable onPress={() => router.back()} style={styles.doneBtn}>
-            <Text style={styles.doneBtnText}>완료</Text>
+          <Pressable onPress={() => router.replace("/matches/history" as any)} style={styles.doneBtn}>
+            <Text style={styles.doneBtnText}>매치 내역으로 이동</Text>
           </Pressable>
         </ScrollView>
       </View>
@@ -132,6 +189,31 @@ export default function GatheringReviewScreen({ gatheringId }: { gatheringId: nu
   }
 
   // ── List screen ───────────────────────────────────────────────────────────
+
+  if (isLoading) {
+    return (
+      <View style={[styles.flex, styles.centerContent]}>
+        <ActivityIndicator color="#4C5BE2" />
+      </View>
+    );
+  }
+
+  if (errorMessage) {
+    return (
+      <View style={styles.flex}>
+        <View style={styles.headerRow}>
+          <Pressable onPress={() => router.back()} style={styles.backButton} hitSlop={10}>
+            <Ionicons name="chevron-back" size={28} color="#111111" />
+          </Pressable>
+          <Text style={styles.headerTitle}>파트너 평가하기</Text>
+          <View style={styles.headerSpacer} />
+        </View>
+        <View style={styles.centerContent}>
+          <Text style={styles.errorText}>{errorMessage}</Text>
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.flex}>
@@ -141,7 +223,7 @@ export default function GatheringReviewScreen({ gatheringId }: { gatheringId: nu
         </Pressable>
         <Text style={styles.headerTitle}>파트너 평가하기</Text>
         <Pressable
-          onPress={() => router.back()}
+          onPress={() => setScreen("skipped")}
           style={styles.skipHeaderBtn}
           hitSlop={10}
         >
@@ -226,6 +308,19 @@ function ParticipantRow({
 
 const styles = StyleSheet.create({
   flex: { flex: 1, backgroundColor: "#fff" },
+  centerContent: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 24,
+  },
+  errorText: {
+    fontSize: 14,
+    lineHeight: 20,
+    fontWeight: "600",
+    color: "#6B7280",
+    textAlign: "center",
+  },
 
   /* 헤더 — PartnerReviewScreen 동일 스타일 */
   headerRow: {

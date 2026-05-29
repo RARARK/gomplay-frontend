@@ -9,6 +9,7 @@ import { useMatchingStore } from "@/stores/matching/matchingStore";
 type MessageHandler = (body: string) => void;
 
 let client: Client | null = null;
+let connectedToken: string | null = null;
 let subscription: StompSubscription | null = null;
 const handlers = new Set<MessageHandler>();
 
@@ -24,11 +25,12 @@ export function addMatchMessageHandler(handler: MessageHandler): () => void {
 export function connectMatchWs(): void {
   const token = useAuthStore.getState().accessToken;
   if (!token) return;
-  if (client?.connected) return;
+  if (client?.connected && connectedToken === token) return;
 
   if (client?.active) {
     client.deactivate();
     client = null;
+    connectedToken = null;
     subscription = null;
   }
 
@@ -43,12 +45,14 @@ export function connectMatchWs(): void {
     heartbeatIncoming: 4000,
     heartbeatOutgoing: 4000,
     onConnect: () => {
+      connectedToken = token;
       useMatchingStore.getState().setWsConnected(true);
       subscription = client!.subscribe("/user/queue/match", (message) => {
         notifyHandlers(message.body);
       });
     },
     onDisconnect: () => {
+      connectedToken = null;
       useMatchingStore.getState().setWsConnected(false);
       subscription = null;
     },
@@ -68,6 +72,7 @@ export function disconnectMatchWs(): void {
   subscription = null;
   client?.deactivate();
   client = null;
+  connectedToken = null;
 }
 
 export function isMatchWsActive(): boolean {

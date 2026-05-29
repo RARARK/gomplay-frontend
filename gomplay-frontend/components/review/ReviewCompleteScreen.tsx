@@ -23,6 +23,11 @@ const CONFETTI = [
   { right: 118, top: 124, color: "#CFD2FA", dx: 10, dy: 16, rotate: "-12deg" },
 ];
 
+type ReviewParticipant = {
+  name: string;
+  profileImageUrl?: string | null;
+};
+
 type ReviewCompleteScreenProps = {
   partnerName?: string;
   partnerProfileImageUrl?: string | null;
@@ -30,6 +35,8 @@ type ReviewCompleteScreenProps = {
   partnerStudentId?: string;
   exerciseTypes?: string;
   scheduledTime?: string;
+  onConfirm?: () => void;
+  participants?: ReviewParticipant[];
 };
 
 export default function ReviewCompleteScreen({
@@ -39,6 +46,8 @@ export default function ReviewCompleteScreen({
   partnerStudentId,
   exerciseTypes,
   scheduledTime,
+  onConfirm,
+  participants,
 }: ReviewCompleteScreenProps) {
   const burstAnim = React.useRef(new Animated.Value(0)).current;
   const checkAnim = React.useRef(new Animated.Value(0)).current;
@@ -172,50 +181,80 @@ export default function ReviewCompleteScreen({
           <Text style={styles.description}>소중한 피드백 감사합니다.</Text>
         </View>
 
-        <View style={styles.partnerCard}>
-          <Image
-            source={
-              partnerProfileImageUrl
-                ? { uri: partnerProfileImageUrl }
-                : require("../../assets/match/Ellipse-12.png")
-            }
-            style={styles.avatar}
-            contentFit="cover"
-          />
-          <View style={styles.partnerInfo}>
-            <View style={styles.nameRow}>
-              <Text style={styles.partnerName}>{partnerName}</Text>
-              <Ionicons name="checkmark-circle" size={15} color="#4C5BE2" />
-            </View>
-            {(partnerDepartment || partnerStudentId) ? (
-              <Text style={styles.partnerSubInfo} numberOfLines={1}>
-                {[partnerDepartment, partnerStudentId].filter(Boolean).join(" · ")}
-              </Text>
-            ) : null}
-            {exerciseTypes ? (
-              <Text style={styles.partnerMeta} numberOfLines={1}>
-                {exerciseTypes}
-              </Text>
-            ) : null}
-            {scheduledTime ? (
-              <Text style={styles.partnerMeta} numberOfLines={1}>
-                {scheduledTime}
-              </Text>
-            ) : null}
+        {participants && participants.length > 0 ? (
+          <View style={styles.partnerCard}>
+            {participants.map((p, i) => (
+              <View
+                key={i}
+                style={[
+                  styles.participantRow,
+                  i < participants.length - 1 && styles.participantRowDivider,
+                ]}
+              >
+                <Image
+                  source={
+                    p.profileImageUrl
+                      ? { uri: p.profileImageUrl }
+                      : require("../../assets/match/Ellipse-12.png")
+                  }
+                  style={styles.avatar}
+                  contentFit="cover"
+                />
+                <View style={styles.nameRow}>
+                  <Text style={styles.partnerName}>{p.name}</Text>
+                  <Ionicons name="checkmark-circle" size={15} color="#4C5BE2" />
+                </View>
+              </View>
+            ))}
           </View>
-        </View>
+        ) : (
+          <View style={styles.partnerCard}>
+            <Image
+              source={
+                partnerProfileImageUrl
+                  ? { uri: partnerProfileImageUrl }
+                  : require("../../assets/match/Ellipse-12.png")
+              }
+              style={styles.avatar}
+              contentFit="cover"
+            />
+            <View style={styles.partnerInfo}>
+              <View style={styles.nameRow}>
+                <Text style={styles.partnerName}>{partnerName}</Text>
+                <Ionicons name="checkmark-circle" size={15} color="#4C5BE2" />
+              </View>
+              {(partnerDepartment || partnerStudentId) ? (
+                <Text style={styles.partnerSubInfo} numberOfLines={1}>
+                  {[partnerDepartment, partnerStudentId].filter(Boolean).join(" · ")}
+                </Text>
+              ) : null}
+              {exerciseTypes ? (
+                <Text style={styles.partnerMeta} numberOfLines={1}>
+                  {exerciseTypes}
+                </Text>
+              ) : null}
+              {scheduledTime ? (
+                <Text style={styles.partnerMeta} numberOfLines={1}>
+                  {scheduledTime}
+                </Text>
+              ) : null}
+            </View>
+          </View>
+        )}
       </ScrollView>
 
       <View style={styles.footer}>
         <Pressable
           accessibilityRole="button"
-          onPress={() => router.replace("/" as any)}
+          onPress={onConfirm ?? (() => router.replace("/matches/history" as any))}
           style={({ pressed }) => [
             styles.homeButton,
             pressed && styles.buttonPressed,
           ]}
         >
-          <Text style={styles.homeButtonText}>홈으로 돌아가기</Text>
+          <Text style={styles.homeButtonText}>
+            {onConfirm ? "확인" : "매치 내역으로 이동"}
+          </Text>
         </Pressable>
       </View>
     </SafeAreaView>
@@ -325,21 +364,26 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   partnerCard: {
-    minHeight: 88,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
     borderRadius: 14,
     borderWidth: 1,
     borderColor: "#ECEEF6",
     backgroundColor: "#FFFFFF",
     paddingHorizontal: 16,
-    paddingVertical: 14,
     shadowColor: "#111827",
     shadowOffset: { width: 0, height: 7 },
     shadowOpacity: 0.05,
     shadowRadius: 14,
     elevation: 2,
+  },
+  participantRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    paddingVertical: 14,
+  },
+  participantRowDivider: {
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: "#ECEEF6",
   },
   avatar: {
     width: 50,

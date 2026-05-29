@@ -1,11 +1,11 @@
-import { useEffect, useState } from "react";
-import { ActivityIndicator, FlatList, StyleSheet, View } from "react-native";
-import { router } from "expo-router";
+import { useCallback, useRef, useState } from "react";
+import { ActivityIndicator, FlatList, StyleSheet, Text, View } from "react-native";
+import { router, useFocusEffect } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import ChatHeader from "./ChatHeader";
 import Chatroom from "./Chatroom";
-import { Color } from "../GlobalStyles";
+import { Color, FontFamily, FontSize } from "../GlobalStyles";
 import { parseServerTimestamp } from "@/lib/utils/time";
 import { getChatRooms } from "@/services/chat/chatService";
 import { getGroupChatRooms } from "@/services/groupChat/groupChatService";
@@ -16,29 +16,43 @@ import type { GroupChatRoom } from "@/types/domain/groupChatRoom";
 type UnifiedRoom = { chatRoom: ChatRoom; isGroup: boolean };
 
 function mapGroupToChatRoom(room: GroupChatRoom): ChatRoom {
+  const lastMessageAt =
+    room.lastMessage?.sentAt ??
+    room.lastMessage?.lastMessageAt ??
+    room.lastMessage?.createdAt ??
+    undefined;
+  const matchStatus = room.gatheringStatus ?? "IN_PROGRESS";
+
   return {
     id: room.id,
     matchId: room.gatheringId,
-    matchStatus: "IN_PROGRESS",
-    status: "ACTIVE",
+    matchStatus,
+    status: matchStatus === "COMPLETED" ? "READ_ONLY" : "ACTIVE",
     participants: [
       {
         id: room.gatheringId,
         name: room.gatheringTitle,
-        profileImageUrl: room.hostProfileImageUrl ?? undefined,
+        profileImageUrl: room.hostProfileImageUrl || undefined,
       },
     ],
     lastMessage: room.lastMessage?.content ?? undefined,
-    lastMessageAt: room.lastMessage?.sentAt ?? undefined,
+    lastMessageAt,
     unreadMessageCount: 0,
-    reviewed: false,
+    reviewed: room.reviewed ?? false,
     createdAt: room.createdAt,
   };
 }
 
-function sortKey(room: ChatRoom): number {
+function getSortTimestamp(room: ChatRoom): number {
   const ts = room.lastMessageAt ?? room.createdAt;
-  return ts ? -parseServerTimestamp(ts).getTime() : 0;
+  if (!ts) return 0;
+
+  const time = parseServerTimestamp(ts).getTime();
+  return Number.isFinite(time) ? time : 0;
+}
+
+function getRoomSortPriority(room: ChatRoom): number {
+  return room.matchStatus === "COMPLETED" ? 1 : 0;
 }
 
 export default function ChatListScreen() {
@@ -46,33 +60,51 @@ export default function ChatListScreen() {
   const setChatRooms = useChatStore((state) => state.setChatRooms);
   const [isLoading, setIsLoading] = useState(true);
   const [groupRooms, setGroupRooms] = useState<GroupChatRoom[]>([]);
+  const requestIdRef = useRef(0);
 
-  useEffect(() => {
-    let isMounted = true;
+  const loadRooms = useCallback(() => {
+    const requestId = requestIdRef.current + 1;
+    requestIdRef.current = requestId;
 
     async function load() {
+      if (chatRooms.length === 0 && groupRooms.length === 0) {
+        setIsLoading(true);
+      }
       try {
         const [individual, group] = await Promise.all([
           getChatRooms(),
           getGroupChatRooms(),
         ]);
-        if (isMounted) {
+        if (requestIdRef.current === requestId) {
           setChatRooms(individual);
           setGroupRooms(group);
         }
       } finally {
-        if (isMounted) setIsLoading(false);
+        if (requestIdRef.current === requestId) {
+          setIsLoading(false);
+        }
       }
     }
 
     void load();
-    return () => { isMounted = false; };
-  }, [setChatRooms]);
+    return () => {
+      if (requestIdRef.current === requestId) {
+        requestIdRef.current += 1;
+        setIsLoading(false);
+      }
+    };
+  }, [chatRooms.length, groupRooms.length, setChatRooms]);
+
+  useFocusEffect(loadRooms);
 
   const unified: UnifiedRoom[] = [
     ...chatRooms.map((r) => ({ chatRoom: r, isGroup: false })),
     ...groupRooms.map((r) => ({ chatRoom: mapGroupToChatRoom(r), isGroup: true })),
-  ].sort((a, b) => sortKey(a.chatRoom) - sortKey(b.chatRoom));
+  ].sort((a, b) => {
+    const priorityDiff = getRoomSortPriority(a.chatRoom) - getRoomSortPriority(b.chatRoom);
+    if (priorityDiff !== 0) return priorityDiff;
+    return getSortTimestamp(b.chatRoom) - getSortTimestamp(a.chatRoom);
+  });
 
   return (
     <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
@@ -112,8 +144,6 @@ export default function ChatListScreen() {
 }
 
 function EmptyState() {
-  const { Text } = require("react-native");
-  const { FontFamily, FontSize } = require("../GlobalStyles");
   return (
     <View style={styles.emptyState}>
       <Text style={[styles.emptyTitle, { fontFamily: FontFamily.inter }]}>아직 채팅이 없어요</Text>
@@ -145,11 +175,13 @@ const styles = StyleSheet.create({
     fontSize: 17,
     lineHeight: 22,
     fontWeight: "600",
+    fontFamily: FontFamily.inter,
     color: "#111827",
   },
   emptyDescription: {
-    fontSize: 12,
+    fontSize: FontSize.fs_12,
     lineHeight: 16,
+    fontFamily: FontFamily.inter,
     color: "#6B7280",
   },
 });

@@ -206,8 +206,8 @@ export type MatchHistoryEntry = {
   scheduledAt: string | null;
   matchedAt: string | null;
   reviewed: boolean;
-  chatRoomId?: number | null;
-  partnerUserId?: number | null;
+  chatRoomId: number | null;
+  partnerUserId: number | null;
   // Extended partner profile fields (optional)
   partnerIsVerified?: boolean;
   partnerMannerTemperature?: number;

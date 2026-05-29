@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   Image,
   Keyboard,
   KeyboardAvoidingView,
@@ -19,6 +20,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import ChatHeader from "./ChatHeader";
 import PostMatchReviewCard from "./PostMatchReviewCard";
+import WorkoutCompleteModal from "@/components/matching/WorkoutCompleteModal";
 import { Color, FontFamily, FontSize } from "../GlobalStyles";
 import {
   connectChatWs,
@@ -45,6 +47,7 @@ import {
 import { normalizeImageUrl } from "@/lib/utils/imageUrl";
 import { formatMessageTime } from "@/lib/utils/time";
 import { MATCH_STATUS } from "@/types/domain/match";
+import { patchCompleteMatch } from "@/services/matching/matchingService";
 
 import PARTNER_IMAGE from "../../assets/chat/Profileimage.png";
 
@@ -104,6 +107,9 @@ export default function ChatRoomScreen() {
 
   const [isLoading, setIsLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
+  const [isCompleting, setIsCompleting] = useState(false);
+  const [hasSubmittedComplete, setHasSubmittedComplete] = useState(false);
+  const [isCompleteModalVisible, setIsCompleteModalVisible] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [roomTitle, setRoomTitle] = useState("");
   const [roomTitleDraft, setRoomTitleDraft] = useState("");
@@ -486,6 +492,40 @@ export default function ChatRoomScreen() {
     }
   };
 
+  const handleOpenReview = () => {
+    if (!chatRoom) return;
+
+    const opponent = getChatRoomPrimaryParticipant(chatRoom.participants);
+    const name = encodeURIComponent(opponent?.name ?? "");
+    const img = encodeURIComponent(opponent?.profileImageUrl ?? "");
+    router.push(
+      `/review/${chatRoom.matchId}?revieweeId=${opponent?.id ?? ""}&partnerName=${name}&partnerProfileImageUrl=${img}` as any,
+    );
+  };
+
+  const handleCompleteMatch = async () => {
+    if (!chatRoom || isCompleting) return;
+
+    setIsCompleting(true);
+    try {
+      await patchCompleteMatch(chatRoom.matchId);
+      setHasSubmittedComplete(true);
+      const details = await getChatRoomDetails(chatRoom.id);
+      if (details) {
+        upsertChatRoom(details.chatRoom);
+        setMessages(chatRoom.id, details.messages);
+      }
+      setIsCompleteModalVisible(true);
+    } catch (error) {
+      Alert.alert(
+        "완료 처리 실패",
+        error instanceof Error ? error.message : "다시 시도해 주세요.",
+      );
+    } finally {
+      setIsCompleting(false);
+    }
+  };
+
   if (isLoading || !chatRoom) {
     return (
       <SafeAreaView
@@ -543,18 +583,30 @@ export default function ChatRoomScreen() {
         </ScrollView>
 
         <PostMatchReviewCard
-          showReviewPrompt={chatRoom.matchStatus === MATCH_STATUS.COMPLETED && !chatRoom.reviewed}
-          title="운동이 완료되었어요!"
-          description="오늘 운동은 어떠셨나요? 파트너에게 평가를 남겨주세요."
-          buttonLabel="평가하러 가기"
-          onPressReview={() => {
-            const opponent = getChatRoomPrimaryParticipant(chatRoom.participants);
-            const name = encodeURIComponent(opponent?.name ?? "");
-            const img = encodeURIComponent(opponent?.profileImageUrl ?? "");
-            router.push(
-              `/review/${chatRoom.matchId}?revieweeId=${opponent?.id ?? ""}&partnerName=${name}&partnerProfileImageUrl=${img}` as any,
-            );
-          }}
+          showReviewPrompt={
+            (chatRoom.completeButtonVisible && !isReadOnly && !hasSubmittedComplete) ||
+            (chatRoom.matchStatus === MATCH_STATUS.COMPLETED && !chatRoom.reviewed)
+          }
+          title={
+            chatRoom.completeButtonVisible && !isReadOnly && !hasSubmittedComplete
+              ? "운동을 완료하셨나요?"
+              : "운동이 완료되었어요!"
+          }
+          description={
+            chatRoom.completeButtonVisible && !isReadOnly && !hasSubmittedComplete
+              ? "운동이 끝났다면 완료 처리하고 상대방에게 후기를 남길 수 있어요."
+              : "오늘 운동은 어떠셨나요? 파트너에게 평가를 남겨주세요."
+          }
+          buttonLabel={
+            chatRoom.completeButtonVisible && !isReadOnly && !hasSubmittedComplete
+              ? isCompleting ? "완료 처리 중..." : "운동 완료하기"
+              : "평가하러 가기"
+          }
+          onPressReview={
+            chatRoom.completeButtonVisible && !isReadOnly && !hasSubmittedComplete
+              ? handleCompleteMatch
+              : handleOpenReview
+          }
           inputPlaceholder={
             isReadOnly ? "읽기 전용 채팅방입니다." : "메시지를 입력하세요..."
           }
@@ -563,6 +615,15 @@ export default function ChatRoomScreen() {
           onChangeMessage={(message) => setDraft(chatRoomId, message)}
           onPressSend={handleSendMessage}
           sendDisabled={isReadOnly || isSending || draft.trim().length === 0}
+        />
+
+        <WorkoutCompleteModal
+          visible={isCompleteModalVisible}
+          onLaterPress={() => setIsCompleteModalVisible(false)}
+          onReviewPress={() => {
+            setIsCompleteModalVisible(false);
+            handleOpenReview();
+          }}
         />
 
         <ChatRoomSideMenu

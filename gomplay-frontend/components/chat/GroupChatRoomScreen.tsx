@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -15,26 +15,31 @@ import {
   View,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { useLocalSearchParams } from "expo-router";
+import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import ChatHeader from "./ChatHeader";
 import PostMatchReviewCard from "./PostMatchReviewCard";
+import WorkoutCompleteModal from "@/components/matching/WorkoutCompleteModal";
 import { Color, FontFamily, FontSize } from "../GlobalStyles";
 import {
   getGroupChatRoomDetails,
+  GroupChatRoomAccessError,
   GroupChatNoticeError,
   GroupChatScheduleError,
   sendGroupChatNotice,
   sendGroupChatSchedule,
 } from "@/services/groupChat/groupChatService";
+import { completeGathering } from "@/services/gathering/gatheringService";
+import { getActiveMatches } from "@/services/matching/matchingService";
 import {
   connectChatWs,
   publishGroupChatMessage,
   subscribeToGroupChatRoom,
 } from "@/lib/ws/chatWsClient";
-import { useAuthStore } from "@/stores/auth/authStore";
+import { getMyProfile } from "@/services/user/userService";
 import { useUserStore } from "@/stores/user/userStore";
+import { useChatStore } from "@/stores/chat/chatStore";
 import { normalizeImageUrl } from "@/lib/utils/imageUrl";
 import { formatDateTime, formatMessageTime } from "@/lib/utils/time";
 import type {
@@ -45,20 +50,32 @@ import type {
 
 const DEFAULT_AVATAR = require("../../assets/chat/Profileimage.png");
 
+type GatheringCompletionInfo = {
+  canComplete: boolean;
+  scheduledEndAt?: string | null;
+};
+
 export default function GroupChatRoomScreen() {
   const params = useLocalSearchParams<{ roomId?: string | string[] }>();
   const roomId = parseRoomId(params.roomId);
 
-  const currentUserId = useAuthStore((s) => s.userId);
   const currentProfileId = useUserStore((s) => s.profile?.id ?? null);
+  const dismissedGatheringIds = useChatStore((s) => s.dismissedGatheringIds);
+  const setCurrentProfile = useUserStore((s) => s.setProfile);
   const scrollViewRef = useRef<ScrollView>(null);
   const handledIdsRef = useRef(new Set<number>());
+  const hasMountedRef = useRef(false);
 
   const [isLoading, setIsLoading] = useState(true);
   const [room, setRoom] = useState<GroupChatRoomDetails | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [realtimeMessages, setRealtimeMessages] = useState<GroupChatMessage[]>([]);
   const [draft, setDraft] = useState("");
   const [isSending, setIsSending] = useState(false);
+  const [isCompleting, setIsCompleting] = useState(false);
+  const [isCompleteModalVisible, setIsCompleteModalVisible] = useState(false);
+  const [completionInfo, setCompletionInfo] = useState<GatheringCompletionInfo | null>(null);
+  const [now, setNow] = useState(() => Date.now());
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   // Notice compose
@@ -87,19 +104,50 @@ export default function GroupChatRoomScreen() {
   }, []);
 
   useEffect(() => {
-    if (!roomId) return;
+    if (!roomId) {
+      setIsLoading(false);
+      setErrorMessage("잘못된 채팅방입니다.");
+      return;
+    }
     let mounted = true;
 
     connectChatWs();
 
     async function load() {
       setIsLoading(true);
+      setErrorMessage(null);
       try {
-        const details = await getGroupChatRoomDetails(roomId!);
+        const [details, profile, activeMatches] = await Promise.all([
+          getGroupChatRoomDetails(roomId!),
+          getMyProfile().catch(() => null),
+          getActiveMatches().catch(() => []),
+        ]);
         if (mounted) {
+          if (profile) setCurrentProfile(profile);
           setRoom(details);
+          const gatheringMatch = activeMatches.find(
+            (match) =>
+              String(match.type).toUpperCase() === "GATHERING" &&
+              match.id === details?.gatheringId,
+          );
+          setCompletionInfo(
+            gatheringMatch
+              ? {
+                  canComplete: gatheringMatch.canComplete,
+                  scheduledEndAt: gatheringMatch.scheduledEndAt,
+                }
+              : null,
+          );
           details?.messages.forEach((m) => handledIdsRef.current.add(m.id));
         }
+      } catch (err) {
+        if (!mounted) return;
+        setRoom(null);
+        setErrorMessage(
+          err instanceof GroupChatRoomAccessError
+            ? err.message
+            : "채팅방을 불러올 수 없습니다.",
+        );
       } finally {
         if (mounted) setIsLoading(false);
       }
@@ -108,7 +156,12 @@ export default function GroupChatRoomScreen() {
     void load();
 
     const unsub = subscribeToGroupChatRoom(roomId, (event) => {
-      if (event.type !== "NEW_MESSAGE") return;
+      if (event.type === "GATHERING_COMPLETED") {
+        setRoom((prev) =>
+          prev ? { ...prev, gatheringStatus: "COMPLETED" } : prev,
+        );
+        return;
+      }
       const msg = event.data;
       if (handledIdsRef.current.has(msg.id)) return;
       handledIdsRef.current.add(msg.id);
@@ -119,7 +172,33 @@ export default function GroupChatRoomScreen() {
       mounted = false;
       unsub();
     };
-  }, [roomId]);
+  }, [roomId, setCurrentProfile]);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (!roomId) return;
+      if (!hasMountedRef.current) {
+        hasMountedRef.current = true;
+        return;
+      }
+      getGroupChatRoomDetails(roomId)
+        .then((details) => {
+          if (!details) return;
+          setRoom((prev) =>
+            prev
+              ? { ...prev, reviewed: details.reviewed, gatheringStatus: details.gatheringStatus }
+              : prev,
+          );
+        })
+        .catch(() => {});
+    }, [roomId]),
+  );
+
+  useEffect(() => {
+    if (!completionInfo?.scheduledEndAt || completionInfo.canComplete) return;
+    const interval = setInterval(() => setNow(Date.now()), 60_000);
+    return () => clearInterval(interval);
+  }, [completionInfo?.canComplete, completionInfo?.scheduledEndAt]);
 
   const allMessages = useMemo<GroupChatMessage[]>(() => {
     const seen = new Set<number>();
@@ -134,10 +213,18 @@ export default function GroupChatRoomScreen() {
   }, [room?.messages, realtimeMessages]);
 
   const pinnedNotice = [...allMessages].reverse().find((m) => m.messageType === "NOTICE") ?? null;
+  const isCompletedGathering = room?.gatheringStatus === "COMPLETED";
+  const isReadOnly = isCompletedGathering;
+  const canCompleteGathering =
+    !isCompletedGathering &&
+    (completionInfo?.canComplete ||
+      (completionInfo?.scheduledEndAt
+        ? now > new Date(completionInfo.scheduledEndAt).getTime()
+        : false));
 
   const handleSend = () => {
     const trimmed = draft.trim();
-    if (!trimmed || isSending || !roomId) return;
+    if (!trimmed || isReadOnly || isSending || !roomId) return;
     setIsSending(true);
     try {
       publishGroupChatMessage(roomId, trimmed);
@@ -151,7 +238,7 @@ export default function GroupChatRoomScreen() {
 
   const handlePostNotice = async () => {
     const trimmed = noticeDraft.trim();
-    if (!trimmed || isPostingNotice || !roomId) return;
+    if (!trimmed || isReadOnly || isPostingNotice || !roomId) return;
     setIsPostingNotice(true);
     try {
       await sendGroupChatNotice(roomId, trimmed);
@@ -170,7 +257,7 @@ export default function GroupChatRoomScreen() {
 
   const handlePostSchedule = async () => {
     const trimmed = schedContent.trim();
-    if (!trimmed || !schedDate.trim() || !schedTime.trim() || isPostingSchedule || !roomId) return;
+    if (isReadOnly || !trimmed || !schedDate.trim() || !schedTime.trim() || isPostingSchedule || !roomId) return;
     const scheduledAt = buildScheduledAt(schedDate.trim(), schedTime.trim());
     if (!scheduledAt) {
       Alert.alert("입력 오류", "날짜는 YYYY-MM-DD, 시간은 HH:mm 형식으로 입력해 주세요.");
@@ -196,14 +283,45 @@ export default function GroupChatRoomScreen() {
     }
   };
 
+  const handleOpenGatheringReview = () => {
+    if (!room) return;
+    router.push(`/review/gathering/${room.gatheringId}` as any);
+  };
+
+  const handleCompleteGathering = async () => {
+    if (!room || isCompleting) return;
+
+    setIsCompleting(true);
+    try {
+      await completeGathering(room.gatheringId);
+      setRoom((prev) =>
+        prev ? { ...prev, gatheringStatus: "COMPLETED" } : prev,
+      );
+      setCompletionInfo((prev) =>
+        prev ? { ...prev, canComplete: false } : prev,
+      );
+      setIsCompleteModalVisible(true);
+    } catch (err) {
+      Alert.alert(
+        "완료 처리 실패",
+        err instanceof Error ? err.message : "다시 시도해 주세요.",
+      );
+    } finally {
+      setIsCompleting(false);
+    }
+  };
+
   if (isLoading || !room) {
     return (
       <SafeAreaView style={styles.safeArea} edges={["top", "left", "right", "bottom"]}>
         <ChatHeader title="그룹 채팅" showMenuButton={false} />
         <View style={styles.loadingContainer}>
+          {!isLoading && errorMessage ? (
+            <Text style={styles.errorText}>{errorMessage}</Text>
+          ) : null}
           {isLoading ? (
             <ActivityIndicator color={Color.primary100} />
-          ) : (
+          ) : errorMessage ? null : (
             <Text style={styles.errorText}>채팅방을 불러올 수 없습니다.</Text>
           )}
         </View>
@@ -244,21 +362,49 @@ export default function GroupChatRoomScreen() {
             <GroupMessageRow
               key={msg.id}
               message={msg}
-              isMine={
-                msg.senderId === currentUserId ||
-                (currentProfileId !== null && msg.senderId === currentProfileId)
-              }
+              isMine={currentProfileId !== null && msg.senderId === currentProfileId}
             />
           ))}
+          {isCompletedGathering ? (
+            <View style={styles.systemMessageWrapper}>
+              <Text style={styles.systemMessageText}>운동이 완료되었습니다.</Text>
+            </View>
+          ) : null}
         </ScrollView>
 
         <PostMatchReviewCard
-          showReviewPrompt={false}
-          inputPlaceholder="메시지를 입력하세요..."
+          showReviewPrompt={canCompleteGathering || (isCompletedGathering && !room.reviewed && !dismissedGatheringIds.includes(room.gatheringId))}
+          title={canCompleteGathering ? "운동을 완료하셨나요?" : "운동이 완료되었어요!"}
+          description={
+            canCompleteGathering
+              ? "운동이 끝났다면 완료 처리하고 참여자들에게 후기를 남길 수 있어요."
+              : "오늘 운동은 어떠셨나요? 참여자들에게 평가를 남겨주세요."
+          }
+          buttonLabel={
+            canCompleteGathering
+              ? isCompleting ? "완료 처리 중..." : "운동 완료하기"
+              : "평가하러 가기"
+          }
+          onPressReview={
+            canCompleteGathering
+              ? handleCompleteGathering
+              : handleOpenGatheringReview
+          }
+          inputPlaceholder={isReadOnly ? "읽기 전용 채팅방입니다." : "메시지를 입력하세요..."}
+          inputDisabled={isReadOnly}
           messageValue={draft}
           onChangeMessage={setDraft}
           onPressSend={handleSend}
-          sendDisabled={isSending || draft.trim().length === 0}
+          sendDisabled={isReadOnly || isSending || draft.trim().length === 0}
+        />
+
+        <WorkoutCompleteModal
+          visible={isCompleteModalVisible}
+          onLaterPress={() => setIsCompleteModalVisible(false)}
+          onReviewPress={() => {
+            setIsCompleteModalVisible(false);
+            handleOpenGatheringReview();
+          }}
         />
 
         {/* Side menu */}
@@ -302,7 +448,7 @@ export default function GroupChatRoomScreen() {
                   <ParticipantRow
                     key={p.id}
                     participant={p}
-                    isSelf={p.id === currentProfileId || p.id === currentUserId}
+                    isSelf={currentProfileId !== null && p.id === currentProfileId}
                   />
                 ))}
                 {!room.participants ? (
@@ -319,7 +465,7 @@ export default function GroupChatRoomScreen() {
               <View style={styles.drawerSection}>
                 <View style={styles.drawerSectionHeader}>
                   <Text style={styles.drawerSectionTitle}>공지</Text>
-                  {room.isHost === true ? (
+                  {room.isHost === true && !isReadOnly ? (
                     <Pressable
                       accessibilityRole="button"
                       onPress={() => { setNoticeDraft(""); setIsNoticeOpen(true); }}
@@ -345,7 +491,7 @@ export default function GroupChatRoomScreen() {
               <View style={styles.drawerSection}>
                 <View style={styles.drawerSectionHeader}>
                   <Text style={styles.drawerSectionTitle}>일정</Text>
-                  {room.isHost === true ? (
+                  {room.isHost === true && !isReadOnly ? (
                     <Pressable
                       accessibilityRole="button"
                       onPress={() => {
@@ -608,6 +754,19 @@ const styles = StyleSheet.create({
 
   messageScrollView: { flex: 1 },
   scrollContent: { paddingTop: 20, paddingBottom: 24, gap: 20 },
+  systemMessageWrapper: {
+    alignSelf: "center",
+    borderRadius: 999,
+    backgroundColor: Color.colorGhostwhite100,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
+  systemMessageText: {
+    fontSize: FontSize.fs_12,
+    lineHeight: 16,
+    fontFamily: FontFamily.inter,
+    color: Color.neutral700,
+  },
 
   // Notice bar (pinned + inline) — same as ChatRoomScreen
   noticeBar: {
