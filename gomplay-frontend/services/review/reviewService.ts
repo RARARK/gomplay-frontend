@@ -1,13 +1,12 @@
 import apiClient from "@/lib/api/client";
-import type { ApiResponse } from "@/types/auth/auth";
 import type { ReceivedReview, ReviewRequest, ReviewResponse } from "@/types/domain/review";
 
 export async function submitReview(input: ReviewRequest): Promise<ReviewResponse> {
-  const response = await apiClient.post<ApiResponse<ReviewResponse>>(
+  const response = await apiClient.post<ReviewResponse>(
     "/api/review",
     input,
   );
-  return response.data.data;
+  return response.data;
 }
 
 export async function getMyReviews(): Promise<ReceivedReview[]> {

@@ -186,8 +186,15 @@ export default function MatchRequestToast() {
   if (!mounted) return null;
 
   const cachedOpponent = candidateCacheRef.current.get(pendingMatchRequest?.opponentId ?? -1);
-  const name = pendingMatchRequest?.name ?? cachedOpponent?.name ?? "누군가";
-  const rawImageUrl = pendingMatchRequest?.profileImageUrl ?? cachedOpponent?.profileImageUrl;
+  const name =
+    pendingMatchRequest?.opponentName ??
+    pendingMatchRequest?.name ??
+    cachedOpponent?.name ??
+    "누군가";
+  const rawImageUrl =
+    pendingMatchRequest?.opponentProfileImageUrl ??
+    pendingMatchRequest?.profileImageUrl ??
+    cachedOpponent?.profileImageUrl;
   const avatarUri = rawImageUrl ? normalizeImageUrl(rawImageUrl) : null;
   const avatarSource = avatarUri ? { uri: avatarUri } : DEFAULT_AVATAR;
 

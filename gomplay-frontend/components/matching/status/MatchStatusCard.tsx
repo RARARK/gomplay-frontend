@@ -78,6 +78,10 @@ export default function MatchStatusCard({
     ? (item.exerciseType ?? "")
     : (item.exerciseType ?? "상의 후 결정");
 
+  // 대기 중 조건:
+  // - 서버: canComplete:false + END_PENDING (PARTNER 백엔드 구현 후)
+  // - 로컬: completedByMe (GATHERING, 또는 앱 재시작 전 PARTNER 폴백)
+  const isWaiting = (!item.canComplete && item.status === "END_PENDING") || !!completedByMe;
   const postCompleteEnabled =
     item.canComplete ||
     (item.scheduledEndAt ? now > new Date(item.scheduledEndAt).getTime() : false);
@@ -194,13 +198,13 @@ export default function MatchStatusCard({
                 <Ionicons name="checkmark-circle" size={14} color="#16A34A" />
                 <Text style={[styles.actionText, styles.completedActionText]}>운동 완료</Text>
               </View>
-            ) : isInProgress ? (
+            ) : (isInProgress || item.status === "END_PENDING") ? (
               isPost ? (
                 <>
-                  {completedByMe ? (
+                  {isWaiting ? (
                     <View style={[styles.actionButton, styles.waitingCompleteButton]}>
                       <Ionicons name="time-outline" size={14} color="#9CA3AF" />
-                      <Text style={[styles.actionText, styles.waitingCompleteText]}>다른 사람이 아직 완료하지 않았어요</Text>
+                      <Text style={[styles.actionText, styles.waitingCompleteText]}>상대방 완료 대기 중</Text>
                     </View>
                   ) : postCompleteEnabled && onComplete ? (
                     <Pressable
@@ -220,7 +224,12 @@ export default function MatchStatusCard({
                 </>
               ) : (
                 <>
-                  {partnerCompleteEnabled && onComplete ? (
+                  {isWaiting ? (
+                    <View style={[styles.actionButton, styles.waitingCompleteButton]}>
+                      <Ionicons name="time-outline" size={14} color="#9CA3AF" />
+                      <Text style={[styles.actionText, styles.waitingCompleteText]}>상대방 완료 대기 중</Text>
+                    </View>
+                  ) : partnerCompleteEnabled && onComplete ? (
                     <Pressable
                       style={[styles.actionButton, styles.primaryActionButton]}
                       onPress={onComplete}
@@ -229,10 +238,12 @@ export default function MatchStatusCard({
                       <Text style={styles.primaryActionText}>운동 완료하기</Text>
                     </Pressable>
                   ) : null}
-                  <Pressable style={styles.actionButton} onPress={onChat}>
-                    <Ionicons name="chatbubble-outline" size={14} color="#4C5BE2" />
-                    <Text style={styles.actionText}>채팅</Text>
-                  </Pressable>
+                  {onChat ? (
+                    <Pressable style={styles.actionButton} onPress={onChat}>
+                      <Ionicons name="chatbubble-outline" size={14} color="#4C5BE2" />
+                      <Text style={styles.actionText}>채팅</Text>
+                    </Pressable>
+                  ) : null}
                 </>
               )
             ) : isAccepted ? (

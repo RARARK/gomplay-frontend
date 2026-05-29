@@ -256,35 +256,24 @@ export async function getMatchHistory(): Promise<MatchHistoryEntry[]> {
   }
 }
 
-export async function completeMatch(
-  input: CompleteMatchInput,
-  context: CompleteMatchContext,
-): Promise<CompleteMatchResult> {
-  const errorMessage = getCompleteMatchErrorMessage(input, context);
+type CompleteMatchApiResponse = {
+  status: "END_PENDING" | "COMPLETED";
+};
 
-  if (errorMessage) {
-    throw new Error(errorMessage);
+export async function patchCompleteMatch(matchId: number): Promise<CompleteMatchApiResponse> {
+  try {
+    const res = await apiClient.patch<CompleteMatchApiResponse>(
+      `/api/match/${matchId}/complete`,
+    );
+    return res.data;
+  } catch (error) {
+    if (error instanceof ApiError) throw error;
+    if (isAxiosError(error)) {
+      const msg = (error.response?.data as { message?: string })?.message;
+      if (error.response?.status === 400) throw new ApiError(msg ?? "완료 처리할 수 없습니다.");
+      if (error.response?.status === 500) throw new ApiError("서버 내부 오류");
+      if (msg) throw new ApiError(msg);
+    }
+    throw new ApiError("완료 처리에 실패했습니다.");
   }
-
-  if (
-    context.status === MATCH_STATUS.END_PENDING &&
-    context.endRequestedBy !== context.currentUserId
-  ) {
-    return {
-      matchId: input.matchId,
-      status: MATCH_STATUS.COMPLETED,
-    };
-  }
-
-  if (context.status === MATCH_STATUS.END_PENDING) {
-    return {
-      matchId: input.matchId,
-      status: MATCH_STATUS.COMPLETED,
-    };
-  }
-
-  return {
-    matchId: input.matchId,
-    status: MATCH_STATUS.END_PENDING,
-  };
 }

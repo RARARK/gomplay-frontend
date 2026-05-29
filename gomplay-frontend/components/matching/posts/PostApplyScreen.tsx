@@ -30,6 +30,7 @@ import {
   formatCreatePostDayLabel,
   formatCreatePostTimeRangeLabel,
 } from "@/components/matching/create-post/createPostUtils";
+import { parseToKST } from "@/lib/utils/time";
 import ApplicantPanel from "@/components/matching/status/ApplicantPanel";
 import type { Applicant } from "@/components/matching/status/ApplicantPanel";
 import OpponentProfileModal from "@/components/matching/OpponentProfileModal";
@@ -57,7 +58,7 @@ type PostApplyScreenProps = {
 };
 
 const toDate = (value: string) => {
-  const date = new Date(value);
+  const date = parseToKST(value);
   return Number.isNaN(date.getTime()) ? new Date() : date;
 };
 

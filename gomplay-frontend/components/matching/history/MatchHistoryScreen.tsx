@@ -13,10 +13,11 @@ import MatchHistoryCard, {
   type MatchHistoryItem,
 } from "@/components/matching/history/MatchHistoryCard";
 import { getMatchHistory } from "@/services/matching/matchingService";
+import { parseToKST } from "@/lib/utils/time";
 import type { MatchHistoryEntry } from "@/types/domain/match";
 
 function formatDate(iso: string): string {
-  const d = new Date(iso);
+  const d = parseToKST(iso);
   if (Number.isNaN(d.getTime())) return "";
   const m = String(d.getMonth() + 1).padStart(2, "0");
   const day = String(d.getDate()).padStart(2, "0");
@@ -24,7 +25,7 @@ function formatDate(iso: string): string {
 }
 
 function formatTime(iso: string): string {
-  const d = new Date(iso);
+  const d = parseToKST(iso);
   if (Number.isNaN(d.getTime())) return "";
   return d.toLocaleTimeString("ko-KR", {
     hour: "2-digit",
@@ -113,16 +114,17 @@ export default function MatchHistoryScreen() {
                 item={item}
                 onChat={
                   item.chatRoomId
-                    ? () => router.push(`/chat/${item.chatRoomId}` as any)
+                    ? () =>
+                        item.sourceType === "POST"
+                          ? router.push(`/group-chat/${item.chatRoomId}` as any)
+                          : router.push(`/chat/${item.chatRoomId}` as any)
                     : undefined
                 }
                 onReview={
                   item.reviewed
                     ? undefined
                     : item.gatheringId != null
-                      ? () => router.push(
-                          `/review/${item.gatheringId}?type=gathering&revieweeId=${item.partnerUserId ?? 0}&partnerName=${encodeURIComponent(item.partnerName)}` as any,
-                        )
+                      ? () => router.push(`/review/gathering/${item.gatheringId}` as any)
                       : item.matchId != null
                         ? () => router.push(
                             `/review/${item.matchId}?type=partner&revieweeId=${item.partnerUserId ?? 0}&partnerName=${encodeURIComponent(item.partnerName)}` as any,

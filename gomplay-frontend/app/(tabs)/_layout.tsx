@@ -56,23 +56,41 @@ export default function TabsLayout() {
   const clearLastResolvedMatchRequest = useMatchingStore((s) => s.clearLastResolvedMatchRequest);
   const setCandidates = useMatchingStore((s) => s.setCandidates);
   const setMatching = useAuthStore((s) => s.setMatching);
+  const handledMatchRequestIdRef = React.useRef<number | null>(null);
 
   React.useEffect(() => {
     if (!lastResolvedMatchRequest) return;
+    // Deduplicate: StrictMode double-invoke and polling fallback can both fire this
+    if (handledMatchRequestIdRef.current === lastResolvedMatchRequest.matchRequestId) return;
+    handledMatchRequestIdRef.current = lastResolvedMatchRequest.matchRequestId;
+
     const { accepted, roomId } = lastResolvedMatchRequest;
     clearLastResolvedMatchRequest();
-    if (accepted && roomId) {
+    if (accepted) {
       setMatching(false);
       setCandidates([]);
       toggleMatching(false).catch(() => {});
-      // 채팅 WS를 이동 전에 미리 연결 — ChatRoomScreen 마운트 전에 연결이 완료되어야
-      // 방 생성 직후 백엔드가 보내는 WS 메시지를 놓치지 않음
       connectChatWs();
       getChatRooms()
-        .then(setChatRooms)
-        .catch(() => {})
-        .finally(() => router.push(`/chat/${encodeURIComponent(roomId)}`));
-    } else if (!accepted) {
+        .then((rooms) => {
+          setChatRooms(rooms);
+          const targetId = roomId ?? rooms
+            .filter((r) => r.status === "ACTIVE")
+            .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0]?.id;
+          if (targetId) {
+            router.push(`/chat/${encodeURIComponent(targetId)}`);
+          } else {
+            router.push("/(tabs)/chat");
+          }
+        })
+        .catch(() => {
+          if (roomId) {
+            router.push(`/chat/${encodeURIComponent(roomId)}`);
+          } else {
+            router.push("/(tabs)/chat");
+          }
+        });
+    } else {
       Alert.alert("매칭 거절", "상대방이 매칭을 거절했어요.");
     }
   }, [lastResolvedMatchRequest, clearLastResolvedMatchRequest, setCandidates, setMatching, setChatRooms]);

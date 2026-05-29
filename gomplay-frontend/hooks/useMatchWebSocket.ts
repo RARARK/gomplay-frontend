@@ -9,6 +9,7 @@ import { useAuthStore } from "@/stores/auth/authStore";
 import { useMatchingStore, VISIBLE_CANDIDATE_LIMIT } from "@/stores/matching/matchingStore";
 import type { WsMatchEvent } from "@/types/domain/wsEvents";
 
+
 export function useMatchWebSocket(): void {
   const isLoggedIn = useAuthStore((s) => s.isLoggedIn);
 
@@ -58,6 +59,8 @@ export function useMatchWebSocket(): void {
           store.setPendingMatchRequest(event.data);
           break;
         case "MATCH_ACCEPTED":
+          // Set matching=false immediately so the polling fallback stops on its next tick
+          useAuthStore.getState().setMatching(false);
           store.resolveMatchRequest(event.data.matchRequestId, true, event.data.chatRoomId);
           break;
         case "MATCH_REJECTED":

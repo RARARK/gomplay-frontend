@@ -55,6 +55,10 @@ type Props = {
   partnerStudentId?: string;
   exerciseTypes?: string;
   scheduledTime?: string;
+  /** 뒤로가기 / 건너뛰기 override (gathering 흐름에서 목록으로 복귀 등) */
+  onBack?: () => void;
+  /** 평가 제출 성공 후 override (gathering 흐름에서 완료 콜백) */
+  onComplete?: () => void;
 };
 
 
@@ -88,7 +92,7 @@ function TraitCheckbox({
   );
 }
 
-export default function PartnerReviewScreen({ matchResultId, gatheringId, revieweeId, partnerName, partnerProfileImageUrl, partnerDepartment, partnerStudentId, exerciseTypes, scheduledTime }: Props) {
+export default function PartnerReviewScreen({ matchResultId, gatheringId, revieweeId, partnerName, partnerProfileImageUrl, partnerDepartment, partnerStudentId, exerciseTypes, scheduledTime, onBack, onComplete }: Props) {
   const markReviewCompleted = useChatStore((s) => s.markReviewCompleted);
 
   const [selectedTraits, setSelectedTraits] = React.useState<Set<string>>(
@@ -151,7 +155,11 @@ export default function PartnerReviewScreen({ matchResultId, gatheringId, review
       });
 
       if (matchResultId) markReviewCompleted(matchResultId);
-      setIsComplete(true);
+      if (onComplete) {
+        onComplete();
+      } else {
+        setIsComplete(true);
+      }
     } catch (err) {
       Alert.alert(
         "제출 실패",
@@ -190,7 +198,7 @@ export default function PartnerReviewScreen({ matchResultId, gatheringId, review
         <View style={styles.headerRow}>
           <Pressable
             accessibilityRole="button"
-            onPress={() => router.back()}
+            onPress={() => (onBack ? onBack() : router.back())}
             style={styles.backButton}
           >
             <Ionicons name="chevron-back" size={28} color="#111111" />
@@ -419,7 +427,7 @@ export default function PartnerReviewScreen({ matchResultId, gatheringId, review
           <Pressable
             accessibilityRole="button"
             style={styles.skipButton}
-            onPress={() => router.back()}
+            onPress={() => (onBack ? onBack() : router.back())}
           >
             <Text style={styles.skipButtonText}>건너뛰기</Text>
           </Pressable>
@@ -468,10 +476,12 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   headerTitle: {
+    flex: 1,
     fontSize: 20,
     lineHeight: 28,
     color: "#111827",
     fontWeight: "800",
+    textAlign: "left",
   },
   headerSpacer: { width: 40 },
 

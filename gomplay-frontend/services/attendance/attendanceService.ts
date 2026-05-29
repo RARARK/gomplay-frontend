@@ -1,54 +1,69 @@
 import { isAxiosError } from "axios";
 
 import apiClient, { ApiError } from "@/lib/api/client";
+import { useUserStore } from "@/stores/user/userStore";
 import type {
   AttendanceCalendarResponse,
   AttendanceStatus,
   CheckInResult,
 } from "@/types/domain/attendance";
 
-const POINTS_PER_CHECKIN = 10;
+type CheckInApiResponse = {
+  date: string;
+  totalPoints: number;
+  totalAttendance: number;
+};
 
-// Mock storage — replace with real API calls
-const checkedInDates = new Set<string>([
-  "2026-04-28",
-  "2026-04-29",
-  "2026-04-30",
-]);
-let totalPoints = checkedInDates.size * POINTS_PER_CHECKIN;
-
-function getServerDateString(): string {
-  // In production this comes from the API response, not the device clock.
+function todayString(): string {
   return new Date().toISOString().split("T")[0];
 }
 
 export async function getAttendanceStatus(
   _userId: number,
 ): Promise<AttendanceStatus> {
-  const serverDate = getServerDateString();
-  return {
-    todayCheckedIn: checkedInDates.has(serverDate),
-    checkedInDates: Array.from(checkedInDates),
-    totalPoints,
-    serverDate,
-  };
+  const serverDate = todayString();
+  const [year, month] = serverDate.split("-").map(Number);
+
+  try {
+    const calendar = await getAttendanceCalendar(year, month);
+    return {
+      todayCheckedIn: calendar.attendanceDates.includes(serverDate),
+      checkedInDates: calendar.attendanceDates,
+      totalPoints: useUserStore.getState().profile?.pointBalance ?? 0,
+      serverDate,
+    };
+  } catch {
+    return {
+      todayCheckedIn: false,
+      checkedInDates: [],
+      totalPoints: useUserStore.getState().profile?.pointBalance ?? 0,
+      serverDate,
+    };
+  }
 }
 
 export async function checkIn(_userId: number): Promise<CheckInResult> {
-  const serverDate = getServerDateString();
-
-  if (checkedInDates.has(serverDate)) {
-    throw new Error("이미 오늘 출석체크를 완료했어요.");
+  try {
+    const res = await apiClient.post<CheckInApiResponse>("/api/attendance");
+    return {
+      pointsEarned: 10,
+      totalPoints: res.data.totalPoints,
+      serverDate: res.data.date,
+    };
+  } catch (error) {
+    if (error instanceof ApiError) throw error;
+    if (isAxiosError(error)) {
+      const msg = (error.response?.data as { message?: string })?.message;
+      if (error.response?.status === 400) {
+        throw new ApiError(msg ?? "이미 오늘 출석체크를 완료했어요.");
+      }
+      if (error.response?.status === 500) {
+        throw new ApiError("서버 내부 오류");
+      }
+      if (msg) throw new ApiError(msg);
+    }
+    throw new ApiError("출석 체크에 실패했습니다.");
   }
-
-  checkedInDates.add(serverDate);
-  totalPoints += POINTS_PER_CHECKIN;
-
-  return {
-    pointsEarned: POINTS_PER_CHECKIN,
-    totalPoints,
-    serverDate,
-  };
 }
 
 export async function getAttendanceCalendar(

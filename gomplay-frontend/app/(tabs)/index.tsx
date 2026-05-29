@@ -1,7 +1,8 @@
 import * as React from "react";
 import { router, useFocusEffect } from "expo-router";
-import { Alert, ScrollView, StyleSheet } from "react-native";
+import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { Ionicons } from "@expo/vector-icons";
 
 import HomeHeader from "@/components/matching/home/HomeHeader";
 import HeroBanner from "@/components/matching/home/HeroBanner";
@@ -264,6 +265,11 @@ export default function HomePage() {
       const res = await toggleMatching(true);
       if (!res.data.isMatching) {
         isTogglingRef.current = false;
+        const reason: string = (res.data as { message?: string }).message ?? "";
+        Alert.alert(
+          "매칭 시작 실패",
+          reason || "퀵 매치를 시작할 수 없어요. 포인트나 프로필을 확인해주세요.",
+        );
         return;
       }
       setIsQuickMatchOn(true);
@@ -289,7 +295,8 @@ export default function HomePage() {
         <HomeHeader />
         <HeroBanner banners={banners} />
 
-
+        {/* TEST: 운동 모집 평가 진입 버튼 */}
+        <ReviewEntryBanner />
 
         <HomeStatusSection
           state={currentState}
@@ -304,6 +311,49 @@ export default function HomePage() {
         <MatchSection />
       </ScrollView>
     </SafeAreaView>
+  );
+}
+
+function ReviewEntryBanner() {
+  return (
+    <Pressable
+      onPress={() => router.push("/review/gathering/99" as any)}
+      style={{
+        marginHorizontal: 16,
+        borderRadius: 16,
+        backgroundColor: "#FFFBEB",
+        borderWidth: 1,
+        borderColor: "#FDE68A",
+        padding: 16,
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 14,
+      }}
+    >
+      <View style={{
+        width: 46, height: 46, borderRadius: 23,
+        backgroundColor: "#FEF3C7",
+        alignItems: "center", justifyContent: "center",
+      }}>
+        <Text style={{ fontSize: 22 }}>👏</Text>
+      </View>
+      <View style={{ flex: 1 }}>
+        <Text style={{ fontSize: 14, fontWeight: "800", color: "#92400E" }}>
+          운동이 완료됐어요!
+        </Text>
+        <Text style={{ fontSize: 12, fontWeight: "500", color: "#B45309", marginTop: 2 }}>
+          런닝 모집 파트너를 평가해주세요
+        </Text>
+      </View>
+      <View style={{
+        flexDirection: "row", alignItems: "center", gap: 2,
+        backgroundColor: "#F59E0B", borderRadius: 999,
+        paddingHorizontal: 12, paddingVertical: 6,
+      }}>
+        <Text style={{ fontSize: 12, fontWeight: "800", color: "#fff" }}>평가하기</Text>
+        <Ionicons name="chevron-forward" size={13} color="#fff" />
+      </View>
+    </Pressable>
   );
 }
 

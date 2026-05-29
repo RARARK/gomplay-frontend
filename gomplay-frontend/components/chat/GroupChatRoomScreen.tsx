@@ -143,7 +143,7 @@ export default function GroupChatRoomScreen() {
       publishGroupChatMessage(roomId, trimmed);
       setDraft("");
     } catch {
-      // WS not connected
+      Alert.alert("전송 실패", "메시지를 전송할 수 없습니다. 잠시 후 다시 시도해주세요.");
     } finally {
       setIsSending(false);
     }
@@ -220,7 +220,7 @@ export default function GroupChatRoomScreen() {
         />
 
         {pinnedNotice ? (
-          <Pressable style={styles.noticeBar} onPress={() => {}}>
+          <View style={styles.noticeBar}>
             <View style={styles.noticeHeader}>
               <Ionicons name="megaphone-outline" size={18} color={Color.primary100} />
               <Text style={styles.noticeTitle}>공지</Text>
@@ -228,7 +228,7 @@ export default function GroupChatRoomScreen() {
             <Text numberOfLines={2} style={styles.noticePreview}>
               {pinnedNotice.content}
             </Text>
-          </Pressable>
+          </View>
         ) : null}
 
         <ScrollView
@@ -352,7 +352,7 @@ export default function GroupChatRoomScreen() {
                         setSchedContent("");
                         setSchedDate("");
                         setSchedTime("");
-                        setSchedVenue(room.venue ?? "");
+                        setSchedVenue(room.venue);
                         setSchedSport(room.sportType ?? "");
                         setIsScheduleOpen(true);
                       }}
@@ -594,7 +594,7 @@ function parseRoomId(raw: string | string[] | undefined): number | null {
 
 function buildScheduledAt(date: string, time: string): string | null {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !/^\d{2}:\d{2}$/.test(time)) return null;
-  const iso = `${date}T${time}:00`;
+  const iso = `${date}T${time}:00+09:00`;
   return isNaN(new Date(iso).getTime()) ? null : iso;
 }
 

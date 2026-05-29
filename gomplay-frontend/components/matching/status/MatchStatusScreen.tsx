@@ -24,9 +24,10 @@ import {
   getGatheringParticipants,
   rejectParticipant,
 } from "@/services/gathering/gatheringService";
-import { getActiveMatches } from "@/services/matching/matchingService";
+import { getActiveMatches, patchCompleteMatch } from "@/services/matching/matchingService";
 import { getMyProfile } from "@/services/user/userService";
 import { useUserStore } from "@/stores/user/userStore";
+import { parseToKST } from "@/lib/utils/time";
 import type { GatheringParticipant } from "@/types/domain/gathering";
 import type { ActiveMatch } from "@/types/domain/match";
 import type { UserProfile } from "@/types/domain/user";
@@ -93,7 +94,7 @@ const mapParticipantToApplicant = (
 
 const formatScheduledDate = (value: string | null | undefined): string | undefined => {
   if (!value) return undefined;
-  const date = new Date(value);
+  const date = parseToKST(value);
   if (Number.isNaN(date.getTime())) return undefined;
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
@@ -107,7 +108,7 @@ const formatTimeRange = (
   if (!startAt) return undefined;
 
   const formatTime = (value: string) => {
-    const date = new Date(value);
+    const date = parseToKST(value);
     if (Number.isNaN(date.getTime())) return null;
     return date.toLocaleTimeString("ko-KR", {
       hour: "2-digit",
@@ -219,6 +220,7 @@ export default function MatchStatusScreen({
   const [matchesRefreshing, setMatchesRefreshing] = React.useState(false);
   const [matchesError, setMatchesError] = React.useState<string | null>(null);
   const [completedItem, setCompletedItem] = React.useState<MatchItem | null>(null);
+  // 완료 버튼을 누른 매치 ID를 로컬에서 추적 (앱 재시작 전까지 "대기 중" 표시용)
   const [completedByMeIds, setCompletedByMeIds] = React.useState<Set<string>>(new Set());
   const [applicantsByMatch, setApplicantsByMatch] = React.useState<
     Record<string, Applicant[]>
@@ -422,9 +424,13 @@ export default function MatchStatusScreen({
 
   const handleComplete = async (item: MatchItem) => {
     try {
-      await completeGathering(Number(item.id));
+      if (item.sourceType === "POST") {
+        await completeGathering(Number(item.id));
+        setCompletedItem(item);
+      } else {
+        await patchCompleteMatch(Number(item.id));
+      }
       setCompletedByMeIds((prev) => new Set(prev).add(item.id));
-      setCompletedItem(item);
       void loadActiveMatches(true);
     } catch (error) {
       Alert.alert(
@@ -565,11 +571,7 @@ export default function MatchStatusScreen({
                 key={item.id}
                 item={item}
                 completedByMe={completedByMeIds.has(item.id)}
-                onComplete={
-                  item.sourceType === "POST"
-                    ? () => handleComplete(item)
-                    : undefined
-                }
+                onComplete={() => handleComplete(item)}
                 onChat={
                   item.chatRoomId
                     ? () => router.push(`/chat/${item.chatRoomId}` as any)

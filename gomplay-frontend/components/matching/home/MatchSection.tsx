@@ -6,6 +6,7 @@ import ModernMatchCard from "./ModernMatchCard";
 import { Color, Gap } from "@/constants/locofyHomeStyles";
 import { getGatheringRecommendations } from "@/services/gathering/gatheringService";
 import { getSportImage } from "@/lib/utils/sportImageMap";
+import { parseToKST } from "@/lib/utils/time";
 import type { GatheringRecommendItem } from "@/types/domain/gathering";
 import type { ModernMatchCardProps } from "@/types/ui/homeCards";
 
@@ -15,8 +16,8 @@ function mapRecommendToCard(
   item: GatheringRecommendItem,
   onPress: () => void,
 ): ModernMatchCardProps {
-  const start = new Date(item.scheduledAt);
-  const end = new Date(item.scheduledEndAt);
+  const start = parseToKST(item.scheduledAt);
+  const end = parseToKST(item.scheduledEndAt);
 
   const month = String(start.getMonth() + 1).padStart(2, "0");
   const day = String(start.getDate()).padStart(2, "0");

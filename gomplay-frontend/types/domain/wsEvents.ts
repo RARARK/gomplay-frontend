@@ -5,6 +5,10 @@ export type WsMatchRequestData = {
   opponentId: number;
   status: "PENDING";
   expiresAt: string;
+  // server sends opponentName / opponentProfileImageUrl
+  opponentName?: string;
+  opponentProfileImageUrl?: string | null;
+  // legacy aliases kept for compatibility
   name?: string;
   profileImageUrl?: string | null;
 };

@@ -18,6 +18,7 @@ const RAINBOW_COLORS: readonly [string, string, ...string[]] = [
 import MatchDifficultyIcon from "@/assets/match/heroicons-chart-bar-16-solid.svg";
 import { useBoostStore } from "@/stores/gathering/boostStore";
 import { getSportIcon } from "@/lib/utils/sportIconMap";
+import { parseToKST } from "@/lib/utils/time";
 import type { GatheringListItem } from "@/types/domain/gathering";
 
 type PostCardProps = {
@@ -30,7 +31,7 @@ const DEFAULT_TITLE =
   "\uAC19\uC774 \uC6B4\uB3D9\uD558\uC2E4 \uBD84 \uAD6C\uD574\uC694";
 
 const getValidDate = (value: string) => {
-  const date = new Date(value);
+  const date = parseToKST(value);
   return Number.isNaN(date.getTime()) ? null : date;
 };
 
