@@ -64,8 +64,15 @@ export type ActiveMatchStatus =
   | "completed"
   | "cancelled";
 
+export type CanCompleteReason =
+  | "NOT_STARTED"
+  | "ALREADY_REQUESTED"
+  | "PARTNER_REQUESTED"
+  | "AVAILABLE";
+
 export type ActiveMatch = {
   canComplete: boolean;
+  canCompleteReason?: CanCompleteReason | null;
   chatRoomId: number | null;
   difficulty: string | null;
   id: number;

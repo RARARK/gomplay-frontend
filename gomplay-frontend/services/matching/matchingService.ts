@@ -243,18 +243,24 @@ export async function getActiveMatches(): Promise<ActiveMatch[]> {
 export async function getMatchHistory(): Promise<MatchHistoryEntry[]> {
   try {
     const res = await apiClient.get<MatchHistoryResponse | MatchHistoryEntry[]>("/api/match/history");
-    const entries = Array.isArray(res.data) ? res.data : res.data.data;
+    const entries = Array.isArray(res.data) ? res.data : (res.data.data ?? []);
     return entries.map((e) => ({
       ...e,
       chatRoomId: e.chatRoomId ?? null,
       partnerUserId: e.partnerUserId ?? null,
     }));
   } catch (error) {
+    if (error instanceof ApiError) throw error;
     if (isAxiosError(error)) {
       const errorBody = getBackendErrorBody(error.response?.data);
       if (errorBody?.code === 4000) throw new ApiError("데이터베이스 연결에 실패하였습니다.");
-      if (error.response?.status === 400) throw new ApiError(errorBody?.message ?? "유저를 찾을 수 없습니다.");
+      // 403: 백엔드가 빈 히스토리를 빈 배열 대신 403으로 내려주는 경우 빈 목록으로 처리
+      if (error.response?.status === 403) return [];
       if (error.response?.status === 500) throw new ApiError("서버 내부 오류");
+      const status = error.response?.status;
+      throw new ApiError(
+        errorBody?.message ?? (status ? `오류가 발생했습니다. (${status})` : "매치 내역을 불러오지 못했습니다."),
+      );
     }
     throw new ApiError("매치 내역을 불러오지 못했습니다.");
   }

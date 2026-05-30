@@ -9,6 +9,11 @@ import { getSportIcon } from "@/lib/utils/sportIconMap";
 export type MatchSourceType = "POST" | "PARTNER";
 export type MatchStatus = "IN_PROGRESS" | "PENDING" | "ACCEPTED" | "COMPLETED";
 export type MatchRole = "HOST" | "GUEST";
+export type CanCompleteReason =
+  | "NOT_STARTED"
+  | "ALREADY_REQUESTED"
+  | "PARTNER_REQUESTED"
+  | "AVAILABLE";
 
 export type MatchItem = {
   id: string;
@@ -16,6 +21,7 @@ export type MatchItem = {
   status: MatchStatus;
   role?: MatchRole | null;
   canComplete?: boolean;
+  canCompleteReason?: CanCompleteReason | null;
   reviewed?: boolean;
   revieweeId?: number | null;
   partnerName: string;
@@ -78,16 +84,18 @@ export default function MatchStatusCard({
     ? (item.exerciseType ?? "")
     : (item.exerciseType ?? "상의 후 결정");
 
-  // 대기 중 조건:
-  // - 서버: canComplete:false + END_PENDING (PARTNER 백엔드 구현 후)
-  // - 로컬: completedByMe (GATHERING, 또는 앱 재시작 전 PARTNER 폴백)
-  const isWaiting = (!item.canComplete && item.status === "END_PENDING") || !!completedByMe;
+  const reason = item.canCompleteReason;
+  const isWaiting =
+    reason === "ALREADY_REQUESTED" ||
+    (!!completedByMe && reason !== "AVAILABLE" && reason !== "PARTNER_REQUESTED");
+  const isPartnerRequested = !isPost && reason === "PARTNER_REQUESTED";
   const postCompleteEnabled =
-    item.canComplete ||
-    (item.scheduledEndAt ? now > new Date(item.scheduledEndAt).getTime() : false);
+    reason === "AVAILABLE" ||
+    (!reason && (item.canComplete || (item.scheduledEndAt ? now > new Date(item.scheduledEndAt).getTime() : false)));
   const partnerCompleteEnabled =
-    item.canComplete ||
-    (item.matchedAt ? now > new Date(item.matchedAt).getTime() + COMPLETE_DELAY_MS : false);
+    reason === "AVAILABLE" ||
+    reason === "PARTNER_REQUESTED" ||
+    (!reason && (item.canComplete || (item.matchedAt ? now > new Date(item.matchedAt).getTime() + COMPLETE_DELAY_MS : false)));
 
   return (
     <View style={styles.container}>
@@ -190,6 +198,14 @@ export default function MatchStatusCard({
               ) : null}
             </View>
           </View>
+
+          {/* 상대방 완료 요청 알림 */}
+          {isPartnerRequested && (
+            <View style={styles.partnerRequestedNotice}>
+              <Ionicons name="notifications-outline" size={13} color="#F59E0B" />
+              <Text style={styles.partnerRequestedNoticeText}>상대방이 완료를 요청했어요!</Text>
+            </View>
+          )}
 
           {/* 액션 버튼 */}
           <View style={styles.actionRow}>
@@ -464,4 +480,19 @@ const styles = StyleSheet.create({
     backgroundColor: "#F9FAFB",
   },
   waitingCompleteText: { color: "#9CA3AF" },
+  partnerRequestedNotice: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    paddingHorizontal: 8,
+    paddingVertical: 5,
+    borderRadius: 6,
+    backgroundColor: "#FFFBEB",
+  },
+  partnerRequestedNoticeText: {
+    fontSize: 11,
+    lineHeight: 15,
+    color: "#D97706",
+    fontWeight: "700",
+  },
 });

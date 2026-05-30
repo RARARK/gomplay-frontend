@@ -5,8 +5,10 @@ import type { GroupChatRoom, GroupChatRoomDetails } from "@/types/domain/groupCh
 
 export async function getGroupChatRooms(): Promise<GroupChatRoom[]> {
   try {
-    const response = await apiClient.get<GroupChatRoom[]>("/api/group-chat/rooms");
-    return response.data;
+    const response = await apiClient.get<{ data: GroupChatRoom[] } | GroupChatRoom[]>(
+      "/api/group-chat/rooms",
+    );
+    return Array.isArray(response.data) ? response.data : (response.data.data ?? []);
   } catch {
     return [];
   }

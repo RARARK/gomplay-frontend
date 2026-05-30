@@ -26,6 +26,13 @@ export async function login(
     );
     const data = res.data?.data;
     if (!data) throw new ApiError("로그인 응답 데이터가 올바르지 않습니다.");
+    console.log("[LOGIN] success:", res.data?.success);
+    console.log("[LOGIN] message:", res.data?.message);
+    console.log("[LOGIN] userId:", data.userId);
+    console.log("[LOGIN] tokenType:", data.tokenType);
+    console.log("[LOGIN] matching:", data.matching);
+    console.log("[LOGIN] accessToken:", data.accessToken);
+    console.log("[LOGIN] refreshToken:", data.refreshToken);
     return data;
   } catch (error) {
     if (error instanceof ApiError) throw error;

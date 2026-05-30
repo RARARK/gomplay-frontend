@@ -25,7 +25,6 @@ export type CreatePostInput = {
   scheduledStartAt: string;
   scheduledEndAt: string;
   capacity: number;
-  openChatUrl: string;
   message?: string;
   difficulty: PostDifficulty;
   tags?: string[];
@@ -43,8 +42,7 @@ export type CreatePostFieldError = Partial<
     | "scheduledStartAt"
     | "scheduledEndAt"
     | "capacity"
-    | "difficulty"
-    | "openChatUrl",
+    | "difficulty",
     string
   >
 >;

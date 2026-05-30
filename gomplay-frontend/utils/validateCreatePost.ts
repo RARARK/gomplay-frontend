@@ -6,8 +6,6 @@ import {
 
 const DIFFICULTY_VALUES = new Set(Object.values(POST_DIFFICULTY));
 
-const KAKAO_OPEN_CHAT_PREFIX = "https://open.kakao.com/o/";
-
 const isBlank = (value?: string) => !value || value.trim().length === 0;
 
 export const validateCreatePostInput = (
@@ -15,12 +13,6 @@ export const validateCreatePostInput = (
   now = new Date(),
 ): CreatePostFieldError => {
   const errors: CreatePostFieldError = {};
-
-  if (isBlank(input.openChatUrl)) {
-    errors.openChatUrl = "오픈채팅방 링크를 입력해주세요.";
-  } else if (!input.openChatUrl!.trim().startsWith(KAKAO_OPEN_CHAT_PREFIX)) {
-    errors.openChatUrl = "카카오 오픈채팅 링크만 사용할 수 있어요. (https://open.kakao.com/o/...)";
-  }
 
   if (isBlank(input.exerciseType)) {
     errors.exerciseType = "운동 종목을 선택해주세요.";

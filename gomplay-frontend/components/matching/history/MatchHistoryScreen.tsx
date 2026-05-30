@@ -2,6 +2,7 @@ import { router, useFocusEffect } from "expo-router";
 import React from "react";
 import {
   ActivityIndicator,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -68,27 +69,42 @@ export default function MatchHistoryScreen() {
   const insets = useSafeAreaInsets();
   const [history, setHistory] = React.useState<MatchHistoryItem[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
+  const [error, setError] = React.useState<string | null>(null);
+
+  const load = React.useCallback(() => {
+    setIsLoading(true);
+    setError(null);
+    getMatchHistory()
+      .then((data) => {
+        const seen = new Set<number>();
+        const deduped = data.filter((entry) => {
+          if (seen.has(entry.id)) return false;
+          seen.add(entry.id);
+          return true;
+        });
+        const sorted = deduped.sort((a, b) => {
+          const dateA = a.scheduledAt ?? a.matchedAt ?? "";
+          const dateB = b.scheduledAt ?? b.matchedAt ?? "";
+          return dateB.localeCompare(dateA);
+        });
+        setHistory(sorted.map(mapEntryToItem));
+      })
+      .catch((err: unknown) => {
+        const msg =
+          (err instanceof Error ? err.message : null) ??
+          (err && typeof err === "object" && "message" in err
+            ? String((err as { message: unknown }).message)
+            : null) ??
+          "매치 내역을 불러오지 못했습니다.";
+        setError(msg);
+      })
+      .finally(() => setIsLoading(false));
+  }, []);
 
   useFocusEffect(
     React.useCallback(() => {
-      setIsLoading(true);
-      getMatchHistory()
-        .then((data) => {
-          const seen = new Set<number>();
-          const deduped = data.filter((entry) => {
-            if (seen.has(entry.id)) return false;
-            seen.add(entry.id);
-            return true;
-          });
-          const sorted = deduped.sort((a, b) => {
-            const dateA = a.scheduledAt ?? a.matchedAt ?? "";
-            const dateB = b.scheduledAt ?? b.matchedAt ?? "";
-            return dateB.localeCompare(dateA);
-          });
-          setHistory(sorted.map(mapEntryToItem));
-        })
-        .finally(() => setIsLoading(false));
-    }, []),
+      load();
+    }, [load]),
   );
 
   return (
@@ -105,6 +121,13 @@ export default function MatchHistoryScreen() {
         {isLoading ? (
           <View style={styles.loadingContainer}>
             <ActivityIndicator color="#4C5BE2" />
+          </View>
+        ) : error ? (
+          <View style={styles.empty}>
+            <Text style={styles.emptyText}>{error}</Text>
+            <Pressable style={styles.retryButton} onPress={load}>
+              <Text style={styles.retryButtonText}>다시 시도</Text>
+            </Pressable>
           </View>
         ) : history.length > 0 ? (
           <View style={styles.list}>
@@ -187,5 +210,20 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     color: "#9CA3AF",
     fontWeight: "700",
+  },
+  retryButton: {
+    marginTop: 12,
+    minHeight: 36,
+    borderRadius: 8,
+    backgroundColor: "#4C5BE2",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 20,
+  },
+  retryButtonText: {
+    fontSize: 13,
+    lineHeight: 18,
+    color: "#FFFFFF",
+    fontWeight: "800",
   },
 });

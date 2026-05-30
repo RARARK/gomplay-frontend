@@ -34,13 +34,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   pendingProfileImageUri: null,
 
   setAuth: ({ userId, accessToken, refreshToken, matching }) =>
-    set({
-      userId,
-      isLoggedIn: true,
-      accessToken,
-      refreshToken,
-      matching,
-    }),
+    set({ userId, isLoggedIn: true, accessToken, refreshToken, matching }),
 
   setMatching: (value) => set({ matching: value }),
 

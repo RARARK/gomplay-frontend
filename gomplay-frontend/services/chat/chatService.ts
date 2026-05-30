@@ -1,3 +1,5 @@
+import { isAxiosError } from "axios";
+
 import type {
   ChatRealtimeListener,
   CreateSystemMessageInput,
@@ -71,8 +73,9 @@ export async function getChatRooms(): Promise<ChatRoom[]> {
     const response = await apiClient.get<ApiResponse<ChatRoomApiItem[]>>(
       "/api/chat/rooms",
     );
-    return response.data.data.map(mapApiChatRoom);
-  } catch {
+    return (response.data.data ?? []).map(mapApiChatRoom);
+  } catch (err) {
+    if (isAxiosError(err) && err.response?.status === 403) return [];
     return [];
   }
 }

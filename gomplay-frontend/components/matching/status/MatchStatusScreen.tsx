@@ -183,6 +183,7 @@ const mapActiveMatchToItem = (
     status,
     role,
     canComplete: match.canComplete,
+    canCompleteReason: match.canCompleteReason ?? null,
     reviewed: match.reviewed,
     revieweeId,
     partnerName: displayName ?? "",
@@ -428,7 +429,10 @@ export default function MatchStatusScreen({
         await completeGathering(Number(item.id));
         setCompletedItem(item);
       } else {
-        await patchCompleteMatch(Number(item.id));
+        const result = await patchCompleteMatch(Number(item.id));
+        if (result.status === "COMPLETED") {
+          setCompletedItem(item);
+        }
       }
       setCompletedByMeIds((prev) => new Set(prev).add(item.id));
       void loadActiveMatches(true);
@@ -608,15 +612,19 @@ export default function MatchStatusScreen({
           if (!completedItem) return;
           const item = completedItem;
           setCompletedItem(null);
-          const params = new URLSearchParams({ type: "gathering" });
-          if (item.revieweeId) params.set("revieweeId", String(item.revieweeId));
-          if (item.partnerName) params.set("partnerName", item.partnerName);
-          if (item.partnerProfileImageUrl) params.set("partnerProfileImageUrl", item.partnerProfileImageUrl);
-          if (item.partnerDepartment) params.set("partnerDepartment", item.partnerDepartment);
-          if (item.partnerStudentNumber) params.set("partnerStudentId", item.partnerStudentNumber);
-          if (item.exerciseType) params.set("exerciseTypes", item.exerciseType);
-          if (item.scheduledTime) params.set("scheduledTime", item.scheduledTime);
-          router.push(`/review/${item.id}?${params.toString()}` as any);
+          if (item.sourceType === "POST") {
+            router.push(`/review/gathering/${item.id}` as any);
+          } else {
+            const params = new URLSearchParams({ type: "partner" });
+            if (item.revieweeId) params.set("revieweeId", String(item.revieweeId));
+            if (item.partnerName) params.set("partnerName", item.partnerName);
+            if (item.partnerProfileImageUrl) params.set("partnerProfileImageUrl", item.partnerProfileImageUrl);
+            if (item.partnerDepartment) params.set("partnerDepartment", item.partnerDepartment);
+            if (item.partnerStudentNumber) params.set("partnerStudentId", item.partnerStudentNumber);
+            if (item.exerciseType) params.set("exerciseTypes", item.exerciseType);
+            if (item.scheduledTime) params.set("scheduledTime", item.scheduledTime);
+            router.push(`/review/${item.id}?${params.toString()}` as any);
+          }
         }}
       />
     </>
