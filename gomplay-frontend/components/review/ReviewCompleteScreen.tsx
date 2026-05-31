@@ -209,35 +209,37 @@ export default function ReviewCompleteScreen({
           </View>
         ) : (
           <View style={styles.partnerCard}>
-            <Image
-              source={
-                partnerProfileImageUrl
-                  ? { uri: partnerProfileImageUrl }
-                  : require("../../assets/match/Ellipse-12.png")
-              }
-              style={styles.avatar}
-              contentFit="cover"
-            />
-            <View style={styles.partnerInfo}>
-              <View style={styles.nameRow}>
-                <Text style={styles.partnerName}>{partnerName}</Text>
-                <Ionicons name="checkmark-circle" size={15} color="#4C5BE2" />
+            <View style={styles.participantRow}>
+              <Image
+                source={
+                  partnerProfileImageUrl
+                    ? { uri: partnerProfileImageUrl }
+                    : require("../../assets/match/Ellipse-12.png")
+                }
+                style={styles.avatar}
+                contentFit="cover"
+              />
+              <View style={styles.partnerInfo}>
+                <View style={styles.nameRow}>
+                  <Text style={styles.partnerName}>{partnerName}</Text>
+                  <Ionicons name="checkmark-circle" size={15} color="#4C5BE2" />
+                </View>
+                {(partnerDepartment || partnerStudentId) ? (
+                  <Text style={styles.partnerSubInfo} numberOfLines={1}>
+                    {[partnerDepartment, partnerStudentId].filter(Boolean).join(" · ")}
+                  </Text>
+                ) : null}
+                {exerciseTypes ? (
+                  <Text style={styles.partnerMeta} numberOfLines={1}>
+                    {exerciseTypes}
+                  </Text>
+                ) : null}
+                {scheduledTime ? (
+                  <Text style={styles.partnerMeta} numberOfLines={1}>
+                    {scheduledTime}
+                  </Text>
+                ) : null}
               </View>
-              {(partnerDepartment || partnerStudentId) ? (
-                <Text style={styles.partnerSubInfo} numberOfLines={1}>
-                  {[partnerDepartment, partnerStudentId].filter(Boolean).join(" · ")}
-                </Text>
-              ) : null}
-              {exerciseTypes ? (
-                <Text style={styles.partnerMeta} numberOfLines={1}>
-                  {exerciseTypes}
-                </Text>
-              ) : null}
-              {scheduledTime ? (
-                <Text style={styles.partnerMeta} numberOfLines={1}>
-                  {scheduledTime}
-                </Text>
-              ) : null}
             </View>
           </View>
         )}
@@ -246,15 +248,13 @@ export default function ReviewCompleteScreen({
       <View style={styles.footer}>
         <Pressable
           accessibilityRole="button"
-          onPress={onConfirm ?? (() => router.replace("/matches/history" as any))}
+          onPress={onConfirm ?? (() => router.replace("/(tabs)" as any))}
           style={({ pressed }) => [
             styles.homeButton,
             pressed && styles.buttonPressed,
           ]}
         >
-          <Text style={styles.homeButtonText}>
-            {onConfirm ? "확인" : "매치 내역으로 이동"}
-          </Text>
+          <Text style={styles.homeButtonText}>확인</Text>
         </Pressable>
       </View>
     </SafeAreaView>

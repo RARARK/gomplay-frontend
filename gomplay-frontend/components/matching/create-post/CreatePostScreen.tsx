@@ -41,6 +41,7 @@ import {
   formatCreatePostDayLabel,
   formatCreatePostTimeRangeLabel,
   getRoundedFutureDate,
+  getTomorrowDate,
 } from "@/components/matching/create-post/createPostUtils";
 import {
   getCurrentCoords,
@@ -59,8 +60,8 @@ const createInitialFormState = (): CreatePostFormState => ({
   title: "",
   exerciseType: "러닝",
   location: CREATE_POST_DEFAULT_LOCATION,
-  scheduledStartAt: getRoundedFutureDate(1),
-  scheduledEndAt: getRoundedFutureDate(3),
+  scheduledStartAt: getTomorrowDate(10),
+  scheduledEndAt: getTomorrowDate(12),
   capacity: 1,
   message: "",
   difficulty: POST_DIFFICULTY.INTRODUCTORY,
@@ -163,11 +164,17 @@ export default function CreatePostScreen() {
   };
 
   const handleSelectDate = (dateString: string) => {
-    const { nextStartAt, nextEndAt } = applyDateStringToRange(
+    let { nextStartAt, nextEndAt } = applyDateStringToRange(
       form.scheduledStartAt,
       form.scheduledEndAt,
       dateString,
     );
+
+    // 선택한 날짜+기존 시간이 현재보다 과거이면 가장 가까운 미래 시간으로 자동 조정
+    if (nextStartAt <= new Date()) {
+      nextStartAt = getRoundedFutureDate(1);
+      nextEndAt = getRoundedFutureDate(3);
+    }
 
     setForm((current) => ({
       ...current,
@@ -190,6 +197,11 @@ export default function CreatePostScreen() {
       endHour,
       endMinute,
     );
+
+    if (nextStartAt <= new Date()) {
+      Alert.alert("시간 설정 오류", "시작 시간은 현재 시각 이후여야 합니다.");
+      return;
+    }
 
     setForm((current) => ({
       ...current,

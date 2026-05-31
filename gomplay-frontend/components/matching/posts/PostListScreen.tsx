@@ -48,7 +48,7 @@ const EXERCISE_FILTER_OPTIONS: readonly CreatePostExerciseGridOption[] = [
   {
     value: ALL_FILTER_VALUE,
     label: "전체",
-    icon: <Ionicons name="apps-outline" size={28} color="#4C5BE2" />,
+    icon: () => <Ionicons name="apps-outline" size={28} color="#4C5BE2" />,
   },
   ...CREATE_POST_EXERCISE_GRID_OPTIONS,
 ];

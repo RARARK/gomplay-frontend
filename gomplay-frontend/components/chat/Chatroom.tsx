@@ -43,6 +43,7 @@ export default function Chatroom({ chatRoom, onPress }: ChatroomProps) {
     lastMessage,
     lastMessageAt,
     unreadMessageCount,
+    createdAt,
   } = chatRoom;
   const partnerDisplayName = getChatRoomParticipantDisplayName(participants);
   const partner = getChatRoomPrimaryParticipant(participants);
@@ -94,7 +95,7 @@ export default function Chatroom({ chatRoom, onPress }: ChatroomProps) {
       </View>
 
       <View style={styles.meta}>
-        <Text style={styles.timestamp}>{formatChatListTime(lastMessageAt)}</Text>
+        <Text style={styles.timestamp}>{formatChatListTime(lastMessageAt ?? createdAt)}</Text>
         {unreadMessageCount > 0 ? (
           <View style={styles.badge}>
             <Text style={styles.badgeText}>{unreadMessageCount}</Text>

@@ -8,6 +8,13 @@ export const getRoundedFutureDate = (hoursFromNow: number) => {
   return next;
 };
 
+export const getTomorrowDate = (hour: number, minute = 0) => {
+  const d = new Date();
+  d.setDate(d.getDate() + 1);
+  d.setHours(hour, minute, 0, 0);
+  return d;
+};
+
 export const formatCreatePostDayLabel = (value: Date) => {
   const month = `${value.getMonth() + 1}`.padStart(2, "0");
   const date = `${value.getDate()}`.padStart(2, "0");

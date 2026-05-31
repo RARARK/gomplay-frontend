@@ -54,7 +54,7 @@ export default function CreatePostExerciseGridModal({
                   }}
                   style={[styles.card, isSelected && styles.cardSelected]}
                 >
-                  <View style={styles.iconWrap}>{option.icon}</View>
+                  <View style={styles.iconWrap}>{option.icon()}</View>
                   <Text
                     style={[
                       styles.cardLabel,

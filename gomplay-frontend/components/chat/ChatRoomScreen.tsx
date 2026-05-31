@@ -102,13 +102,14 @@ export default function ChatRoomScreen() {
   const clearUnreadCount = useChatStore((state) => state.clearUnreadCount);
   const draftsByRoomId = useChatStore((state) => state.draftsByRoomId);
   const setDraft = useChatStore((state) => state.setDraft);
+  const completedMatchIds = useChatStore((state) => state.completedMatchIds);
+  const markMatchCompleted = useChatStore((state) => state.markMatchCompleted);
 
   const scrollViewRef = useRef<ScrollView>(null);
 
   const [isLoading, setIsLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
   const [isCompleting, setIsCompleting] = useState(false);
-  const [hasSubmittedComplete, setHasSubmittedComplete] = useState(false);
   const [isCompleteModalVisible, setIsCompleteModalVisible] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [roomTitle, setRoomTitle] = useState("");
@@ -509,7 +510,7 @@ export default function ChatRoomScreen() {
     setIsCompleting(true);
     try {
       await patchCompleteMatch(chatRoom.matchId);
-      setHasSubmittedComplete(true);
+      markMatchCompleted(chatRoom.matchId);
       const details = await getChatRoomDetails(chatRoom.id);
       if (details) {
         upsertChatRoom(details.chatRoom);
@@ -584,26 +585,26 @@ export default function ChatRoomScreen() {
 
         <PostMatchReviewCard
           showReviewPrompt={
-            (chatRoom.completeButtonVisible && !isReadOnly && !hasSubmittedComplete) ||
+            (chatRoom.completeButtonVisible && !isReadOnly && !completedMatchIds.includes(chatRoom.matchId)) ||
             (chatRoom.matchStatus === MATCH_STATUS.COMPLETED && !chatRoom.reviewed)
           }
           title={
-            chatRoom.completeButtonVisible && !isReadOnly && !hasSubmittedComplete
+            chatRoom.completeButtonVisible && !isReadOnly && !completedMatchIds.includes(chatRoom.matchId)
               ? "운동을 완료하셨나요?"
               : "운동이 완료되었어요!"
           }
           description={
-            chatRoom.completeButtonVisible && !isReadOnly && !hasSubmittedComplete
+            chatRoom.completeButtonVisible && !isReadOnly && !completedMatchIds.includes(chatRoom.matchId)
               ? "운동이 끝났다면 완료 처리하고 상대방에게 후기를 남길 수 있어요."
               : "오늘 운동은 어떠셨나요? 파트너에게 평가를 남겨주세요."
           }
           buttonLabel={
-            chatRoom.completeButtonVisible && !isReadOnly && !hasSubmittedComplete
+            chatRoom.completeButtonVisible && !isReadOnly && !completedMatchIds.includes(chatRoom.matchId)
               ? isCompleting ? "완료 처리 중..." : "운동 완료하기"
               : "평가하러 가기"
           }
           onPressReview={
-            chatRoom.completeButtonVisible && !isReadOnly && !hasSubmittedComplete
+            chatRoom.completeButtonVisible && !isReadOnly && !completedMatchIds.includes(chatRoom.matchId)
               ? handleCompleteMatch
               : handleOpenReview
           }

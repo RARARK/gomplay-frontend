@@ -20,7 +20,7 @@ const HERO_H = Math.round(SCREEN_H * 0.5);
 
 const STYLE_VERSUS = [
   {
-    key: "독립형",
+    key: "각자",
     label: "독립형",
     icon: "person-outline" as const,
     desc: "혼자서도 계획적으로\n운동을 즐겨요",
@@ -30,7 +30,7 @@ const STYLE_VERSUS = [
     activeDesc: "#166534",
   },
   {
-    key: "소통형",
+    key: "같이",
     label: "소통형",
     icon: "people-outline" as const,
     desc: "함께 대화하며\n운동하는 걸 좋아해요",

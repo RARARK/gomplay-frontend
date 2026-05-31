@@ -137,6 +137,14 @@ export default function PartnerReviewScreen({ matchResultId, gatheringId, review
       .filter((t) => selectedTraits.has(t.id))
       .map((t) => t.label);
 
+    const reportDescriptionTrimmed = reportDescription.trim();
+    const rawCategories = isReportExpanded ? Array.from(selectedReportReasons) : [];
+    // 신고 탭 열린 상태에서 카테고리 미선택 + 설명만 있으면 '기타' 자동 추가
+    const reportCategories =
+      isReportExpanded && rawCategories.length === 0 && reportDescriptionTrimmed
+        ? ["기타"]
+        : rawCategories;
+
     try {
       await submitReview({
         revieweeId,
@@ -146,12 +154,8 @@ export default function PartnerReviewScreen({ matchResultId, gatheringId, review
         badTags,
         isNoShow,
         comment: comment.trim() || null,
-        reportCategories: isReportExpanded
-          ? Array.from(selectedReportReasons)
-          : [],
-        reportContent: isReportExpanded && reportDescription.trim()
-          ? reportDescription.trim()
-          : null,
+        reportCategories,
+        reportContent: isReportExpanded && reportDescriptionTrimmed ? reportDescriptionTrimmed : null,
       });
 
       if (matchResultId) markReviewCompleted(matchResultId);
@@ -224,6 +228,11 @@ export default function PartnerReviewScreen({ matchResultId, gatheringId, review
                   <Text style={styles.completedBadgeText}>운동 완료</Text>
                 </View>
               </View>
+              {(partnerDepartment || partnerStudentId) ? (
+                <Text style={styles.partnerDept} numberOfLines={1}>
+                  {[partnerDepartment, partnerStudentId].filter(Boolean).join(" · ")}
+                </Text>
+              ) : null}
               {exerciseTypes ? (
                 <View style={styles.chipRow}>
                   <View style={styles.infoChip}>

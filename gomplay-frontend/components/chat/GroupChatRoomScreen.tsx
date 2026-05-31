@@ -61,6 +61,8 @@ export default function GroupChatRoomScreen() {
 
   const currentProfileId = useUserStore((s) => s.profile?.id ?? null);
   const dismissedGatheringIds = useChatStore((s) => s.dismissedGatheringIds);
+  const completedGatheringIds = useChatStore((s) => s.completedGatheringIds);
+  const markGatheringCompleted = useChatStore((s) => s.markGatheringCompleted);
   const setCurrentProfile = useUserStore((s) => s.setProfile);
   const scrollViewRef = useRef<ScrollView>(null);
   const handledIdsRef = useRef(new Set<number>());
@@ -184,11 +186,17 @@ export default function GroupChatRoomScreen() {
       getGroupChatRoomDetails(roomId)
         .then((details) => {
           if (!details) return;
-          setRoom((prev) =>
-            prev
-              ? { ...prev, reviewed: details.reviewed, gatheringStatus: details.gatheringStatus }
-              : prev,
-          );
+          setRoom((prev) => {
+            if (!prev) return prev;
+            return {
+              ...prev,
+              reviewed: details.reviewed,
+              gatheringStatus:
+                prev.gatheringStatus === "COMPLETED"
+                  ? "COMPLETED"
+                  : details.gatheringStatus,
+            };
+          });
         })
         .catch(() => {});
     }, [roomId]),
@@ -215,8 +223,10 @@ export default function GroupChatRoomScreen() {
   const pinnedNotice = [...allMessages].reverse().find((m) => m.messageType === "NOTICE") ?? null;
   const isCompletedGathering = room?.gatheringStatus === "COMPLETED";
   const isReadOnly = isCompletedGathering;
+  const hasCompletedThisGathering = room != null && completedGatheringIds.includes(room.gatheringId);
   const canCompleteGathering =
     !isCompletedGathering &&
+    !hasCompletedThisGathering &&
     (completionInfo?.canComplete ||
       (completionInfo?.scheduledEndAt
         ? now > new Date(completionInfo.scheduledEndAt).getTime()
@@ -294,6 +304,7 @@ export default function GroupChatRoomScreen() {
     setIsCompleting(true);
     try {
       await completeGathering(room.gatheringId);
+      markGatheringCompleted(room.gatheringId);
       setRoom((prev) =>
         prev ? { ...prev, gatheringStatus: "COMPLETED" } : prev,
       );

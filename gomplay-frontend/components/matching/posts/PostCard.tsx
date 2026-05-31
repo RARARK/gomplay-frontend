@@ -99,29 +99,31 @@ export default function PostCard({ post, onPress }: PostCardProps) {
   });
 
   return (
-    <Pressable
-      accessibilityRole="button"
-      onPress={() => onPress?.(post)}
-      style={[styles.cardFrame, isBoosted && styles.boostedFrame]}
-    >
+    <View style={styles.outerWrapper}>
       {isBoosted ? (
-        <Animated.View style={[styles.rainbowBorder, { transform: [{ rotate: spin }] }]}>
-          <LinearGradient
-            colors={RAINBOW_COLORS}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={StyleSheet.absoluteFill}
-          />
-        </Animated.View>
+        <View style={styles.boostingBadge}>
+          <Ionicons name="flash" size={16} color="#F43F5E" />
+          <Text style={styles.boostingBadgeText}>{BOOSTING_LABEL}</Text>
+        </View>
       ) : null}
 
-      <View style={[styles.card, isBoosted && styles.boostedCard]}>
+      <Pressable
+        accessibilityRole="button"
+        onPress={() => onPress?.(post)}
+        style={[styles.cardFrame, isBoosted && styles.boostedFrame]}
+      >
         {isBoosted ? (
-          <View style={styles.boostingBadge}>
-            <Ionicons name="flash" size={16} color="#F43F5E" />
-            <Text style={styles.boostingBadgeText}>{BOOSTING_LABEL}</Text>
-          </View>
+          <Animated.View style={[styles.rainbowBorder, { transform: [{ rotate: spin }] }]}>
+            <LinearGradient
+              colors={RAINBOW_COLORS}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={StyleSheet.absoluteFill}
+            />
+          </Animated.View>
         ) : null}
+
+        <View style={[styles.card, isBoosted && styles.boostedCard]}>
 
         <View style={styles.mainRow}>
           <Image
@@ -207,12 +209,16 @@ export default function PostCard({ post, onPress }: PostCardProps) {
             ) : null}
           </View>
         </View>
-      </View>
-    </Pressable>
+        </View>
+      </Pressable>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  outerWrapper: {
+    gap: 6,
+  },
   cardFrame: {
     borderRadius: 18,
     backgroundColor: "#FFFFFF",
@@ -261,15 +267,15 @@ const styles = StyleSheet.create({
   },
   boostingBadge: {
     alignSelf: "flex-start",
-    minHeight: 36,
     flexDirection: "row",
     alignItems: "center",
-    gap: 7,
+    gap: 6,
     borderRadius: 999,
     borderWidth: 1,
     borderColor: "#FDA4AF",
     backgroundColor: "#FFFFFF",
-    paddingHorizontal: 14,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
   },
   boostingBadgeText: {
     fontSize: 14,

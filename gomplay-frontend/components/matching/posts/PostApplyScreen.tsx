@@ -107,15 +107,6 @@ export default function PostApplyScreen({ postId }: PostApplyScreenProps) {
       try {
         const nextPost = await getGatheringDetail(postId);
         if (isMounted) {
-          console.log("[PostApplyScreen] gathering detail loaded", {
-            requestedPostId: postId,
-            responsePostId: nextPost.id,
-            responseHostId: nextPost.hostId,
-            currentUserId: userId,
-            currentProfileId: profileId,
-            status: nextPost.status,
-          });
-
           setPost(nextPost);
           setEditTitle(nextPost.title ?? "");
           setEditTags(parseTags(nextPost.tags));
@@ -224,21 +215,6 @@ export default function PostApplyScreen({ postId }: PostApplyScreenProps) {
     if (!post || userId === null) return;
     setIsSaving(true);
     try {
-      console.log("[PostApplyScreen] update gathering pressed", {
-        routePostId: postId,
-        requestPostId: post.id,
-        postHostId: post.hostId,
-        currentUserId: userId,
-        isOwner,
-        status: post.status,
-        participantSummary: participants.reduce<Record<string, number>>(
-          (acc, participant) => ({
-            ...acc,
-            [participant.status]: (acc[participant.status] ?? 0) + 1,
-          }),
-          {},
-        ),
-      });
       await updateGathering(post.id, {
         hostId: userId,
         title: editTitle.trim() || undefined,
@@ -319,80 +295,10 @@ export default function PostApplyScreen({ postId }: PostApplyScreenProps) {
         style: "destructive",
         onPress: async () => {
           if (!post) return;
-          console.log("[PostApplyScreen] delete gathering pressed", {
-            routePostId: postId,
-            requestPostId: post.id,
-            postHostId: post.hostId,
-            currentUserId: userId,
-            isOwner,
-            status: post.status,
-            participantSummary: participants.reduce<Record<string, number>>(
-              (acc, participant) => ({
-                ...acc,
-                [participant.status]: (acc[participant.status] ?? 0) + 1,
-              }),
-              {},
-            ),
-          });
           try {
             await deleteGathering(post.id);
             router.back();
           } catch (err) {
-            let latestPost: GatheringPostDetailResponse | null = null;
-            let latestParticipants: GatheringParticipant[] | null = null;
-
-            try {
-              latestPost = await getGatheringDetail(post.id);
-            } catch (detailError) {
-              console.log("[PostApplyScreen] delete diagnostic detail failed", {
-                requestPostId: post.id,
-                error: detailError,
-              });
-            }
-
-            try {
-              latestParticipants = await getGatheringParticipants(post.id);
-            } catch (participantError) {
-              console.log("[PostApplyScreen] delete diagnostic participants failed", {
-                requestPostId: post.id,
-                error: participantError,
-              });
-            }
-
-            console.log("[PostApplyScreen] delete gathering failed", {
-              routePostId: postId,
-              requestPostId: post.id,
-              postHostId: post.hostId,
-              currentUserId: userId,
-              isOwner,
-              status: post.status,
-              participantSummary: participants.reduce<Record<string, number>>(
-                (acc, participant) => ({
-                  ...acc,
-                  [participant.status]: (acc[participant.status] ?? 0) + 1,
-                }),
-                {},
-              ),
-              latestPost: latestPost
-                ? {
-                    id: latestPost.id,
-                    hostId: latestPost.hostId,
-                    status: latestPost.status,
-                    currentParticipants: latestPost.currentParticipants,
-                    maxParticipants: latestPost.maxParticipants,
-                  }
-                : null,
-              latestParticipantSummary: latestParticipants
-                ? latestParticipants.reduce<Record<string, number>>(
-                    (acc, participant) => ({
-                      ...acc,
-                      [participant.status]: (acc[participant.status] ?? 0) + 1,
-                    }),
-                    {},
-                  )
-                : null,
-              error: err,
-            });
             Alert.alert(
               "삭제 실패",
               err instanceof Error ? err.message : "다시 시도해주세요.",

@@ -14,7 +14,8 @@ import { useChatStore } from "@/stores/chat/chatStore";
 type Participant = {
   userId: number;
   name: string;
-  info: string;
+  department: string;
+  studentNumber: string;
   profileImageUrl: string | null;
   reviewed: boolean;
 };
@@ -62,9 +63,8 @@ export default function GatheringReviewScreen({
         const nextParticipants = items.map((participant) => ({
           userId: participant.userId,
           name: participant.name,
-          info: [participant.department, participant.studentNumber]
-            .filter(Boolean)
-            .join(" · "),
+          department: participant.department,
+          studentNumber: participant.studentNumber,
           profileImageUrl: participant.profileImageUrl,
           reviewed: participant.reviewed,
         }));
@@ -140,7 +140,8 @@ export default function GatheringReviewScreen({
           revieweeId={selected.userId}
           partnerName={selected.name}
           partnerProfileImageUrl={selected.profileImageUrl}
-          exerciseTypes={selected.info.split(" · ")[0]}
+          partnerDepartment={selected.department}
+          partnerStudentId={selected.studentNumber}
           onBack={handleBack}
           onComplete={handleReviewComplete}
         />
@@ -287,7 +288,9 @@ function ParticipantRow({
       <Avatar uri={p.profileImageUrl} size={48} />
       <View style={styles.participantInfo}>
         <Text style={styles.participantName}>{p.name}</Text>
-        <Text style={styles.participantMeta}>{p.info}</Text>
+        <Text style={styles.participantMeta}>
+          {[p.department, p.studentNumber].filter(Boolean).join(" · ")}
+        </Text>
       </View>
       {p.reviewed ? (
         <View style={styles.doneBadge}>
