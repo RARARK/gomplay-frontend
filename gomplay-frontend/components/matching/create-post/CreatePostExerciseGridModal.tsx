@@ -44,6 +44,7 @@ export default function CreatePostExerciseGridModal({
           >
             {options.map((option) => {
               const isSelected = option.value === selectedValue;
+              const Icon = option.icon;
 
               return (
                 <Pressable
@@ -54,7 +55,7 @@ export default function CreatePostExerciseGridModal({
                   }}
                   style={[styles.card, isSelected && styles.cardSelected]}
                 >
-                  <View style={styles.iconWrap}>{option.icon()}</View>
+                  <View style={styles.iconWrap}><Icon /></View>
                   <Text
                     style={[
                       styles.cardLabel,

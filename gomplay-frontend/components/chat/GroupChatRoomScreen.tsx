@@ -204,8 +204,13 @@ export default function GroupChatRoomScreen() {
 
   useEffect(() => {
     if (!completionInfo?.scheduledEndAt || completionInfo.canComplete) return;
-    const interval = setInterval(() => setNow(Date.now()), 60_000);
-    return () => clearInterval(interval);
+    const msUntilEnd = new Date(completionInfo.scheduledEndAt).getTime() - Date.now();
+    if (msUntilEnd <= 0) {
+      setNow(Date.now());
+      return;
+    }
+    const timer = setTimeout(() => setNow(Date.now()), msUntilEnd);
+    return () => clearTimeout(timer);
   }, [completionInfo?.canComplete, completionInfo?.scheduledEndAt]);
 
   const allMessages = useMemo<GroupChatMessage[]>(() => {

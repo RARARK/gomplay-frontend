@@ -304,7 +304,11 @@ export default function CreatePostScreen() {
   const handleSubmit = async () => {
     setHasSubmitted(true);
 
-    if (Object.keys(validationErrors).length > 0) {
+    const currentErrors = validateCreatePostInput(payload, new Date());
+    if (Object.keys(currentErrors).length > 0) {
+      if (currentErrors.scheduledStartAt) {
+        Alert.alert("시간 설정 오류", currentErrors.scheduledStartAt);
+      }
       return;
     }
 

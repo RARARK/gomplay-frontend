@@ -61,9 +61,20 @@ export default function MatchStatusCard({
 
   React.useEffect(() => {
     if (item.status !== "IN_PROGRESS") return;
-    const interval = setInterval(() => setNow(Date.now()), 60_000);
-    return () => clearInterval(interval);
-  }, [item.status]);
+    const triggerAt = item.scheduledEndAt
+      ? new Date(item.scheduledEndAt).getTime()
+      : item.matchedAt
+        ? new Date(item.matchedAt).getTime() + COMPLETE_DELAY_MS
+        : null;
+    if (triggerAt === null) return;
+    const msUntil = triggerAt - Date.now();
+    if (msUntil <= 0) {
+      setNow(Date.now());
+      return;
+    }
+    const timer = setTimeout(() => setNow(Date.now()), msUntil);
+    return () => clearTimeout(timer);
+  }, [item.status, item.scheduledEndAt, item.matchedAt]);
 
   const isInProgress = item.status === "IN_PROGRESS";
   const isAccepted = item.status === "ACCEPTED";

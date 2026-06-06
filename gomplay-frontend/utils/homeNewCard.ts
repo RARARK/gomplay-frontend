@@ -41,10 +41,10 @@ export const getCurrentFreeTimeLabel = (
   now = new Date(),
 ) => {
   const today = JS_DAY_TO_WEEKDAY[now.getDay()];
-  if (!today) return "오늘 공강 없음";
+  if (!today) return "자유 시간";
 
   const rawNowMinutes = now.getHours() * 60 + now.getMinutes();
-  if (rawNowMinutes >= TIMETABLE_END_MINUTES) return "오늘 공강 없음";
+  if (rawNowMinutes >= TIMETABLE_END_MINUTES) return "자유 시간";
 
   const nowMinutes = Math.max(TIMETABLE_START_MINUTES, rawNowMinutes);
   const lectureRanges = ranges

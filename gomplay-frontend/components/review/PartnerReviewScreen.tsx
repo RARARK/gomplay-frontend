@@ -433,7 +433,18 @@ export default function PartnerReviewScreen({ matchResultId, gatheringId, review
           <Pressable
             accessibilityRole="button"
             style={styles.skipButton}
-            onPress={() => (onComplete ? onComplete() : onBack ? onBack() : router.back())}
+            onPress={() => {
+              if (matchResultId) {
+                markReviewCompleted(matchResultId);
+                setIsComplete(true);
+              } else if (onComplete) {
+                onComplete();
+              } else if (onBack) {
+                onBack();
+              } else {
+                router.back();
+              }
+            }}
           >
             <Text style={styles.skipButtonText}>건너뛰기</Text>
           </Pressable>

@@ -153,39 +153,13 @@ export default function GatheringReviewScreen({
 
   if (screen === "allDone") {
     return (
-      <View style={styles.flex}>
-        <View style={styles.headerRow}>
-          <Pressable onPress={() => router.back()} style={styles.backButton} hitSlop={10}>
-            <Ionicons name="chevron-back" size={28} color="#111111" />
-          </Pressable>
-          <Text style={styles.headerTitle}>파트너 평가하기</Text>
-          <View style={styles.headerSpacer} />
-        </View>
-
-        <ScrollView contentContainerStyle={styles.listContent} showsVerticalScrollIndicator={false}>
-          <View style={styles.hero}>
-            <View style={styles.doneCircle}>
-              <Ionicons name="checkmark" size={44} color="#fff" />
-            </View>
-            <Text style={styles.heroTitle}>모든 파트너 평가가 완료되었어요!</Text>
-            <Text style={styles.heroSub}>오늘도 좋은 운동 함께해주셔서 감사합니다 😊</Text>
-          </View>
-
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>참가자 {total}명</Text>
-              <Text style={[styles.progressText, { color: "#10B981" }]}>{total}/{total}명 평가 완료</Text>
-            </View>
-            {participants.map((p) => (
-              <ParticipantRow key={p.userId} participant={p} onPress={undefined} />
-            ))}
-          </View>
-
-          <Pressable onPress={() => router.replace("/matches/history" as any)} style={styles.doneBtn}>
-            <Text style={styles.doneBtnText}>매치 내역으로 이동</Text>
-          </Pressable>
-        </ScrollView>
-      </View>
+      <ReviewCompleteScreen
+        participants={participants.map((p) => ({ name: p.name, profileImageUrl: p.profileImageUrl }))}
+        onConfirm={() => {
+          dismissGatheringReview(gatheringId);
+          router.replace("/(tabs)" as any);
+        }}
+      />
     );
   }
 
@@ -375,13 +349,6 @@ const styles = StyleSheet.create({
   heroTitle: { fontSize: 20, fontWeight: "900", color: "#111827", textAlign: "center" },
   heroSub:   { fontSize: 14, fontWeight: "500", color: "#6B7280", textAlign: "center", lineHeight: 20 },
 
-  doneCircle: {
-    width: 80, height: 80, borderRadius: 40,
-    backgroundColor: "#10B981",
-    alignItems: "center", justifyContent: "center",
-    marginBottom: 4,
-  },
-
   section:       { gap: 10 },
   sectionHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   sectionTitle:  { fontSize: 15, fontWeight: "800", color: "#111827" },
@@ -412,9 +379,4 @@ const styles = StyleSheet.create({
 
   avatarWrap: { backgroundColor: "#EEF2FF", alignItems: "center", justifyContent: "center" },
 
-  doneBtn: {
-    height: 52, borderRadius: 14, backgroundColor: "#4C5BE2",
-    alignItems: "center", justifyContent: "center",
-  },
-  doneBtnText: { fontSize: 16, fontWeight: "900", color: "#fff" },
 });

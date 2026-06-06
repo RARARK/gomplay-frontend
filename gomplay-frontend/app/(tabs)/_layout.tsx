@@ -20,6 +20,7 @@ import {
 } from "@/types/domain/chatMessage";
 
 const NOTIFICATION_POLL_MS = 60_000;
+const TAB_LABEL_STYLE = { fontSize: 12, marginBottom: 2 } as const;
 
 function useSyncNotificationUnread() {
   const setUnreadCount = useNotificationStore((s) => s.setUnreadCount);
@@ -104,20 +105,19 @@ export default function TabsLayout() {
   const chatBadge =
     totalUnread > 0 ? (totalUnread > 99 ? "99+" : totalUnread) : undefined;
 
+  const tabBarStyle = React.useMemo(() => ({
+    height: 60 + insets.bottom,
+    paddingBottom: Math.max(insets.bottom, 6),
+    paddingTop: 6,
+  }), [insets.bottom]);
+
   const screenOptions = React.useCallback(
     ({ route }: { route: { name: string } }) => ({
       headerShown: false,
       tabBarActiveTintColor: "#4C5BE2",
       tabBarInactiveTintColor: "#999",
-      tabBarStyle: {
-        height: 60 + insets.bottom,
-        paddingBottom: Math.max(insets.bottom, 6),
-        paddingTop: 6,
-      },
-      tabBarLabelStyle: {
-        fontSize: 12,
-        marginBottom: 2,
-      },
+      tabBarStyle,
+      tabBarLabelStyle: TAB_LABEL_STYLE,
       tabBarIcon: ({
         color,
         size,
@@ -150,7 +150,7 @@ export default function TabsLayout() {
         );
       },
     }),
-    [insets.bottom],
+    [tabBarStyle],
   );
 
   React.useEffect(() => {

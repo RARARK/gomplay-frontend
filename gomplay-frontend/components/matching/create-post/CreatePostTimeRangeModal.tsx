@@ -1,5 +1,5 @@
 import React from "react";
-import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
+import { Modal, Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 
 import {
@@ -78,6 +78,7 @@ export default function CreatePostTimeRangeModal({
               <Picker
                 selectedValue={startHour}
                 onValueChange={(value) => setStartHour(Number(value))}
+                mode={Platform.OS === "android" ? "dropdown" : undefined}
               >
                 {HOUR_OPTIONS.map((hour) => (
                   <Picker.Item
@@ -94,6 +95,7 @@ export default function CreatePostTimeRangeModal({
               <Picker
                 selectedValue={startMinute}
                 onValueChange={(value) => setStartMinute(Number(value))}
+                mode={Platform.OS === "android" ? "dropdown" : undefined}
               >
                 {MINUTE_OPTIONS.map((minute) => (
                   <Picker.Item
@@ -112,6 +114,7 @@ export default function CreatePostTimeRangeModal({
               <Picker
                 selectedValue={endHour}
                 onValueChange={(value) => setEndHour(Number(value))}
+                mode={Platform.OS === "android" ? "dropdown" : undefined}
               >
                 {HOUR_OPTIONS.map((hour) => (
                   <Picker.Item
@@ -128,6 +131,7 @@ export default function CreatePostTimeRangeModal({
               <Picker
                 selectedValue={endMinute}
                 onValueChange={(value) => setEndMinute(Number(value))}
+                mode={Platform.OS === "android" ? "dropdown" : undefined}
               >
                 {MINUTE_OPTIONS.map((minute) => (
                   <Picker.Item
