@@ -340,7 +340,7 @@ export default function CreatePostScreen() {
         [
           {
             text: "확인",
-            onPress: () => router.replace("/posts"),
+            onPress: () => router.replace("/(tabs)/partner"),
           },
         ],
       );
@@ -372,7 +372,7 @@ export default function CreatePostScreen() {
           <View style={styles.headerRow}>
             <Pressable
               accessibilityRole="button"
-              onPress={() => router.back()}
+              onPress={() => router.replace("/(tabs)/partner")}
               style={styles.backButton}
             >
               <Ionicons name="chevron-back" size={28} color="#111111" />
