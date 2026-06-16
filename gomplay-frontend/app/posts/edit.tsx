@@ -15,17 +15,12 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import CreatePostCapacitySelector from "@/components/matching/create-post/CreatePostCapacitySelector";
 import CreatePostTagSelector from "@/components/matching/create-post/CreatePostTagSelector";
 import {
   CREATE_POST_MAX_TAG_SELECTION,
   CREATE_POST_TAG_OPTIONS,
 } from "@/components/matching/create-post/createPostConfig";
-import {
-  getPostById,
-  getPostParticipants,
-  updatePost,
-} from "@/services/post/postService";
+import { getPostById, updatePost } from "@/services/post/postService";
 
 const BIO_MAX_LENGTH = 200;
 
@@ -35,11 +30,9 @@ export default function EditPostRoute() {
 
   const [isLoading, setIsLoading] = React.useState(true);
   const [isSaving, setIsSaving] = React.useState(false);
-  const [minCapacity, setMinCapacity] = React.useState(1);
 
   const [title, setTitle] = React.useState("");
   const [tags, setTags] = React.useState<string[]>([]);
-  const [capacity, setCapacity] = React.useState(1);
   const [message, setMessage] = React.useState("");
   const [isTagSelectorExpanded, setIsTagSelectorExpanded] = React.useState(false);
   const scrollViewRef = React.useRef<ScrollView>(null);
@@ -47,20 +40,22 @@ export default function EditPostRoute() {
   React.useEffect(() => {
     if (!postId) return;
 
-    Promise.all([getPostById(postId), getPostParticipants(postId)])
-      .then(([post, participants]) => {
+    getPostById(postId)
+      .then((post) => {
         if (!post) {
           Alert.alert("오류", "게시글을 찾을 수 없어요.", [
             { text: "확인", onPress: () => router.back() },
           ]);
           return;
         }
-        const currentCount = participants.length;
         setTitle(post.title ?? "");
         setTags(post.tags ?? []);
-        setCapacity(post.capacity);
         setMessage(post.message ?? "");
-        setMinCapacity(Math.max(1, currentCount));
+      })
+      .catch(() => {
+        Alert.alert("오류", "게시글을 불러오지 못했어요.", [
+          { text: "확인", onPress: () => router.back() },
+        ]);
       })
       .finally(() => setIsLoading(false));
   }, [postId]);
@@ -79,7 +74,6 @@ export default function EditPostRoute() {
       await updatePost(postId, {
         title: title.trim() || undefined,
         tags: tags.length > 0 ? tags : undefined,
-        capacity,
         message: message.trim() || undefined,
       });
       router.back();
@@ -155,19 +149,6 @@ export default function EditPostRoute() {
               onToggleExpanded={() => setIsTagSelectorExpanded((v) => !v)}
               onToggleTag={handleToggleTag}
             />
-          </View>
-
-          <View style={styles.section}>
-            <CreatePostCapacitySelector
-              value={capacity}
-              onChange={setCapacity}
-              min={minCapacity}
-            />
-            {minCapacity > 1 ? (
-              <Text style={styles.capacityHint}>
-                현재 참여자 {minCapacity}명 이상으로만 설정할 수 있어요.
-              </Text>
-            ) : null}
           </View>
 
           <View style={styles.section}>
@@ -276,11 +257,6 @@ const styles = StyleSheet.create({
     fontSize: 15,
     lineHeight: 20,
     color: "#111827",
-  },
-  capacityHint: {
-    fontSize: 12,
-    color: "#6B7280",
-    fontWeight: "500",
   },
   inputHint: {
     fontSize: 13,
