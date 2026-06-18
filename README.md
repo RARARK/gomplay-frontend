@@ -380,6 +380,10 @@ React Native App (Expo)
 | 앱 설정 | `app.json` |
 
 
+## 🔗 관련 레포지토리
 
+| 레포 | 링크 |
+|:----:|:----:|
+| backend | [gomplay-backtend](https://github.com/Parrot871/GomPlay_BE.git) |
 
 
