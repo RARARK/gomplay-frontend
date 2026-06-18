@@ -82,15 +82,43 @@
 
 ## 3. 화면 캡처
 
-> 📷 스크린샷 첨부 예정
+### 🏠 홈 화면
 
-| 홈 | 퀵 매칭 | 모집글 |
-|:---:|:---:|:---:|
-| - | - | - |
+<p align="center">
+  <img src="gomplay-frontend/assets/screenshots/home.jpg" width="300">
+</p>
 
-| 채팅 | 매너온도 평가 | 마이페이지 |
-|:---:|:---:|:---:|
-| - | - | - |
+---
+
+### ⚡ 퀵 매칭
+
+<p align="center">
+  <img src="gomplay-frontend/assets/screenshots/quickmatch.png" width="300">
+</p>
+
+---
+
+### 📋 운동 모집글
+
+<p align="center">
+  <img src="gomplay-frontend/assets/screenshots/post.jpg" width="300">
+</p>
+
+---
+
+### 💬 채팅
+
+<p align="center">
+  <img src="gomplay-frontend/assets/screenshots/chat.jpg" width="300">
+</p>
+
+---
+
+### 📈 매칭 현황
+
+<p align="center">
+  <img src="gomplay-frontend/assets/screenshots/matchstatus.jpg" width="300">
+</p>
 
 ---
 
