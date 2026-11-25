@@ -5,19 +5,25 @@ import React from "react";
 import {
   ActivityIndicator,
   Alert,
-  Keyboard,
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   TextInput,
   View,
 } from "react-native";
 import Animated, {
+  scrollTo,
   useAnimatedKeyboard,
+  useAnimatedReaction,
+  useAnimatedRef,
   useAnimatedStyle,
+  useScrollOffset,
+  useSharedValue,
 } from "react-native-reanimated";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import {
+  initialWindowMetrics,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 
 import ReviewCompleteScreen from "@/components/review/ReviewCompleteScreen";
 import { submitReview } from "@/services/review/reviewService";
@@ -113,33 +119,47 @@ export default function PartnerReviewScreen({ matchResultId, gatheringId, review
   const [isComplete, setIsComplete] = React.useState(false);
 
   const insets = useSafeAreaInsets();
-  const scrollViewRef = React.useRef<React.ComponentRef<typeof ScrollView>>(null);
-  const isCommentFocusedRef = React.useRef(false);
 
-  // 키보드에 가려지는 만큼 스크롤 영역 아래에 빈 공간을 둬서 화면을 줄인다.
-  // KeyboardAvoidingView는 Android(edge-to-edge)에서 기기마다 결과가 달라 쓰지 않는다.
-  // 일부 Android 기기는 키보드가 뜨면 insets.bottom에 키보드 높이가 이미 포함되어
-  // 하단 여백(아래 paddingBottom)으로 확보되므로, 그만큼은 빼고 남는 높이만 더한다.
+  // ── 키보드 처리 ─────────────────────────────────────────────────────────────
+  // 키보드가 올라오는 매 프레임마다, 키보드에 가려지는 높이(lift)만큼
+  // 1) 스크롤 영역 아래에 빈 공간을 두어 화면을 줄이고
+  // 2) 스크롤 위치도 같은 만큼 올려서
+  // 입력창이 키보드에 붙어 함께 올라가게 한다. (내릴 때도 같이 내려온다)
+  //
+  // 하단 여백 기준값은 키보드가 없을 때의 값(initialWindowMetrics)을 쓴다.
+  // 일부 Android 기기는 키보드가 뜨면 insets.bottom에 키보드 높이가 섞여 들어와
+  // 기기마다 결과가 달라지기 때문이다.
+  const restingBottomInset =
+    initialWindowMetrics?.insets.bottom ?? insets.bottom;
   const keyboard = useAnimatedKeyboard();
-  const bottomInset = insets.bottom;
+  const scrollRef = useAnimatedRef<Animated.ScrollView>();
+  const scrollOffset = useScrollOffset(scrollRef);
+  const isTrackingKeyboard = useSharedValue(false);
+  const offsetBeforeKeyboard = useSharedValue(0);
+
   const keyboardSpacerStyle = useAnimatedStyle(() => ({
-    height: Math.max(0, keyboard.height.value - bottomInset),
+    height: Math.max(0, keyboard.height.get() - restingBottomInset),
   }));
 
-  // 한 줄 후기 입력 중 키보드가 올라오면 입력창과 하단 버튼이 보이도록 맨 아래로 스크롤한다.
-  React.useEffect(() => {
-    const subscription = Keyboard.addListener("keyboardDidShow", () => {
-      if (isCommentFocusedRef.current) {
-        scrollViewRef.current?.scrollToEnd({ animated: true });
+  useAnimatedReaction(
+    () => Math.max(0, keyboard.height.get() - restingBottomInset),
+    (lift, previousLift) => {
+      if (!isTrackingKeyboard.get()) return;
+      scrollTo(scrollRef, 0, offsetBeforeKeyboard.get() + lift, false);
+      // 키보드가 완전히 내려가면 추적을 끝낸다.
+      if (lift === 0 && previousLift !== null && previousLift > 0) {
+        isTrackingKeyboard.set(false);
       }
-    });
-    return () => subscription.remove();
-  }, []);
+    },
+    [restingBottomInset],
+  );
 
-  const scrollToEndWhileCommenting = () => {
-    if (isCommentFocusedRef.current) {
-      scrollViewRef.current?.scrollToEnd({ animated: true });
-    }
+  // 입력창에 포커스가 가면 그 시점의 스크롤 위치를 기준으로 키보드를 따라가기 시작한다.
+  // (키보드가 이미 떠 있는 상태에서 다른 입력창으로 옮긴 경우도 기준을 맞춘다)
+  const startKeyboardTracking = () => {
+    const currentLift = Math.max(0, keyboard.height.get() - restingBottomInset);
+    offsetBeforeKeyboard.set(scrollOffset.get() - currentLift);
+    isTrackingKeyboard.set(true);
   };
 
   const toggleTrait =(id: string) => {
@@ -220,17 +240,13 @@ export default function PartnerReviewScreen({ matchResultId, gatheringId, review
 
   return (
     <View style={styles.flex}>
-      <ScrollView
-        ref={scrollViewRef}
+      <Animated.ScrollView
+        ref={scrollRef}
         style={styles.scroll}
         contentContainerStyle={[
           styles.content,
-          { paddingBottom: 40 + insets.bottom },
+          { paddingBottom: 40 + restingBottomInset },
         ]}
-        // 키보드 때문에 스크롤 영역이나 하단 여백이 바뀐 뒤에 다시 맨 아래로 맞춘다.
-        // (keyboardDidShow 시점에는 아직 레이아웃이 바뀌기 전이라 끝까지 내려가지 않는다.)
-        onLayout={scrollToEndWhileCommenting}
-        onContentSizeChange={scrollToEndWhileCommenting}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
@@ -443,6 +459,7 @@ export default function PartnerReviewScreen({ matchResultId, gatheringId, review
                 placeholderTextColor="#9CA3AF"
                 value={reportDescription}
                 onChangeText={setReportDescription}
+                onFocus={startKeyboardTracking}
                 multiline
                 textAlignVertical="top"
               />
@@ -462,14 +479,7 @@ export default function PartnerReviewScreen({ matchResultId, gatheringId, review
             placeholderTextColor="#9CA3AF"
             value={comment}
             onChangeText={setComment}
-            onFocus={() => {
-              isCommentFocusedRef.current = true;
-              // 키보드가 이미 떠 있는 경우(다른 입력창에서 이동)에는 keyboardDidShow가 다시 오지 않는다.
-              scrollViewRef.current?.scrollToEnd({ animated: true });
-            }}
-            onBlur={() => {
-              isCommentFocusedRef.current = false;
-            }}
+            onFocus={startKeyboardTracking}
             multiline
             textAlignVertical="top"
           />
@@ -511,7 +521,7 @@ export default function PartnerReviewScreen({ matchResultId, gatheringId, review
             )}
           </Pressable>
         </View>
-      </ScrollView>
+      </Animated.ScrollView>
       <Animated.View style={keyboardSpacerStyle} />
     </View>
   );
