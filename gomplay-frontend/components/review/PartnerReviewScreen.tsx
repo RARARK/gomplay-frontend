@@ -5,8 +5,8 @@ import React from "react";
 import {
   ActivityIndicator,
   Alert,
+  Keyboard,
   KeyboardAvoidingView,
-  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -14,6 +14,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import ReviewCompleteScreen from "@/components/review/ReviewCompleteScreen";
 import { submitReview } from "@/services/review/reviewService";
@@ -108,7 +109,21 @@ export default function PartnerReviewScreen({ matchResultId, gatheringId, review
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [isComplete, setIsComplete] = React.useState(false);
 
-  const toggleTrait = (id: string) => {
+  const insets = useSafeAreaInsets();
+  const scrollViewRef = React.useRef<React.ComponentRef<typeof ScrollView>>(null);
+  const isCommentFocusedRef = React.useRef(false);
+
+  // 한 줄 후기 입력 중 키보드가 올라오면 입력창과 하단 버튼이 보이도록 맨 아래로 스크롤한다.
+  React.useEffect(() => {
+    const subscription = Keyboard.addListener("keyboardDidShow", () => {
+      if (isCommentFocusedRef.current) {
+        scrollViewRef.current?.scrollToEnd({ animated: true });
+      }
+    });
+    return () => subscription.remove();
+  }, []);
+
+  const toggleTrait =(id: string) => {
     setSelectedTraits((prev) => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
@@ -185,13 +200,14 @@ export default function PartnerReviewScreen({ matchResultId, gatheringId, review
   }
 
   return (
-    <KeyboardAvoidingView
-      style={styles.flex}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-    >
+    <KeyboardAvoidingView style={styles.flex} behavior="padding">
       <ScrollView
+        ref={scrollViewRef}
         style={styles.scroll}
-        contentContainerStyle={styles.content}
+        contentContainerStyle={[
+          styles.content,
+          { paddingBottom: 40 + insets.bottom },
+        ]}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
@@ -423,6 +439,14 @@ export default function PartnerReviewScreen({ matchResultId, gatheringId, review
             placeholderTextColor="#9CA3AF"
             value={comment}
             onChangeText={setComment}
+            onFocus={() => {
+              isCommentFocusedRef.current = true;
+              // 키보드가 이미 떠 있는 경우(다른 입력창에서 이동)에는 keyboardDidShow가 다시 오지 않는다.
+              scrollViewRef.current?.scrollToEnd({ animated: true });
+            }}
+            onBlur={() => {
+              isCommentFocusedRef.current = false;
+            }}
             multiline
             textAlignVertical="top"
           />

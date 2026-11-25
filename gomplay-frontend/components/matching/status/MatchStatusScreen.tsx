@@ -647,7 +647,7 @@ const styles = StyleSheet.create({
   headerContainer: {
     backgroundColor: "#FFFFFF",
     paddingHorizontal: 16,
-    paddingTop: 18,
+    paddingTop: 8, // 홈 헤더(HomeHeader paddingVertical 8)와 MY 버튼 위치를 맞춘다
   },
   headerRow: {
     height: 48,

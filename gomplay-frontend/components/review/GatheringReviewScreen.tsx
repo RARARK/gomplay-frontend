@@ -2,7 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { router } from "expo-router";
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
 import PartnerReviewScreen from "@/components/review/PartnerReviewScreen";
 import ReviewCompleteScreen from "@/components/review/ReviewCompleteScreen";
@@ -131,10 +131,8 @@ export default function GatheringReviewScreen({
 
   if (screen === "review" && selected) {
     return (
-      <KeyboardAvoidingView
-        style={styles.flex}
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-      >
+      // 키보드 처리는 PartnerReviewScreen 안에서 한다. 여기서 또 감싸면 iOS에서 여백이 두 번 들어간다.
+      <View style={styles.flex}>
         <PartnerReviewScreen
           gatheringId={gatheringId}
           revieweeId={selected.userId}
@@ -145,7 +143,7 @@ export default function GatheringReviewScreen({
           onBack={handleBack}
           onComplete={handleReviewComplete}
         />
-      </KeyboardAvoidingView>
+      </View>
     );
   }
 
