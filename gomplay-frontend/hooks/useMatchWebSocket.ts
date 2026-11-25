@@ -1,6 +1,5 @@
 import { useEffect } from "react";
 
-import { isSignupTestMode } from "@/lib/devtools/signupTestMode";
 import {
   addMatchMessageHandler,
   connectMatchWs,
@@ -15,8 +14,7 @@ export function useMatchWebSocket(): void {
   const isLoggedIn = useAuthStore((s) => s.isLoggedIn);
 
   useEffect(() => {
-    // 회원가입 테스트 모드의 가짜 로그인으로는 실제 서버에 연결하지 않는다.
-    if (!isLoggedIn || isSignupTestMode()) return;
+    if (!isLoggedIn) return;
 
     connectMatchWs();
 

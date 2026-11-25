@@ -2,7 +2,6 @@ import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 
-import SignupTestBanner from "@/components/devtools/SignupTestBanner";
 import { useMatchWebSocket } from "@/hooks/useMatchWebSocket";
 
 export default function RootLayout() {
@@ -17,10 +16,5 @@ export default function RootLayout() {
     return null;
   }
 
-  return (
-    <>
-      <Stack screenOptions={{ headerShown: false }} />
-      <SignupTestBanner />
-    </>
-  );
+  return <Stack screenOptions={{ headerShown: false }} />;
 }
