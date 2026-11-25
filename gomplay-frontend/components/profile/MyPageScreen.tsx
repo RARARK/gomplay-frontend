@@ -19,10 +19,10 @@ import { logout } from "@/services/auth/authService";
 import { getSurvey } from "@/services/survey/surveyService";
 import { getMyProfile } from "@/services/user/userService";
 import { useAuthStore } from "@/stores/auth/authStore";
+import { useScreenCacheStore } from "@/stores/cache/screenCacheStore";
 import { useMatchingStore } from "@/stores/matching/matchingStore";
 import { useNotificationStore } from "@/stores/notification/notificationStore";
 import { useUserStore } from "@/stores/user/userStore";
-import type { Survey } from "@/types/domain/survey";
 
 const MANNER_TEMPERATURE_COLOR = "#F59E0B";
 const MANNER_TEMPERATURE_TRACK = "#FEF3C7";
@@ -134,14 +134,17 @@ export default function MyPageScreen() {
     React.useState(false);
   const [isUniversityBadgeExpanded, setIsUniversityBadgeExpanded] =
     React.useState(false);
-  const [survey, setSurvey] = React.useState<Survey | null>(null);
+  const survey = useScreenCacheStore((state) => state.survey);
+  const setSurvey = useScreenCacheStore((state) => state.setSurvey);
   const mannerDescriptionProgress = React.useRef(new Animated.Value(0)).current;
   const universityBadgeProgress = React.useRef(new Animated.Value(0)).current;
 
   const loadProfile = React.useCallback(() => {
     let cancelled = false;
+    // 저장된 프로필이 있으면 로딩 화면 없이 그대로 보여주고 뒤에서 갱신한다.
+    const hasCachedProfile = !!useUserStore.getState().profile;
 
-    setIsLoading(true);
+    setIsLoading(!hasCachedProfile);
     setErrorMessage(null);
 
     getMyProfile()
@@ -153,9 +156,12 @@ export default function MyPageScreen() {
       })
       .catch((err: unknown) => {
         if (!cancelled) {
-          setErrorMessage(
-            err instanceof Error ? err.message : "프로필을 불러올 수 없습니다.",
-          );
+          // 이미 보여주고 있는 프로필이 있으면 갱신 실패로 화면을 가리지 않는다.
+          if (!hasCachedProfile) {
+            setErrorMessage(
+              err instanceof Error ? err.message : "프로필을 불러올 수 없습니다.",
+            );
+          }
           setIsLoading(false);
         }
       });
@@ -167,7 +173,7 @@ export default function MyPageScreen() {
     return () => {
       cancelled = true;
     };
-  }, [setProfile]);
+  }, [setProfile, setSurvey]);
 
   useFocusEffect(
     React.useCallback(() => {

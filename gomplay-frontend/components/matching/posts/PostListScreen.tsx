@@ -144,6 +144,7 @@ export default function PostListScreen({
 
   const [posts, setPosts] = React.useState<GatheringListItem[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
+  const hasLoadedPostsRef = React.useRef(false);
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
   const [selectedExerciseType, setSelectedExerciseType] =
     React.useState<string>(ALL_FILTER_VALUE);
@@ -238,17 +239,21 @@ export default function PostListScreen({
   useFocusEffect(
     React.useCallback(() => {
       let isActive = true;
+      // 탭 전환으로 다시 들어온 경우 이전 목록을 그대로 두고 뒤에서 갱신한다.
+      const hasPosts = hasLoadedPostsRef.current;
 
-      setIsLoading(true);
+      if (!hasPosts) setIsLoading(true);
       setErrorMessage(null);
       getGatheringPosts({ size: PAGE_SIZE })
         .then((res) => {
           if (isActive) {
             setPosts(res.content);
+            hasLoadedPostsRef.current = true;
           }
         })
         .catch((err) => {
-          if (isActive) {
+          // 이미 보여주던 목록이 있으면 갱신 실패로 지우지 않는다.
+          if (isActive && !hasPosts) {
             setPosts([]);
             setErrorMessage(
               err instanceof Error ? err.message : ERR_FETCH_FAILED,
@@ -390,7 +395,10 @@ export default function PostListScreen({
                 setIsLoading(true);
                 setErrorMessage(null);
                 getGatheringPosts({ size: PAGE_SIZE })
-                  .then((res) => { setPosts(res.content); })
+                  .then((res) => {
+                    setPosts(res.content);
+                    hasLoadedPostsRef.current = true;
+                  })
                   .catch((err) => {
                     setPosts([]);
                     setErrorMessage(err instanceof Error ? err.message : ERR_FETCH_FAILED);

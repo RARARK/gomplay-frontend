@@ -14,6 +14,7 @@ import {
 
 import { getPointLogs } from "@/services/point/pointService";
 import { getMyProfile } from "@/services/user/userService";
+import { useScreenCacheStore } from "@/stores/cache/screenCacheStore";
 import { useUserStore } from "@/stores/user/userStore";
 import type { PointLog, PointLogReason } from "@/types/domain/point";
 
@@ -252,8 +253,10 @@ function LogItem({ item }: { item: PointLog }) {
 export default function PointLogsScreen() {
   const profile = useUserStore((state) => state.profile);
   const setProfile = useUserStore((state) => state.setProfile);
-  const [logs, setLogs] = useState<PointLog[]>([]);
-  const [loading, setLoading] = useState(true);
+  const cachedLogs = useScreenCacheStore((state) => state.pointLogs);
+  const setCachedLogs = useScreenCacheStore((state) => state.setPointLogs);
+  const logs = useMemo<PointLog[]>(() => cachedLogs ?? [], [cachedLogs]);
+  const [loading, setLoading] = useState(cachedLogs === null);
   const [error, setError] = useState<string | null>(null);
   const [tab, setTab] = useState<Tab>("all");
   const [showAll, setShowAll] = useState(false);
@@ -263,18 +266,21 @@ export default function PointLogsScreen() {
   useFocusEffect(
     React.useCallback(() => {
       let isActive = true;
+      // 마지막으로 받은 내역이 있으면 로딩 화면 없이 보여주고 뒤에서 갱신한다.
+      const hasCachedLogs = useScreenCacheStore.getState().pointLogs !== null;
 
       setWeek(getWeekRange());
-      setLoading(true);
+      setLoading(!hasCachedLogs);
       setError(null);
 
+      // 포인트 잔액이 바뀌었을 수 있어 프로필도 함께 갱신한다.
       Promise.allSettled([getPointLogs(), getMyProfile()])
         .then(([logsResult, profileResult]) => {
           if (!isActive) return;
 
           if (logsResult.status === "fulfilled") {
-            setLogs(logsResult.value ?? []);
-          } else {
+            setCachedLogs(logsResult.value ?? []);
+          } else if (!hasCachedLogs) {
             const reason = logsResult.reason;
             setError(
               reason instanceof Error
@@ -294,7 +300,7 @@ export default function PointLogsScreen() {
       return () => {
         isActive = false;
       };
-    }, [setProfile]),
+    }, [setCachedLogs, setProfile]),
   );
 
   const sortedLogs = useMemo(

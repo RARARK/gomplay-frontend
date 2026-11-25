@@ -14,6 +14,7 @@ import MatchHistoryCard, {
   type MatchHistoryItem,
 } from "@/components/matching/history/MatchHistoryCard";
 import { getMatchHistory } from "@/services/matching/matchingService";
+import { useScreenCacheStore } from "@/stores/cache/screenCacheStore";
 import { parseToKST } from "@/lib/utils/time";
 import type { MatchHistoryEntry } from "@/types/domain/match";
 
@@ -67,12 +68,19 @@ function mapEntryToItem(entry: MatchHistoryEntry): MatchHistoryItem {
 
 export default function MatchHistoryScreen() {
   const insets = useSafeAreaInsets();
-  const [history, setHistory] = React.useState<MatchHistoryItem[]>([]);
-  const [isLoading, setIsLoading] = React.useState(true);
+  const cachedEntries = useScreenCacheStore((state) => state.matchHistory);
+  const setCachedEntries = useScreenCacheStore((state) => state.setMatchHistory);
+  const history = React.useMemo<MatchHistoryItem[]>(
+    () => (cachedEntries ?? []).map(mapEntryToItem),
+    [cachedEntries],
+  );
+  const [isLoading, setIsLoading] = React.useState(cachedEntries === null);
   const [error, setError] = React.useState<string | null>(null);
 
   const load = React.useCallback(() => {
-    setIsLoading(true);
+    // 마지막으로 받은 내역이 있으면 로딩 화면 없이 보여주고 뒤에서 갱신한다.
+    const hasCachedEntries = useScreenCacheStore.getState().matchHistory !== null;
+    setIsLoading(!hasCachedEntries);
     setError(null);
     getMatchHistory()
       .then((data) => {
@@ -87,9 +95,10 @@ export default function MatchHistoryScreen() {
           const dateB = b.scheduledAt ?? b.matchedAt ?? "";
           return dateB.localeCompare(dateA);
         });
-        setHistory(sorted.map(mapEntryToItem));
+        setCachedEntries(sorted);
       })
       .catch((err: unknown) => {
+        if (hasCachedEntries) return;
         const msg =
           (err instanceof Error ? err.message : null) ??
           (err && typeof err === "object" && "message" in err
@@ -99,7 +108,7 @@ export default function MatchHistoryScreen() {
         setError(msg);
       })
       .finally(() => setIsLoading(false));
-  }, []);
+  }, [setCachedEntries]);
 
   useFocusEffect(
     React.useCallback(() => {

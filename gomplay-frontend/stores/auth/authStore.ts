@@ -1,5 +1,6 @@
 import { create } from "zustand";
 
+import { useScreenCacheStore } from "@/stores/cache/screenCacheStore";
 import { useUserStore } from "@/stores/user/userStore";
 
 type AuthState = {
@@ -40,6 +41,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   clearAuth: () => {
     useUserStore.getState().clearProfile();
+    useScreenCacheStore.getState().clearAll();
     set({
       userId: null,
       isLoggedIn: false,

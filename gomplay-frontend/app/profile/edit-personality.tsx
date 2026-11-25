@@ -18,6 +18,7 @@ import type {
   TutorialStep,
 } from "@/components/auth/tutorial/tutorialTypes";
 import { getSurvey, submitSurvey, updateSurvey } from "@/services/survey/surveyService";
+import { useScreenCacheStore } from "@/stores/cache/screenCacheStore";
 import { useUserStore } from "@/stores/user/userStore";
 import { mapSurveyToTutorial, mapTutorialToSurvey } from "@/utils/mapTutorialToSurvey";
 
@@ -89,6 +90,7 @@ export default function EditPersonalityRoute() {
         await submitSurvey(input);
       }
       clearProfile();
+      useScreenCacheStore.getState().setSurvey(null);
       Alert.alert("저장 완료", "성향 정보가 업데이트됐어요.", [
         { text: "확인", onPress: () => router.back() },
       ]);
