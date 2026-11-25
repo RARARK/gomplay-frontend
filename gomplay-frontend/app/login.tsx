@@ -15,8 +15,6 @@ import { getMyProfile } from "@/services/user/userService";
 import { useAuthStore } from "@/stores/auth/authStore";
 import { useUserStore } from "@/stores/user/userStore";
 
-const DEV_LOGIN_EMAIL = "32201274@dankook.ac.kr";
-const DEV_LOGIN_PASSWORD = "password12345";
 const SAVED_LOGIN_CREDENTIALS_KEY = "savedLoginCredentials";
 const MAX_SAVED_LOGIN_CREDENTIALS = 5;
 
@@ -68,12 +66,8 @@ export default function LoginScreen() {
   const setAuth = useAuthStore((state) => state.setAuth);
   const clearProfile = useUserStore((state) => state.clearProfile);
   const setProfile = useUserStore((state) => state.setProfile);
-  const [schoolEmail, setSchoolEmail] = React.useState(
-    __DEV__ ? DEV_LOGIN_EMAIL : "",
-  );
-  const [password, setPassword] = React.useState(
-    __DEV__ ? DEV_LOGIN_PASSWORD : "",
-  );
+  const [schoolEmail, setSchoolEmail] = React.useState("");
+  const [password, setPassword] = React.useState("");
   const [savedCredentials, setSavedCredentials] = React.useState<
     SavedLoginCredential[]
   >([]);
