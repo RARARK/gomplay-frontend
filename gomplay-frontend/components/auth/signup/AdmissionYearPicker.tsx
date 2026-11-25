@@ -9,6 +9,7 @@ import {
   Text,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const CURRENT_YEAR = new Date().getFullYear();
 const YEARS = Array.from({ length: 10 }, (_, i) => CURRENT_YEAR - i);
@@ -26,6 +27,7 @@ export default function AdmissionYearPicker({
   errorMessage,
   disabled,
 }: Props) {
+  const insets = useSafeAreaInsets();
   const [visible, setVisible] = React.useState(false);
 
   const open = () => {
@@ -65,7 +67,7 @@ export default function AdmissionYearPicker({
       <Modal visible={visible} transparent animationType="slide" onRequestClose={close}>
         <View style={styles.overlay}>
           <Pressable style={styles.backdrop} onPress={close} />
-          <View style={styles.sheet}>
+          <View style={[styles.sheet, { paddingBottom: 32 + insets.bottom }]}>
             <View style={styles.handle} />
             <View style={styles.sheetHeader}>
               <View style={styles.headerBtn} />

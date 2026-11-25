@@ -3,6 +3,7 @@ import React from "react";
 import {
   ActivityIndicator,
   Modal,
+  Platform,
   Pressable,
   StyleSheet,
   Text,
@@ -68,7 +69,8 @@ export default function CreatePostLocationPickerModal({
           ) : null}
           <MapView
             style={styles.map}
-            provider={PROVIDER_GOOGLE}
+            // iOS Expo Go는 Google 지도를 지원하지 않아 Apple 지도(기본값)를 쓴다.
+            provider={Platform.OS === "android" ? PROVIDER_GOOGLE : undefined}
             initialRegion={initialRegion}
             onMapReady={() => setIsMapReady(true)}
             onPress={(e) => {

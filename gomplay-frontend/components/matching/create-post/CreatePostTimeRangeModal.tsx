@@ -1,12 +1,17 @@
 import React from "react";
 import { Modal, Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import { Picker } from "@react-native-picker/picker";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import {
   HOUR_OPTIONS,
   MINUTE_OPTIONS,
   formatCreatePostTimeRangeLabel,
 } from "@/components/matching/create-post/createPostUtils";
+
+// iOS 피커는 기본 휠 높이(약 216pt)가 커서 휠 4개가 들어가면 작은 아이폰에서 시트가 화면을 넘는다.
+const IOS_PICKER_STYLE = Platform.OS === "ios" ? { height: 150 } : undefined;
+const IOS_PICKER_ITEM_STYLE = Platform.OS === "ios" ? { height: 150, fontSize: 18 } : undefined;
 
 type CreatePostTimeRangeModalProps = {
   visible: boolean;
@@ -28,6 +33,7 @@ export default function CreatePostTimeRangeModal({
   onClose,
   onConfirm,
 }: CreatePostTimeRangeModalProps) {
+  const insets = useSafeAreaInsets();
   const [startHour, setStartHour] = React.useState(startAt.getHours());
   const [startMinute, setStartMinute] = React.useState(startAt.getMinutes());
   const [endHour, setEndHour] = React.useState(endAt.getHours());
@@ -57,7 +63,7 @@ export default function CreatePostTimeRangeModal({
       <View style={styles.backdrop}>
         <Pressable style={styles.dismissLayer} onPress={onClose} />
 
-        <View style={styles.sheet}>
+        <View style={[styles.sheet, { paddingBottom: 28 + insets.bottom }]}>
           <View style={styles.header}>
             <Text style={styles.title}>시간 선택</Text>
             <Pressable onPress={onClose} style={styles.closeButton}>
@@ -79,6 +85,8 @@ export default function CreatePostTimeRangeModal({
                 selectedValue={startHour}
                 onValueChange={(value) => setStartHour(Number(value))}
                 mode={Platform.OS === "android" ? "dropdown" : undefined}
+                style={IOS_PICKER_STYLE}
+                itemStyle={IOS_PICKER_ITEM_STYLE}
               >
                 {HOUR_OPTIONS.map((hour) => (
                   <Picker.Item
@@ -96,6 +104,8 @@ export default function CreatePostTimeRangeModal({
                 selectedValue={startMinute}
                 onValueChange={(value) => setStartMinute(Number(value))}
                 mode={Platform.OS === "android" ? "dropdown" : undefined}
+                style={IOS_PICKER_STYLE}
+                itemStyle={IOS_PICKER_ITEM_STYLE}
               >
                 {MINUTE_OPTIONS.map((minute) => (
                   <Picker.Item
@@ -115,6 +125,8 @@ export default function CreatePostTimeRangeModal({
                 selectedValue={endHour}
                 onValueChange={(value) => setEndHour(Number(value))}
                 mode={Platform.OS === "android" ? "dropdown" : undefined}
+                style={IOS_PICKER_STYLE}
+                itemStyle={IOS_PICKER_ITEM_STYLE}
               >
                 {HOUR_OPTIONS.map((hour) => (
                   <Picker.Item
@@ -132,6 +144,8 @@ export default function CreatePostTimeRangeModal({
                 selectedValue={endMinute}
                 onValueChange={(value) => setEndMinute(Number(value))}
                 mode={Platform.OS === "android" ? "dropdown" : undefined}
+                style={IOS_PICKER_STYLE}
+                itemStyle={IOS_PICKER_ITEM_STYLE}
               >
                 {MINUTE_OPTIONS.map((minute) => (
                   <Picker.Item

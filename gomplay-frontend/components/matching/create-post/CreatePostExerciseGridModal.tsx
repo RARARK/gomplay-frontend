@@ -1,5 +1,6 @@
 import React from "react";
 import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import type { CreatePostExerciseGridOption } from "@/components/matching/create-post/createPostExerciseOptions";
 
@@ -20,6 +21,7 @@ export default function CreatePostExerciseGridModal({
   onClose,
   onSelect,
 }: CreatePostExerciseGridModalProps) {
+  const insets = useSafeAreaInsets();
   return (
     <Modal
       animationType="fade"
@@ -30,7 +32,7 @@ export default function CreatePostExerciseGridModal({
       <View style={styles.backdrop}>
         <Pressable style={styles.dismissLayer} onPress={onClose} />
 
-        <View style={styles.sheet}>
+        <View style={[styles.sheet, { paddingBottom: 28 + insets.bottom }]}>
           <View style={styles.header}>
             <Text style={styles.title}>{title}</Text>
             <Pressable onPress={onClose} style={styles.closeButton}>
