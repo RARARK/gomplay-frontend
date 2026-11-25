@@ -1,4 +1,4 @@
-const API_BASE = "http://3.38.165.56:8080";
+const API_BASE = "http://52.78.97.182:8080";
 
 /**
  * Ensures a profile image URL is absolute.

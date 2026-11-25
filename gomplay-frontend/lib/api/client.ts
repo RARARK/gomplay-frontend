@@ -15,7 +15,7 @@ export class ApiError extends Error {
 }
 
 const apiClient = axios.create({
-  baseURL: "http://3.38.165.56:8080",
+  baseURL: "http://52.78.97.182:8080",
   headers: { "Content-Type": "application/json" },
 });
 

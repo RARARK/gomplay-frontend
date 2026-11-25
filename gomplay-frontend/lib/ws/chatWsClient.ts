@@ -99,7 +99,7 @@ export function connectChatWs(): void {
   client = new Client({
     webSocketFactory: () =>
       new SockJS(
-        `http://3.38.165.56:8080/ws?token=${encodeURIComponent(token)}`,
+        `http://52.78.97.182:8080/ws?token=${encodeURIComponent(token)}`,
         null,
         { transports: ["websocket"] },
       ),
