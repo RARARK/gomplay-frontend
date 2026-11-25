@@ -76,7 +76,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 18,
   },
   dismissLayer: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
   },
   sheet: {
     borderRadius: 24,

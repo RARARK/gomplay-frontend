@@ -419,11 +419,11 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   heroImage: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     opacity: 0.72,
   },
   heroOverlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     backgroundColor: "rgba(239, 240, 255, 0.76)",
   },
   heroGlow: {

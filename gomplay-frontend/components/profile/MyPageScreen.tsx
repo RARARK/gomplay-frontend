@@ -1217,7 +1217,7 @@ const styles = StyleSheet.create({
     height: 68,
   },
   reportLockOverlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     alignItems: "center",
     justifyContent: "center",
     gap: 8,

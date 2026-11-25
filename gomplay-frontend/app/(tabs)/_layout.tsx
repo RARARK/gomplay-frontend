@@ -1,7 +1,13 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router, Tabs } from "expo-router";
 import React from "react";
-import { Alert, AppState, type AppStateStatus, View } from "react-native";
+import {
+  Alert,
+  AppState,
+  type AppStateStatus,
+  type ColorValue,
+  View,
+} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import MatchRequestToast from "@/components/matching/toast/MatchRequestToast";
@@ -123,7 +129,7 @@ export default function TabsLayout() {
         size,
         focused,
       }: {
-        color: string;
+        color: ColorValue;
         size: number;
         focused: boolean;
       }) => {

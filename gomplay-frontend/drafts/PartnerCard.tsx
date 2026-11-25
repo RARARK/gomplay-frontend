@@ -772,7 +772,7 @@ const S = StyleSheet.create({
   },
 
   disconnectedOverlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     backgroundColor: "rgba(243, 244, 246, 0.92)",
     alignItems: "center",
     justifyContent: "center",

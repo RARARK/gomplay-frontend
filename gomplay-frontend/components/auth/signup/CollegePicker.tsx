@@ -121,7 +121,7 @@ const styles = StyleSheet.create({
   errorText: { fontSize: 11, lineHeight: 15, color: "#FF3B30", fontFamily: "System", marginTop: -4 },
 
   overlay: { flex: 1, justifyContent: "flex-end", backgroundColor: "rgba(0,0,0,0.4)" },
-  backdrop: { ...StyleSheet.absoluteFillObject },
+  backdrop: { ...StyleSheet.absoluteFill },
   sheet: {
     backgroundColor: "#FFFFFF",
     borderTopLeftRadius: 24,
