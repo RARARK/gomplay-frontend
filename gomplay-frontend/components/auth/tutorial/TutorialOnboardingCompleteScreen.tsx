@@ -8,10 +8,10 @@ import {
 } from "react-native";
 import { Image } from "expo-image";
 
-import OnboardingImage1 from "@/assets/login/onboarding1.png";
-import OnboardingImage2 from "@/assets/login/onboarding2.png";
-import OnboardingImage3 from "@/assets/login/onboarding3.png";
-import OnboardingImage4 from "@/assets/login/onboarding4.png";
+import OnboardingImage1 from "@/assets/login/onboarding1.webp";
+import OnboardingImage2 from "@/assets/login/onboarding2.webp";
+import OnboardingImage3 from "@/assets/login/onboarding3.webp";
+import OnboardingImage4 from "@/assets/login/onboarding4.webp";
 import type { AppImageSource } from "@/types/ui/image";
 
 type TutorialOnboardingCompleteScreenProps = {

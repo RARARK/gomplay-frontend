@@ -1,6 +1,7 @@
 import * as React from "react";
 import { useRouter } from "expo-router";
-import { View, Image, Text, Pressable, StyleSheet } from "react-native";
+import { View, Text, Pressable, StyleSheet } from "react-native";
+import { Image } from "expo-image";
 import Materialsymbolscheck from "@/assets/home/material-symbols-check.svg";
 import { HomeLayout } from "@/constants/locofyHomeStyles";
 

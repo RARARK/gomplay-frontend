@@ -9,7 +9,7 @@ import type { Banner } from "@/types/ui/homeBanner";
 export const homeBanners: Banner[] = [
   {
     id: "banner-hero",
-    image: require("../../../assets/home/herobannermain.png"),
+    image: require("../../../assets/home/herobannermain.webp"),
     onPress: () => router.push("/posts" as any),
   },
   {

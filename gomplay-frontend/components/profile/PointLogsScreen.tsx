@@ -17,7 +17,7 @@ import { getMyProfile } from "@/services/user/userService";
 import { useUserStore } from "@/stores/user/userStore";
 import type { PointLog, PointLogReason } from "@/types/domain/point";
 
-import POINT_BEAR from "../../assets/home/pointbear.png";
+import POINT_BEAR from "../../assets/home/pointbear.webp";
 
 const PRIMARY = "#4C5BE2";
 

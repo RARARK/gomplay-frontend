@@ -301,7 +301,7 @@ export default function MyPageScreen() {
               source={profileImageSource}
               style={styles.profileImage}
               contentFit="cover"
-              cachePolicy="none"
+              cachePolicy="memory-disk"
               transition={120}
             />
             <View

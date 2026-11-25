@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Image, Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Image } from "expo-image";
 import { Ionicons } from "@expo/vector-icons";
 
 import { Border, Color, FontFamily, FontSize } from "../GlobalStyles";
@@ -42,6 +43,7 @@ export default function MatchInfoCard({
           <Image
             source={require("../../assets/chat/Locationpin.png")}
             style={styles.locationIcon}
+            contentFit="contain"
           />
           <Text numberOfLines={1} style={styles.locationText}>
             {locationName}
@@ -106,7 +108,6 @@ const styles = StyleSheet.create({
   locationIcon: {
     width: 19,
     height: 27,
-    resizeMode: "contain",
   },
   locationText: {
     flex: 1,

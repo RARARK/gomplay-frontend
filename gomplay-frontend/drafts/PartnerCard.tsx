@@ -10,7 +10,6 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Image } from "expo-image";
 import * as React from "react";
 import {
-  ImageBackground,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -287,7 +286,12 @@ const PartnerCard = ({
   return (
     <View style={[S.card, width != null && { width }]}>
       {/* ── Visual header ── */}
-      <ImageBackground source={imageSource} resizeMode="cover" style={S.visual}>
+      <View style={S.visual}>
+        <Image
+          source={imageSource}
+          contentFit="cover"
+          style={StyleSheet.absoluteFill}
+        />
         {matchScore != null && (
           <View style={S.ringOverlay}>
             <MatchRing score={matchScore} />
@@ -328,7 +332,7 @@ const PartnerCard = ({
           </View>
         )}
         <View style={S.nameDivider} />
-      </ImageBackground>
+      </View>
 
       {/* ── Match Insight ── */}
       <View style={S.insightCard}>

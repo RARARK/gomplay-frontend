@@ -1,4 +1,5 @@
-import { Image, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { Image } from "expo-image";
 import { Ionicons } from "@expo/vector-icons";
 
 import { Border, Color, FontFamily, FontSize } from "../GlobalStyles";
@@ -80,6 +81,7 @@ export default function PostMatchReviewCard({
           <Image
             source={require("../../assets/chat/airplane.png")}
             style={styles.sendIcon}
+            contentFit="contain"
           />
         </Pressable>
       </View>
@@ -177,6 +179,5 @@ const styles = StyleSheet.create({
   sendIcon: {
     width: 26,
     height: 26,
-    resizeMode: "contain",
   },
 });

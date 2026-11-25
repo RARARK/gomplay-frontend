@@ -1,6 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
-import * as ImageManipulator from "expo-image-manipulator";
 import * as ImagePicker from "expo-image-picker";
 import { router } from "expo-router";
 import React from "react";
@@ -22,8 +21,6 @@ import {
 import { useUserStore } from "@/stores/user/userStore";
 
 const DEFAULT_AVATAR = require("../../assets/match/Ellipse-12.png");
-const PROFILE_IMAGE_MAX_WIDTH = 1024;
-const PROFILE_IMAGE_COMPRESS_QUALITY = 0.8;
 
 function SectionLabel({ label }: { label: string }) {
   return <Text style={styles.sectionLabel}>{label}</Text>;
@@ -80,17 +77,8 @@ export default function ProfileEditRoute() {
     setIsUploadingPhoto(true);
 
     try {
-      const shouldResize =
-        typeof asset.width === "number" && asset.width > PROFILE_IMAGE_MAX_WIDTH;
-      const normalizedImage = await ImageManipulator.manipulateAsync(
-        uri,
-        shouldResize ? [{ resize: { width: PROFILE_IMAGE_MAX_WIDTH } }] : [],
-        {
-          compress: PROFILE_IMAGE_COMPRESS_QUALITY,
-          format: ImageManipulator.SaveFormat.JPEG,
-        },
-      );
-      const profileImageUrl = await uploadProfileImage(normalizedImage.uri, {
+      // 리사이즈와 JPEG 변환은 uploadProfileImage 안에서 처리한다.
+      const profileImageUrl = await uploadProfileImage(uri, {
         fileName: "profile.jpg",
         mimeType: "image/jpeg",
       });
@@ -128,7 +116,7 @@ export default function ProfileEditRoute() {
               source={photoUri ? { uri: photoUri } : DEFAULT_AVATAR}
               style={styles.avatar}
               contentFit="cover"
-              cachePolicy="none"
+              cachePolicy="memory-disk"
             />
             <Pressable
               accessibilityRole="button"

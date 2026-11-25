@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
-  Image,
   Keyboard,
   KeyboardAvoidingView,
   Modal,
@@ -14,6 +13,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { Image } from "expo-image";
 import { Ionicons } from "@expo/vector-icons";
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -861,7 +861,7 @@ const styles = StyleSheet.create({
   myBubbleText: { fontSize: 16, lineHeight: 22, fontFamily: FontFamily.inter, color: "#FFFFFF" },
   partnerMessageSection: { gap: 6, paddingHorizontal: 18 },
   partnerHeaderRow: { flexDirection: "row", alignItems: "center", gap: 8 },
-  partnerAvatar: { width: 36, height: 36, borderRadius: 18, resizeMode: "cover" },
+  partnerAvatar: { width: 36, height: 36, borderRadius: 18 },
   partnerName: { fontSize: 13, lineHeight: 18, fontWeight: "700", fontFamily: FontFamily.inter, color: Color.labelsPrimary },
   partnerBubbleRow: { flexDirection: "row", alignItems: "flex-end", gap: 6, paddingLeft: 44 },
   partnerBubble: {
@@ -927,7 +927,6 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    resizeMode: "cover",
   },
   participantInitial: {
     fontSize: 13,

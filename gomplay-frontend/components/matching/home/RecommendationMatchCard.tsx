@@ -1,5 +1,6 @@
+import { Image } from "expo-image";
 import * as React from "react";
-import { ImageBackground, Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import {
   Border,
   BoxShadow,
@@ -26,12 +27,12 @@ const RecommendationMatchCard = ({
 }: RecommendationMatchCardProps) => {
   return (
     <View style={styles.card}>
-      <ImageBackground
-        style={styles.cardImage}
-        imageStyle={styles.cardImageBorder}
-        resizeMode="cover"
-        source={imageSource}
-      >
+      <View style={styles.cardImage}>
+        <Image
+          source={imageSource}
+          contentFit="cover"
+          style={[StyleSheet.absoluteFill, styles.cardImageBorder]}
+        />
         <View style={styles.imageOverlay}>
           <View style={styles.dateBadge}>
             <Text style={styles.dateText}>{date}</Text>
@@ -43,7 +44,7 @@ const RecommendationMatchCard = ({
             </Text>
           </View>
         </View>
-      </ImageBackground>
+      </View>
 
       <View style={styles.cardInfo}>
         <View style={styles.infoWrapper}>

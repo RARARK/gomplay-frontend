@@ -1,4 +1,5 @@
 import { isAxiosError } from "axios";
+import { ImageManipulator, SaveFormat } from "expo-image-manipulator";
 
 import apiClient, { ApiError } from "@/lib/api/client";
 import type { ApiResponse } from "@/types/auth/auth";
@@ -90,12 +91,50 @@ const getProfileImageMimeType = (
   return "image/jpeg";
 };
 
+// 프로필 사진은 화면에서 작은 원형으로만 쓰이므로 긴 변 512px JPEG면 충분하다.
+const PROFILE_IMAGE_MAX_SIZE = 512;
+const PROFILE_IMAGE_COMPRESS_QUALITY = 0.8;
+
+/**
+ * 업로드 전에 프로필 사진을 줄이고 JPEG로 다시 저장한다.
+ * 실패하면 null을 반환해 원본 그대로 업로드하도록 한다.
+ */
+async function prepareProfileImage(uri: string): Promise<string | null> {
+  try {
+    const original = await ImageManipulator.manipulate(uri).renderAsync();
+    const isOversized =
+      Math.max(original.width, original.height) > PROFILE_IMAGE_MAX_SIZE;
+    const image = isOversized
+      ? await ImageManipulator.manipulate(uri)
+          .resize(
+            original.width >= original.height
+              ? { width: PROFILE_IMAGE_MAX_SIZE }
+              : { height: PROFILE_IMAGE_MAX_SIZE },
+          )
+          .renderAsync()
+      : original;
+    const saved = await image.saveAsync({
+      compress: PROFILE_IMAGE_COMPRESS_QUALITY,
+      format: SaveFormat.JPEG,
+    });
+    return saved.uri;
+  } catch {
+    return null;
+  }
+}
+
 export async function uploadProfileImage(
-  uri: string,
+  sourceUri: string,
   options: UploadProfileImageOptions = {},
 ): Promise<string> {
-  const name = getProfileImageFileName(uri, options.fileName);
-  const type = getProfileImageMimeType(name, options.mimeType);
+  const preparedUri = await prepareProfileImage(sourceUri);
+  const uri = preparedUri ?? sourceUri;
+  const name = preparedUri
+    ? "profile.jpg"
+    : getProfileImageFileName(uri, options.fileName);
+  const type = preparedUri
+    ? "image/jpeg"
+    : getProfileImageMimeType(name, options.mimeType);
   const formData = new FormData();
   formData.append("file", {
     uri,

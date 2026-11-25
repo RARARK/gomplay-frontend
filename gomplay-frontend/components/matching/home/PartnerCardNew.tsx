@@ -1,9 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
+import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import * as React from "react";
 import {
   Animated,
-  ImageBackground,
   Pressable,
   StyleSheet,
   Text,
@@ -146,12 +146,12 @@ export default function PartnerCardNew({
   return (
     <View style={[styles.stage, width != null && { width }]}>
       <View style={styles.shadowFrame}>
-        <ImageBackground
-          source={getHeroSource(profileImageSource, imageSource)}
-          resizeMode="cover"
-          style={styles.card}
-          imageStyle={styles.cardImage}
-        >
+        <View style={styles.card}>
+          <Image
+            source={getHeroSource(profileImageSource, imageSource)}
+            contentFit="cover"
+            style={[StyleSheet.absoluteFill, styles.cardImage]}
+          />
         <LinearGradient
           pointerEvents="none"
           colors={[
@@ -289,7 +289,7 @@ export default function PartnerCardNew({
             </Pressable>
           </View>
         </View>
-        </ImageBackground>
+        </View>
       </View>
 
       <Animated.View

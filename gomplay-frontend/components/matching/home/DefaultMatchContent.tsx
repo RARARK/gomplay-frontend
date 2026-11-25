@@ -1,5 +1,6 @@
 import * as React from "react";
-import { Image, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
+import { Image } from "expo-image";
 
 import { HomeLayout } from "@/constants/locofyHomeStyles";
 

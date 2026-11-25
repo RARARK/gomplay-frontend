@@ -1,4 +1,5 @@
-import { Image, Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Image } from "expo-image";
 import { router } from "expo-router";
 
 import { Border, Color, FontFamily, FontSize } from "../GlobalStyles";
@@ -161,7 +162,6 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    resizeMode: "cover",
   },
   messageBlock: {
     flex: 1,
