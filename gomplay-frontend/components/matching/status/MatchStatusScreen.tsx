@@ -720,6 +720,12 @@ const styles = StyleSheet.create({
   /* 목록 */
   list: {
     gap: 16,
+    // 탐색 탭 목록과 같은 그림자 모양: 목록 폭에서 카드 좌우 그림자를 잘라 아래쪽 그림자만 보이게 한다.
+    // (탐색 탭은 목록 폭이 카드 폭과 같아 스크롤 경계에서 좌우 그림자가 잘린다)
+    // 마지막 카드의 아래 그림자는 남기도록 아래로 여유를 두고, 그만큼 바깥 간격은 되돌린다.
+    overflow: "hidden",
+    paddingBottom: 12,
+    marginBottom: -12,
   },
   empty: {
     alignItems: "center",

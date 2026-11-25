@@ -3,6 +3,7 @@ import { Image } from "expo-image";
 import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
+import { cardShadowFrame } from "@/constants/cardStyles";
 import DifficultyIcon from "@/assets/match/heroicons-chart-bar-16-solid.svg";
 import { getSportIcon } from "@/lib/utils/sportIconMap";
 
@@ -311,6 +312,8 @@ export default function MatchStatusCard({
 const styles = StyleSheet.create({
   container: {
     width: "100%",
+    // 그림자는 탐색 카드와 같은 공통 프레임에 준다 (카드 본체에는 주지 않음).
+    ...cardShadowFrame,
   },
   card: {
     flexDirection: "row",
@@ -323,11 +326,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
     paddingHorizontal: 12,
     paddingVertical: 14,
-    shadowColor: "#000000",
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 3,
   },
   avatar: {
     width: 58,

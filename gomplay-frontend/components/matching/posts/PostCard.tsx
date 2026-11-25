@@ -4,6 +4,8 @@ import { LinearGradient } from "expo-linear-gradient";
 import React from "react";
 import { Animated, Pressable, StyleSheet, Text, View } from "react-native";
 
+import { cardShadowFrame } from "@/constants/cardStyles";
+
 const RAINBOW_COLORS: readonly [string, string, ...string[]] = [
   "#FF2D8F",
   "#FF8A00",
@@ -220,13 +222,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   cardFrame: {
-    borderRadius: 18,
-    backgroundColor: "#FFFFFF",
-    shadowColor: "#000000",
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 3,
+    ...cardShadowFrame,
   },
   boostedFrame: {
     overflow: "hidden",
