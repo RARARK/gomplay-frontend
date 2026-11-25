@@ -1,10 +1,15 @@
-import { router } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import React from "react";
-import { StyleSheet } from "react-native";
+import { Pressable, StyleSheet, Text } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import LoginScreenContent from "@/components/auth/LoginScreenContent";
+import {
+  endSignupTest,
+  IS_SIGNUP_TEST_AVAILABLE,
+  startSignupTest,
+} from "@/lib/devtools/signupTestMode";
 import { AuthError, login } from "@/services/auth/authService";
 import { getMyProfile } from "@/services/user/userService";
 import { useAuthStore } from "@/stores/auth/authStore";
@@ -74,6 +79,14 @@ export default function LoginScreen() {
   >([]);
   const [isLoading, setIsLoading] = React.useState(false);
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
+
+  // 회원가입 테스트 중 뒤로 가기 등으로 로그인 화면에 돌아오면 테스트 모드를 끈다.
+  // (켜진 채로 두면 실제 로그인 요청까지 가짜 응답으로 처리된다)
+  useFocusEffect(
+    React.useCallback(() => {
+      endSignupTest();
+    }, []),
+  );
 
   React.useEffect(() => {
     let isMounted = true;
@@ -151,6 +164,21 @@ export default function LoginScreen() {
         isLoading={isLoading}
         errorMessage={errorMessage}
       />
+      {IS_SIGNUP_TEST_AVAILABLE ? (
+        <Pressable
+          accessibilityRole="button"
+          style={styles.signupTestButton}
+          onPress={() => {
+            startSignupTest();
+            router.push("/signup");
+          }}
+        >
+          <Text style={styles.signupTestTitle}>회원가입 테스트 (개발용)</Text>
+          <Text style={styles.signupTestDescription}>
+            아무 이메일·인증 코드로 끝까지 진행 · 서버에 저장 안 됨
+          </Text>
+        </Pressable>
+      ) : null}
     </SafeAreaView>
   );
 }
@@ -159,5 +187,27 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: "#FFFFFF",
+  },
+  signupTestButton: {
+    marginHorizontal: 24,
+    marginBottom: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderStyle: "dashed",
+    borderColor: "#F59E0B",
+    backgroundColor: "#FFFBEB",
+    alignItems: "center",
+    gap: 2,
+  },
+  signupTestTitle: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: "#B45309",
+  },
+  signupTestDescription: {
+    fontSize: 12,
+    color: "#92400E",
   },
 });

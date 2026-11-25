@@ -1,6 +1,7 @@
 import axios, { isAxiosError } from "axios";
 import { router } from "expo-router";
 
+import { isSignupTestMode, signupTestAdapter } from "@/lib/devtools/signupTestMode";
 import { useAuthStore } from "@/stores/auth/authStore";
 import type { ApiResponse } from "@/types/auth/auth";
 
@@ -24,6 +25,10 @@ apiClient.interceptors.request.use((config) => {
   const token = useAuthStore.getState().accessToken;
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
+  }
+  // 회원가입 테스트 모드: 실제 서버 대신 가짜 응답을 쓴다 (서버에 아무것도 저장되지 않음).
+  if (isSignupTestMode()) {
+    config.adapter = signupTestAdapter;
   }
   return config;
 });

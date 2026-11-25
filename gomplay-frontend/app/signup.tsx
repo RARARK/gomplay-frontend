@@ -6,6 +6,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import SignupScreenContent, {
   type SignupFieldErrors,
 } from "@/components/auth/signup/SignupScreenContent";
+import { isSignupTestMode } from "@/lib/devtools/signupTestMode";
 import { AuthError, signup } from "@/services/auth/authService";
 import { useAuthStore } from "@/stores/auth/authStore";
 
@@ -30,7 +31,8 @@ function validate(fields: {
 
   if (!schoolEmail) {
     errors.schoolEmail = "이메일을 입력해주세요.";
-  } else if (!DANKOOK_EMAIL_REGEX.test(schoolEmail)) {
+  } else if (!isSignupTestMode() && !DANKOOK_EMAIL_REGEX.test(schoolEmail)) {
+    // 회원가입 테스트 모드에서는 아무 이메일이나 받는다.
     errors.schoolEmail = DANKOOK_EMAIL_ERROR;
   }
 
@@ -87,6 +89,8 @@ export default function SignupScreen() {
 
   const getSchoolEmailError = (value: string) => {
     const email = value.trim();
+    // 회원가입 테스트 모드에서는 아무 이메일이나 받는다.
+    if (isSignupTestMode()) return undefined;
     return email && !DANKOOK_EMAIL_REGEX.test(email) ? DANKOOK_EMAIL_ERROR : undefined;
   };
 

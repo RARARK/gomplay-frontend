@@ -4,6 +4,11 @@ import { StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import TutorialCompleteScreen from "@/components/auth/tutorial/TutorialCompleteScreen";
+import {
+  endSignupTest,
+  finishSignupTest,
+  isSignupTestMode,
+} from "@/lib/devtools/signupTestMode";
 import { login } from "@/services/auth/authService";
 import { submitSchedule, setHasScheduleCache } from "@/services/schedule/scheduleService";
 import { submitSurvey } from "@/services/survey/surveyService";
@@ -62,9 +67,16 @@ export default function TutorialCompleteRoute() {
         setPendingProfileImageUri(null);
       }
 
+      // 회원가입 테스트 모드: 가짜 계정이라 홈으로 가지 않고 테스트를 마친다.
+      if (isSignupTestMode()) {
+        finishSignupTest();
+        return;
+      }
+
       if (pendingCredentials) setPendingCredentials(null);
       router.replace("/(tabs)");
     } catch {
+      if (isSignupTestMode()) endSignupTest();
       router.replace("/login");
     }
   };
