@@ -57,6 +57,22 @@ const saveLoginCredential = async (
   return nextCredentials;
 };
 
+const removeLoginCredential = async (
+  schoolEmail: string,
+  previousCredentials: SavedLoginCredential[],
+) => {
+  const nextCredentials = previousCredentials.filter(
+    (item) => item.schoolEmail !== schoolEmail,
+  );
+
+  await AsyncStorage.setItem(
+    SAVED_LOGIN_CREDENTIALS_KEY,
+    JSON.stringify(nextCredentials),
+  );
+
+  return nextCredentials;
+};
+
 export default function LoginScreen() {
   const setAuth = useAuthStore((state) => state.setAuth);
   const clearProfile = useUserStore((state) => state.clearProfile);
@@ -139,6 +155,16 @@ export default function LoginScreen() {
           setSchoolEmail(credential.schoolEmail);
           setPassword(credential.password);
           setErrorMessage(null);
+        }}
+        onRemoveSavedCredential={(credential) => {
+          // 이 기기에 저장된 최근 계정 목록에서만 지운다 (서버 계정에는 영향 없음).
+          removeLoginCredential(credential.schoolEmail, savedCredentials)
+            .then(setSavedCredentials)
+            .catch(() => {});
+          if (schoolEmail.trim() === credential.schoolEmail) {
+            setSchoolEmail("");
+            setPassword("");
+          }
         }}
         onLoginPress={handleLoginPress}
         onSignupPress={() => router.push("/signup")}

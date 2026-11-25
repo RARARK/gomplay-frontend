@@ -15,6 +15,10 @@ type LoginScreenContentProps = {
     schoolEmail: string;
     password: string;
   }) => void;
+  onRemoveSavedCredential?: (credential: {
+    schoolEmail: string;
+    password: string;
+  }) => void;
   onLoginPress: () => void;
   onSignupPress: () => void;
   isLoading?: boolean;
@@ -28,6 +32,7 @@ export default function LoginScreenContent({
   onChangePassword,
   savedCredentials,
   onSelectSavedCredential,
+  onRemoveSavedCredential,
   onLoginPress,
   onSignupPress,
   isLoading,
@@ -49,6 +54,7 @@ export default function LoginScreenContent({
           onChangePassword={onChangePassword}
           savedCredentials={savedCredentials}
           onSelectSavedCredential={onSelectSavedCredential}
+          onRemoveSavedCredential={onRemoveSavedCredential}
           onLoginPress={onLoginPress}
           onSignupPress={onSignupPress}
           isLoading={isLoading}

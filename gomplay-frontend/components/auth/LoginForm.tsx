@@ -1,3 +1,4 @@
+import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import {
   ActivityIndicator,
@@ -21,6 +22,10 @@ type LoginFormProps = {
     schoolEmail: string;
     password: string;
   }) => void;
+  onRemoveSavedCredential?: (credential: {
+    schoolEmail: string;
+    password: string;
+  }) => void;
   onLoginPress: () => void;
   onSignupPress: () => void;
   isLoading?: boolean;
@@ -34,6 +39,7 @@ export default function LoginForm({
   onChangePassword,
   savedCredentials = [],
   onSelectSavedCredential,
+  onRemoveSavedCredential,
   onLoginPress,
   onSignupPress,
   isLoading = false,
@@ -68,17 +74,30 @@ export default function LoginForm({
           <Text style={styles.savedAccountTitle}>최근 테스트 계정</Text>
           <View style={styles.savedAccountList}>
             {savedCredentials.map((credential) => (
-              <Pressable
-                key={credential.schoolEmail}
-                accessibilityRole="button"
-                disabled={isLoading}
-                onPress={() => onSelectSavedCredential?.(credential)}
-                style={styles.savedAccountButton}
-              >
-                <Text style={styles.savedAccountText} numberOfLines={1}>
-                  {credential.schoolEmail}
-                </Text>
-              </Pressable>
+              <View key={credential.schoolEmail} style={styles.savedAccountButton}>
+                <Pressable
+                  accessibilityRole="button"
+                  disabled={isLoading}
+                  onPress={() => onSelectSavedCredential?.(credential)}
+                  style={styles.savedAccountSelect}
+                >
+                  <Text style={styles.savedAccountText} numberOfLines={1}>
+                    {credential.schoolEmail}
+                  </Text>
+                </Pressable>
+                {onRemoveSavedCredential ? (
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel={`${credential.schoolEmail} 저장된 계정 삭제`}
+                    disabled={isLoading}
+                    hitSlop={8}
+                    onPress={() => onRemoveSavedCredential(credential)}
+                    style={styles.savedAccountRemove}
+                  >
+                    <Ionicons name="close" size={14} color="#9CA3AF" />
+                  </Pressable>
+                ) : null}
+              </View>
             ))}
           </View>
         </View>
@@ -159,8 +178,23 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#D1D5DB",
     backgroundColor: "#FFFFFF",
+    flexDirection: "row",
+    alignItems: "center",
+    paddingLeft: 12,
+    paddingRight: 8,
+    gap: 4,
+  },
+  savedAccountSelect: {
+    flexShrink: 1,
     justifyContent: "center",
-    paddingHorizontal: 12,
+    minHeight: 32,
+  },
+  savedAccountRemove: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
   },
   savedAccountText: {
     fontSize: 12,
