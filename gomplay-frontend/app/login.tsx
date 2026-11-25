@@ -13,6 +13,15 @@ import { useUserStore } from "@/stores/user/userStore";
 const SAVED_LOGIN_CREDENTIALS_KEY = "savedLoginCredentials";
 const MAX_SAVED_LOGIN_CREDENTIALS = 5;
 
+/**
+ * "최근 테스트 계정" 목록에는 공용 테스트 계정(user1~4)만 기기에 저장한다.
+ * 실제 사용자 계정은 로그인에 성공해도 이메일·비밀번호를 기기에 남기지 않는다.
+ */
+const TEST_ACCOUNT_EMAIL_REGEX = /^user[1-4]@dankook\.ac\.kr$/i;
+
+const isTestAccount = (schoolEmail: string) =>
+  TEST_ACCOUNT_EMAIL_REGEX.test(schoolEmail.trim());
+
 type SavedLoginCredential = {
   schoolEmail: string;
   password: string;
@@ -24,16 +33,33 @@ const readSavedLoginCredentials = async (): Promise<SavedLoginCredential[]> => {
 
   try {
     const parsed = JSON.parse(raw);
-    if (!Array.isArray(parsed)) return [];
+    if (!Array.isArray(parsed)) {
+      await AsyncStorage.removeItem(SAVED_LOGIN_CREDENTIALS_KEY);
+      return [];
+    }
 
-    return parsed.filter(
+    const credentials = parsed.filter(
       (item): item is SavedLoginCredential =>
         item != null &&
         typeof item === "object" &&
         typeof item.schoolEmail === "string" &&
         typeof item.password === "string",
     );
+    const testCredentials = credentials.filter((item) =>
+      isTestAccount(item.schoolEmail),
+    );
+
+    // 이전 버전에서 저장된 실제 사용자 계정(또는 잘못된 항목)이 있으면 기기에서 지운다.
+    if (testCredentials.length !== parsed.length) {
+      await AsyncStorage.setItem(
+        SAVED_LOGIN_CREDENTIALS_KEY,
+        JSON.stringify(testCredentials),
+      );
+    }
+
+    return testCredentials;
   } catch {
+    await AsyncStorage.removeItem(SAVED_LOGIN_CREDENTIALS_KEY).catch(() => {});
     return [];
   }
 };
@@ -108,12 +134,15 @@ export default function LoginScreen() {
       const profile = await getMyProfile();
       setProfile(profile);
 
-      saveLoginCredential(
-        { schoolEmail: schoolEmail.trim(), password },
-        savedCredentials,
-      )
-        .then(setSavedCredentials)
-        .catch(() => {});
+      // 공용 테스트 계정만 기기에 저장한다 (실제 사용자 계정은 남기지 않음).
+      if (isTestAccount(schoolEmail)) {
+        saveLoginCredential(
+          { schoolEmail: schoolEmail.trim(), password },
+          savedCredentials,
+        )
+          .then(setSavedCredentials)
+          .catch(() => {});
+      }
 
       router.replace("/(tabs)");
     } catch (error) {
