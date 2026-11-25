@@ -105,7 +105,7 @@ export default function ChatRoomScreen() {
   const completedMatchIds = useChatStore((state) => state.completedMatchIds);
   const markMatchCompleted = useChatStore((state) => state.markMatchCompleted);
 
-  const scrollViewRef = useRef<ScrollView>(null);
+  const scrollViewRef = useRef<React.ComponentRef<typeof ScrollView>>(null);
 
   const [isLoading, setIsLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);

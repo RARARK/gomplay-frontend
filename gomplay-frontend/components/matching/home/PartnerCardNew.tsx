@@ -8,10 +8,10 @@ import {
   StyleSheet,
   Text,
   View,
-  type ImageSourcePropType,
 } from "react-native";
 
 import type { PartnerCardProps } from "@/types/ui/homeCards";
+import type { AppImageSource } from "@/types/ui/image";
 
 const DEFAULT_PROFILE_IMAGE = require("../../../assets/home/PartnerProfileImage.png");
 const CARD_RADIUS = 28;
@@ -24,8 +24,8 @@ type StoryPartnerCardProps = PartnerCardProps & {
 };
 
 const getHeroSource = (
-  profileImageSource?: ImageSourcePropType,
-  imageSource?: ImageSourcePropType,
+  profileImageSource?: AppImageSource,
+  imageSource?: AppImageSource,
 ) => profileImageSource ?? imageSource ?? DEFAULT_PROFILE_IMAGE;
 
 const compactStudentId = (studentId?: string) => {

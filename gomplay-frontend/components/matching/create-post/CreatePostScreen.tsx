@@ -69,7 +69,7 @@ const createInitialFormState = (): CreatePostFormState => ({
 
 export default function CreatePostScreen() {
   const insets = useSafeAreaInsets();
-  const scrollViewRef = React.useRef<ScrollView>(null);
+  const scrollViewRef = React.useRef<React.ComponentRef<typeof ScrollView>>(null);
 
   const [form, setForm] = React.useState<CreatePostFormState>(
     createInitialFormState,

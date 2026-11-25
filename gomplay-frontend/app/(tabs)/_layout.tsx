@@ -151,7 +151,7 @@ export default function TabsLayout() {
           <Ionicons
             name={iconName}
             size={route.name === "partner" ? size + 4 : size}
-            color={color}
+            color={color as string}
           />
         );
       },

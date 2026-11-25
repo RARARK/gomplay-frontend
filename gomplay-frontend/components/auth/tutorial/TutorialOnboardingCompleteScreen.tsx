@@ -5,7 +5,6 @@ import {
   Text,
   View,
   useWindowDimensions,
-  type ImageSourcePropType,
 } from "react-native";
 import { Image } from "expo-image";
 
@@ -13,6 +12,7 @@ import OnboardingImage1 from "@/assets/login/onboarding1.png";
 import OnboardingImage2 from "@/assets/login/onboarding2.png";
 import OnboardingImage3 from "@/assets/login/onboarding3.png";
 import OnboardingImage4 from "@/assets/login/onboarding4.png";
+import type { AppImageSource } from "@/types/ui/image";
 
 type TutorialOnboardingCompleteScreenProps = {
   onPressCta: () => void;
@@ -23,7 +23,7 @@ type OnboardingSlide = {
   title: string;
   description: string;
   buttonLabel: string;
-  heroImage: ImageSourcePropType;
+  heroImage: AppImageSource;
 };
 
 const SLIDES: OnboardingSlide[] = [

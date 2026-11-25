@@ -10,7 +10,7 @@ import {
   Text,
   View,
 } from "react-native";
-import type { ImageSourcePropType } from "react-native";
+import type { AppImageSource } from "@/types/ui/image";
 
 import DEFAULT_PROFILE_IMAGE from "../../../assets/home/PartnerProfileImage.png";
 
@@ -19,7 +19,7 @@ const { height: SCREEN_H } = Dimensions.get("window");
 type Props = {
   visible: boolean;
   onClose: () => void;
-  profileImageSource?: ImageSourcePropType;
+  profileImageSource?: AppImageSource;
   name?: string;
   department?: string;
   studentId?: string;

@@ -1,8 +1,8 @@
-import type { ImageSourcePropType } from "react-native";
+import type { AppImageSource } from "@/types/ui/image";
 
 export type Banner = {
   id: string;
-  image: ImageSourcePropType;
+  image: AppImageSource;
   tag?: string;
   text?: string;
   buttonLabel?: string;

@@ -64,7 +64,7 @@ export default function GroupChatRoomScreen() {
   const completedGatheringIds = useChatStore((s) => s.completedGatheringIds);
   const markGatheringCompleted = useChatStore((s) => s.markGatheringCompleted);
   const setCurrentProfile = useUserStore((s) => s.setProfile);
-  const scrollViewRef = useRef<ScrollView>(null);
+  const scrollViewRef = useRef<React.ComponentRef<typeof ScrollView>>(null);
   const handledIdsRef = useRef(new Set<number>());
   const hasMountedRef = useRef(false);
 

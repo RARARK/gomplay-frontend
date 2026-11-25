@@ -89,7 +89,7 @@ const TimetableSelector = ({
     nextValue: boolean;
     visitedKeys: Set<string>;
   } | null>(null);
-  const scrollViewRef = React.useRef<ScrollView>(null);
+  const scrollViewRef = React.useRef<React.ComponentRef<typeof ScrollView>>(null);
   const scrollViewport = React.useRef({ y: 0, height: 0 });
   const scrollOffsetY = React.useRef(0);
   const scrollContentHeight = React.useRef(0);
@@ -99,8 +99,8 @@ const TimetableSelector = ({
   const lastDragPoint = React.useRef<{ pageX: number; pageY: number } | null>(
     null,
   );
-  const scrollFrameRef = React.useRef<View>(null);
-  const gridRef = React.useRef<View>(null);
+  const scrollFrameRef = React.useRef<React.ComponentRef<typeof View>>(null);
+  const gridRef = React.useRef<React.ComponentRef<typeof View>>(null);
   const gridOrigin = React.useRef({ x: 0, y: 0 });
   const pendingStartCell = React.useRef<TimetableCell | null>(null);
   const longPressSelectionActive = React.useRef(false);

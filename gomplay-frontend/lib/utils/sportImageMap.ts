@@ -1,6 +1,6 @@
-import type { ImageSourcePropType } from "react-native";
+import type { AppImageSource } from "@/types/ui/image";
 
-const SPORT_IMAGE_MAP: Record<string, ImageSourcePropType> = {
+const SPORT_IMAGE_MAP: Record<string, AppImageSource> = {
   당구: require("@/assets/sports/당구.jpg"),
   야구: require("@/assets/sports/야구.jpg"),
   볼링: require("@/assets/sports/볼링.jpg"),
@@ -15,6 +15,6 @@ const SPORT_IMAGE_MAP: Record<string, ImageSourcePropType> = {
   헬스: require("@/assets/sports/헬스.jpg"),
 };
 
-export function getSportImage(sportType: string): ImageSourcePropType | undefined {
+export function getSportImage(sportType: string): AppImageSource | undefined {
   return SPORT_IMAGE_MAP[sportType];
 }

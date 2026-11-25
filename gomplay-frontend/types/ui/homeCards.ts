@@ -1,9 +1,9 @@
-import type { ImageSourcePropType } from "react-native";
+import type { AppImageSource } from "@/types/ui/image";
 
 export type PartnerCardProps = {
   userProfileId?: number;
-  imageSource?: ImageSourcePropType;
-  profileImageSource?: ImageSourcePropType;
+  imageSource?: AppImageSource;
+  profileImageSource?: AppImageSource;
   name?: string;
   age?: number;
   description?: string;
@@ -30,7 +30,7 @@ export type PartnerCardProps = {
 };
 
 export type RecommendationMatchCardProps = {
-  imageSource?: ImageSourcePropType;
+  imageSource?: AppImageSource;
   date?: string;
   sport?: string;
   info?: string;
@@ -39,7 +39,7 @@ export type RecommendationMatchCardProps = {
 };
 
 export type ModernMatchCardProps = {
-  imageSource?: ImageSourcePropType;
+  imageSource?: AppImageSource;
   date: string;
   dayOfWeek: string;
   sport: string;

@@ -42,7 +42,7 @@ export default function EditPostRoute() {
   const [capacity, setCapacity] = React.useState(1);
   const [message, setMessage] = React.useState("");
   const [isTagSelectorExpanded, setIsTagSelectorExpanded] = React.useState(false);
-  const scrollViewRef = React.useRef<ScrollView>(null);
+  const scrollViewRef = React.useRef<React.ComponentRef<typeof ScrollView>>(null);
 
   React.useEffect(() => {
     if (!postId) return;
