@@ -1,6 +1,6 @@
 import React from "react";
 import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useModalBottomInset } from "@/hooks/useModalBottomInset";
 
 type CreatePostChoiceModalProps<T extends string> = {
   visible: boolean;
@@ -19,7 +19,7 @@ export default function CreatePostChoiceModal<T extends string>({
   onClose,
   onSelect,
 }: CreatePostChoiceModalProps<T>) {
-  const insets = useSafeAreaInsets();
+  const modalBottomInset = useModalBottomInset();
   return (
     <Modal
       animationType="fade"
@@ -30,7 +30,7 @@ export default function CreatePostChoiceModal<T extends string>({
       <View style={styles.backdrop}>
         <Pressable style={styles.dismissLayer} onPress={onClose} />
 
-        <View style={[styles.sheet, { paddingBottom: 28 + insets.bottom }]}>
+        <View style={[styles.sheet, { paddingBottom: 28 + modalBottomInset }]}>
           <View style={styles.header}>
             <Text style={styles.title}>{title}</Text>
             <Pressable onPress={onClose} style={styles.closeButton}>

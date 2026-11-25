@@ -1,7 +1,7 @@
 import React from "react";
 import { Modal, Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import { Picker } from "@react-native-picker/picker";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useModalBottomInset } from "@/hooks/useModalBottomInset";
 
 import {
   HOUR_OPTIONS,
@@ -33,7 +33,7 @@ export default function CreatePostTimeRangeModal({
   onClose,
   onConfirm,
 }: CreatePostTimeRangeModalProps) {
-  const insets = useSafeAreaInsets();
+  const modalBottomInset = useModalBottomInset();
   const [startHour, setStartHour] = React.useState(startAt.getHours());
   const [startMinute, setStartMinute] = React.useState(startAt.getMinutes());
   const [endHour, setEndHour] = React.useState(endAt.getHours());
@@ -63,7 +63,7 @@ export default function CreatePostTimeRangeModal({
       <View style={styles.backdrop}>
         <Pressable style={styles.dismissLayer} onPress={onClose} />
 
-        <View style={[styles.sheet, { paddingBottom: 28 + insets.bottom }]}>
+        <View style={[styles.sheet, { paddingBottom: 28 + modalBottomInset }]}>
           <View style={styles.header}>
             <Text style={styles.title}>시간 선택</Text>
             <Pressable onPress={onClose} style={styles.closeButton}>

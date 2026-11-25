@@ -8,7 +8,7 @@ import {
   Text,
   View,
 } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useModalBottomInset } from "@/hooks/useModalBottomInset";
 
 import { dankookJukjeon } from "./dankookDepartments";
 
@@ -27,7 +27,7 @@ export default function DepartmentPicker({
   errorMessage,
   disabled,
 }: Props) {
-  const insets = useSafeAreaInsets();
+  const modalBottomInset = useModalBottomInset();
   const [visible, setVisible] = React.useState(false);
 
   const departments =
@@ -68,7 +68,7 @@ export default function DepartmentPicker({
       <Modal visible={visible} transparent animationType="slide" onRequestClose={close}>
         <View style={styles.overlay}>
           <Pressable style={styles.backdrop} onPress={close} />
-          <View style={[styles.sheet, { paddingBottom: 32 + insets.bottom }]}>
+          <View style={[styles.sheet, { paddingBottom: 32 + modalBottomInset }]}>
             <View style={styles.handle} />
             <View style={styles.sheetHeader}>
               <View style={styles.headerBtn} />

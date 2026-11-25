@@ -11,7 +11,7 @@ import {
   Text,
   View,
 } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useModalBottomInset } from "@/hooks/useModalBottomInset";
 
 import { getPointLogs } from "@/services/point/pointService";
 import { getMyProfile } from "@/services/user/userService";
@@ -252,7 +252,7 @@ function LogItem({ item }: { item: PointLog }) {
 }
 
 export default function PointLogsScreen() {
-  const insets = useSafeAreaInsets();
+  const modalBottomInset = useModalBottomInset();
   const profile = useUserStore((state) => state.profile);
   const setProfile = useUserStore((state) => state.setProfile);
   const cachedLogs = useScreenCacheStore((state) => state.pointLogs);
@@ -517,7 +517,7 @@ export default function PointLogsScreen() {
         onRequestClose={() => setShowGuide(false)}
       >
         <Pressable style={styles.guideOverlay} onPress={() => setShowGuide(false)}>
-          <Pressable style={[styles.guideSheet, { paddingBottom: 40 + insets.bottom }]} onPress={() => {}}>
+          <Pressable style={[styles.guideSheet, { paddingBottom: 40 + modalBottomInset }]} onPress={() => {}}>
             <View style={styles.guideHandle} />
             <View style={styles.guideSheetHeader}>
               <Text style={styles.guideSheetTitle}>포인트 가이드</Text>

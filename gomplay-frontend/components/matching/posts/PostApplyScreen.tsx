@@ -7,6 +7,7 @@ import {
   Alert,
   KeyboardAvoidingView,
   Linking,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -349,7 +350,7 @@ export default function PostApplyScreen({ postId }: PostApplyScreenProps) {
     <>
       <KeyboardAvoidingView
         style={styles.flex}
-        behavior="padding"
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
         <ScrollView
           contentContainerStyle={[

@@ -7,6 +7,7 @@ import {
   Alert,
   Keyboard,
   KeyboardAvoidingView,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -123,6 +124,12 @@ export default function PartnerReviewScreen({ matchResultId, gatheringId, review
     return () => subscription.remove();
   }, []);
 
+  const scrollToEndWhileCommenting = () => {
+    if (isCommentFocusedRef.current) {
+      scrollViewRef.current?.scrollToEnd({ animated: true });
+    }
+  };
+
   const toggleTrait =(id: string) => {
     setSelectedTraits((prev) => {
       const next = new Set(prev);
@@ -200,7 +207,14 @@ export default function PartnerReviewScreen({ matchResultId, gatheringId, review
   }
 
   return (
-    <KeyboardAvoidingView style={styles.flex} behavior="padding">
+    // 키보드 처리:
+    // - iOS: KeyboardAvoidingView가 키보드 높이만큼 화면을 줄인다.
+    // - Android(edge-to-edge): 키보드가 뜨면 insets.bottom에 키보드 높이가 포함되므로
+    //   아래 paddingBottom만으로 충분하다. 여기서 KeyboardAvoidingView까지 쓰면 두 번 올라간다.
+    <KeyboardAvoidingView
+      style={styles.flex}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+    >
       <ScrollView
         ref={scrollViewRef}
         style={styles.scroll}
@@ -208,6 +222,10 @@ export default function PartnerReviewScreen({ matchResultId, gatheringId, review
           styles.content,
           { paddingBottom: 40 + insets.bottom },
         ]}
+        // 키보드 때문에 스크롤 영역이나 하단 여백이 바뀐 뒤에 다시 맨 아래로 맞춘다.
+        // (keyboardDidShow 시점에는 아직 레이아웃이 바뀌기 전이라 끝까지 내려가지 않는다.)
+        onLayout={scrollToEndWhileCommenting}
+        onContentSizeChange={scrollToEndWhileCommenting}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
