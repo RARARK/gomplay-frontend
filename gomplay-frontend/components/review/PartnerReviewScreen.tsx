@@ -6,8 +6,6 @@ import {
   ActivityIndicator,
   Alert,
   Keyboard,
-  KeyboardAvoidingView,
-  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -15,6 +13,10 @@ import {
   TextInput,
   View,
 } from "react-native";
+import Animated, {
+  useAnimatedKeyboard,
+  useAnimatedStyle,
+} from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import ReviewCompleteScreen from "@/components/review/ReviewCompleteScreen";
@@ -114,6 +116,16 @@ export default function PartnerReviewScreen({ matchResultId, gatheringId, review
   const scrollViewRef = React.useRef<React.ComponentRef<typeof ScrollView>>(null);
   const isCommentFocusedRef = React.useRef(false);
 
+  // 키보드에 가려지는 만큼 스크롤 영역 아래에 빈 공간을 둬서 화면을 줄인다.
+  // KeyboardAvoidingView는 Android(edge-to-edge)에서 기기마다 결과가 달라 쓰지 않는다.
+  // 일부 Android 기기는 키보드가 뜨면 insets.bottom에 키보드 높이가 이미 포함되어
+  // 하단 여백(아래 paddingBottom)으로 확보되므로, 그만큼은 빼고 남는 높이만 더한다.
+  const keyboard = useAnimatedKeyboard();
+  const bottomInset = insets.bottom;
+  const keyboardSpacerStyle = useAnimatedStyle(() => ({
+    height: Math.max(0, keyboard.height.value - bottomInset),
+  }));
+
   // 한 줄 후기 입력 중 키보드가 올라오면 입력창과 하단 버튼이 보이도록 맨 아래로 스크롤한다.
   React.useEffect(() => {
     const subscription = Keyboard.addListener("keyboardDidShow", () => {
@@ -207,14 +219,7 @@ export default function PartnerReviewScreen({ matchResultId, gatheringId, review
   }
 
   return (
-    // 키보드 처리:
-    // - iOS: KeyboardAvoidingView가 키보드 높이만큼 화면을 줄인다.
-    // - Android(edge-to-edge): 키보드가 뜨면 insets.bottom에 키보드 높이가 포함되므로
-    //   아래 paddingBottom만으로 충분하다. 여기서 KeyboardAvoidingView까지 쓰면 두 번 올라간다.
-    <KeyboardAvoidingView
-      style={styles.flex}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-    >
+    <View style={styles.flex}>
       <ScrollView
         ref={scrollViewRef}
         style={styles.scroll}
@@ -507,7 +512,8 @@ export default function PartnerReviewScreen({ matchResultId, gatheringId, review
           </Pressable>
         </View>
       </ScrollView>
-    </KeyboardAvoidingView>
+      <Animated.View style={keyboardSpacerStyle} />
+    </View>
   );
 }
 
