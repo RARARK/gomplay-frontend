@@ -22,7 +22,7 @@ export const CREATE_POST_EXERCISE_OPTIONS = [
   "야구",
   "볼링",
   "자전거",
-  "러닝",
+  "런닝",
   "축구",
   "풋살",
   "테니스",

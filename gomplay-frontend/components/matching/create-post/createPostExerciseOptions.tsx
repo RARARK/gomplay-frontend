@@ -30,8 +30,9 @@ export const CREATE_POST_EXERCISE_GRID_OPTIONS: readonly CreatePostExerciseGridO
       icon: () => <Ionicons name="bicycle-outline" size={28} color="#EF5A24" />,
     },
     {
-      value: "러닝",
-      label: "러닝",
+      // 설문/추천/장소검색(백엔드)이 모두 "런닝"을 쓰므로 표기를 맞춘다
+      value: "런닝",
+      label: "런닝",
       icon: () => <MaterialCommunityIcons name="run" size={28} color="#EF5A24" />,
     },
     {

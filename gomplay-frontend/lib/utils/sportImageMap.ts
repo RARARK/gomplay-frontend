@@ -5,6 +5,8 @@ const SPORT_IMAGE_MAP: Record<string, AppImageSource> = {
   야구: require("@/assets/sports/야구.jpg"),
   볼링: require("@/assets/sports/볼링.jpg"),
   자전거: require("@/assets/sports/자전거.jpg"),
+  // 글 작성 종목은 "런닝"(설문·백엔드와 통일), 예전 글은 "러닝"이라 둘 다 같은 사진을 쓴다
+  런닝: require("@/assets/sports/러닝.jpg"),
   러닝: require("@/assets/sports/러닝.jpg"),
   축구: require("@/assets/sports/축구.jpg"),
   풋살: require("@/assets/sports/풋살.jpg"),
