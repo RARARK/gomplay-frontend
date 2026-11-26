@@ -6,7 +6,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import SignupScreenContent, {
   type SignupFieldErrors,
 } from "@/components/auth/signup/SignupScreenContent";
-import { AuthError, signup } from "@/services/auth/authService";
+import { AuthError, resendVerification, signup } from "@/services/auth/authService";
 import { useAuthStore } from "@/stores/auth/authStore";
 
 const DANKOOK_EMAIL_REGEX = /^[A-Za-z0-9._%+-]+@dankook\.ac\.kr$/i;
@@ -148,13 +148,57 @@ export default function SignupScreen() {
         params: { email: result.email },
       });
     } catch (error) {
-      if (error instanceof AuthError) {
+      if (error instanceof AuthError && error.message.includes("이미 가입된 이메일")) {
+        setErrorMessage(await resumePendingSignup(schoolEmail.trim(), password));
+      } else if (error instanceof AuthError) {
         setErrorMessage(error.message);
       } else {
         setErrorMessage("알 수 없는 오류가 발생하였습니다.");
       }
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  /**
+   * 인증 코드 화면에서 뒤로 나왔다가 가입을 다시 누른 경우를 이어서 진행시킨다.
+   * (첫 가입 요청에서 이미 미인증 계정이 만들어져 "이미 가입된 이메일"이 된다)
+   *
+   * 방금 이 앱 실행 중에 같은 이메일·같은 비밀번호로 가입을 시작한 경우에만
+   * 인증 코드를 재전송하고 인증 화면으로 보낸다.
+   * - 비밀번호가 다르면: 서버 계정에는 첫 비밀번호가 남아 있어 인증 후 자동 로그인이 실패한다.
+   * - 기억이 없으면(앱 재시작, 다른 사람이 만든 미인증 계정): 재전송하면 남이 정한
+   *   비밀번호의 계정을 인증해 주는 셈이 되므로 진행하지 않는다.
+   * 정상 진행 시 null, 아니면 화면에 보여줄 에러 메시지를 돌려준다.
+   */
+  const resumePendingSignup = async (
+    email: string,
+    pw: string,
+  ): Promise<string | null> => {
+    const pending = useAuthStore.getState().pendingCredentials;
+    const isSameSignup =
+      pending !== null &&
+      pending.schoolEmail.toLowerCase() === email.toLowerCase() &&
+      pending.password === pw;
+
+    if (!isSameSignup) {
+      return "인증이 완료되지 않은 이메일이에요. 체험 계정을 이용하거나 운영진에게 문의해 주세요.";
+    }
+
+    try {
+      await resendVerification(email);
+      router.push({
+        pathname: "/signup-verification",
+        params: { email },
+      });
+      return null;
+    } catch (resendError) {
+      if (resendError instanceof AuthError && resendError.message.includes("이미 인증된")) {
+        return "이미 가입된 계정이에요. 로그인해 주세요.";
+      }
+      return resendError instanceof AuthError
+        ? resendError.message
+        : "알 수 없는 오류가 발생하였습니다.";
     }
   };
 
