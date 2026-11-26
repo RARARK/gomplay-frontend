@@ -1,7 +1,4 @@
-import "./sockjsPolyfills";
-
 import { Client, type StompSubscription } from "@stomp/stompjs";
-import SockJS from "sockjs-client";
 
 import { useAuthStore } from "@/stores/auth/authStore";
 import type { GroupChatMessage } from "@/types/domain/groupChatRoom";
@@ -97,11 +94,11 @@ export function connectChatWs(): void {
   }
 
   client = new Client({
+    // SockJS는 Expo 터널(https) 환경에서 http 연결을 SecurityError로 막으므로
+    // Spring SockJS 엔드포인트의 raw WebSocket 경로(/ws/websocket)에 직접 연결한다.
     webSocketFactory: () =>
-      new SockJS(
-        `http://52.78.97.182:8080/ws?token=${encodeURIComponent(token)}`,
-        null,
-        { transports: ["websocket"] },
+      new WebSocket(
+        `ws://52.78.97.182:8080/ws/websocket?token=${encodeURIComponent(token)}`,
       ),
     reconnectDelay: 5000,
     onConnect: () => {
