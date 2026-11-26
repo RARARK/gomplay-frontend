@@ -1,6 +1,7 @@
 import { create } from "zustand";
 
 import { useScreenCacheStore } from "@/stores/cache/screenCacheStore";
+import { useMatchingStore } from "@/stores/matching/matchingStore";
 import { useUserStore } from "@/stores/user/userStore";
 
 type AuthState = {
@@ -42,6 +43,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   clearAuth: () => {
     useUserStore.getState().clearProfile();
     useScreenCacheStore.getState().clearAll();
+    // 후보 카드/버퍼/본 사람 목록 등을 비운다. 안 비우면 같은 앱에서 다른 계정으로
+    // 로그인했을 때 이전 계정의 후보 카드가 남고, 스킵 시 후보가 일찍 바닥난다.
+    useMatchingStore.getState().clearMatchingState();
     set({
       userId: null,
       isLoggedIn: false,
