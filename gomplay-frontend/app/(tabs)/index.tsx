@@ -63,11 +63,21 @@ export default function HomePage() {
     () => getHasScheduleCache(),
   );
 
-  // Re-send toggle when WS connects if matching was already ON (e.g. app cold-start)
+  // WS가 (재)연결됐을 때 매칭이 켜져 있으면 서버 대기열에 다시 등록한다.
+  // 서버는 WS가 끊기면 대기열에서 빼지만 DB의 isMatching은 true로 남기고,
+  // isMatching이 이미 true면 toggle(true)를 무시한다. 그래서 true만 다시 보내면
+  // "매칭 중"인데 아무에게도 안 보이는 상태가 되므로 off → on 순서로 보낸다.
   React.useEffect(() => {
     if (!wsConnected) return;
     if (!useAuthStore.getState().matching) return;
-    toggleMatching(true).catch(() => {});
+    toggleMatching(false)
+      .catch(() => {})
+      .then(() => {
+        // off 요청 사이에 사용자가 직접 매칭을 껐다면 다시 켜지 않는다
+        if (!useAuthStore.getState().matching) return;
+        return toggleMatching(true);
+      })
+      .catch(() => {});
   }, [wsConnected]);
 
   // Match accepted/rejected handling is in (tabs)/_layout.tsx (always mounted)
