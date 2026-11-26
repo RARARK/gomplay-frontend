@@ -3,6 +3,9 @@ import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 
 import { useMatchWebSocket } from "@/hooks/useMatchWebSocket";
+import { preloadHomeImages } from "@/lib/utils/preloadHomeImages";
+
+preloadHomeImages();
 
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({

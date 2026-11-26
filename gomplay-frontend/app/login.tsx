@@ -6,6 +6,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import LoginScreenContent from "@/components/auth/LoginScreenContent";
 import { AuthError, login } from "@/services/auth/authService";
+import { getSchedule, setHasScheduleCache } from "@/services/schedule/scheduleService";
 import { getMyProfile } from "@/services/user/userService";
 import { useAuthStore } from "@/stores/auth/authStore";
 import { useUserStore } from "@/stores/user/userStore";
@@ -131,8 +132,14 @@ export default function LoginScreen() {
         matching: data.matching,
       });
 
-      const profile = await getMyProfile();
+      // 시간표도 함께 받아 캐시해 두면 홈 첫 화면이 빈 로딩 상태 없이 바로 그려진다.
+      // (이전 계정의 캐시 값이 남아 잘못된 상태가 잠깐 보이는 것도 막는다)
+      const [profile, schedule] = await Promise.all([
+        getMyProfile(),
+        getSchedule().catch(() => null),
+      ]);
       setProfile(profile);
+      if (schedule) setHasScheduleCache(schedule.length > 0);
 
       // 공용 테스트 계정만 기기에 저장한다 (실제 사용자 계정은 남기지 않음).
       if (isTestAccount(schoolEmail)) {
