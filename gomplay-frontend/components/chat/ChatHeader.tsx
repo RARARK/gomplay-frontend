@@ -10,6 +10,8 @@ type ChatHeaderProps = {
   showBackButton?: boolean;
   onPressMenu?: () => void;
   showMenuButton?: boolean;
+  /** 다른 탭(홈/탐색/매칭현황)과 같은 우측 상단 MY(마이페이지) 버튼 */
+  showMyButton?: boolean;
 };
 
 export default function ChatHeader({
@@ -18,6 +20,7 @@ export default function ChatHeader({
   showBackButton = true,
   onPressMenu,
   showMenuButton = true,
+  showMyButton = false,
 }: ChatHeaderProps) {
   const handleBackPress = () => {
     if (onBackPress) {
@@ -34,7 +37,7 @@ export default function ChatHeader({
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, showMyButton && styles.tabRootContainer]}>
       <View style={styles.headerRow}>
         {showBackButton ? (
           <Pressable
@@ -60,6 +63,16 @@ export default function ChatHeader({
             <Ionicons name="menu-outline" size={28} color="#111827" />
           </Pressable>
         ) : null}
+        {showMyButton ? (
+          <Pressable
+            accessibilityLabel="Open profile"
+            accessibilityRole="button"
+            onPress={() => router.push("/mypage" as any)}
+            style={styles.myButton}
+          >
+            <Text style={styles.myButtonText}>MY</Text>
+          </Pressable>
+        ) : null}
       </View>
     </View>
   );
@@ -70,6 +83,10 @@ const styles = StyleSheet.create({
     backgroundColor: Color.colorWhite,
     paddingHorizontal: 16,
     paddingTop: 18,
+  },
+  // 탭 루트 화면(채팅 목록)에서는 다른 탭 헤더와 MY 버튼 위치를 맞춘다 (홈/탐색/매칭현황 paddingTop 8)
+  tabRootContainer: {
+    paddingTop: 8,
   },
   headerRow: {
     height: 48,
@@ -98,5 +115,18 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     zIndex: 1,
+  },
+  myButton: {
+    width: 48,
+    height: 48,
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 1,
+  },
+  myButtonText: {
+    fontSize: 16,
+    lineHeight: 18,
+    color: "#111111",
+    fontWeight: "900",
   },
 });
