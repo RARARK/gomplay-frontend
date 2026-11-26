@@ -11,13 +11,14 @@ type CreatePostCapacitySelectorProps = {
 export default function CreatePostCapacitySelector({
   value,
   onChange,
-  min = 1,
+  // 서버는 maxParticipants를 작성자 포함 총 인원으로 보고 마감하므로 최소 2명(본인 + 1명)
+  min = 2,
 }: CreatePostCapacitySelectorProps) {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
         <Ionicons name="person-outline" size={24} color="#111827" />
-        <Text style={styles.label}>모집 인원</Text>
+        <Text style={styles.label}>총 인원 (본인 포함)</Text>
       </View>
 
       <View style={styles.counter}>

@@ -518,7 +518,7 @@ export default function PostApplyScreen({ postId }: PostApplyScreenProps) {
           <View style={styles.capacityContainer}>
             <View style={styles.capacityHeader}>
               <Ionicons name="person-outline" size={24} color="#111827" />
-              <Text style={styles.capacityLabel}>모집 인원</Text>
+              <Text style={styles.capacityLabel}>총 인원 (본인 포함)</Text>
             </View>
             <View style={styles.capacityCounter}>
               <Text style={styles.capacityValue}>{post.maxParticipants}명</Text>
@@ -529,7 +529,7 @@ export default function PostApplyScreen({ postId }: PostApplyScreenProps) {
         {!isOwner ? (
           <View style={styles.section}>
             <Text style={styles.sectionLabel}>
-              참가 인원 {post.currentParticipants - 1}/{post.maxParticipants}
+              참가 인원 {post.currentParticipants}/{post.maxParticipants}
             </Text>
           </View>
         ) : null}

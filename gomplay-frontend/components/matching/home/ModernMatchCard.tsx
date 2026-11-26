@@ -103,7 +103,8 @@ const ModernMatchCard = React.memo(function ModernMatchCard({
               <View style={styles.footerItem}>
                 <Ionicons name="people-outline" size={11} color="#D1D5DB" />
                 <Text style={styles.footerText}>
-                  {(currentParticipants ?? 1) - 1} / {maxParticipants}
+                  {/* 서버 기준: 작성자 포함 현재 인원 / 총 인원 */}
+                  {currentParticipants ?? 1} / {maxParticipants}
                 </Text>
               </View>
             )}

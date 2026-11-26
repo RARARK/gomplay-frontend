@@ -58,11 +58,11 @@ import { validateCreatePostInput } from "@/utils/validateCreatePost";
 
 const createInitialFormState = (): CreatePostFormState => ({
   title: "",
-  exerciseType: "러닝",
+  exerciseType: "런닝",
   location: CREATE_POST_DEFAULT_LOCATION,
   scheduledStartAt: getTomorrowDate(10),
   scheduledEndAt: getTomorrowDate(12),
-  capacity: 1,
+  capacity: 2,
   message: "",
   difficulty: POST_DIFFICULTY.INTRODUCTORY,
 });

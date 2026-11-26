@@ -31,9 +31,9 @@ export const validateCreatePostInput = (
   }
 
   if (typeof input.capacity !== "number" || Number.isNaN(input.capacity)) {
-    errors.capacity = "모집 인원을 입력해주세요.";
-  } else if (input.capacity < 1) {
-    errors.capacity = "모집 인원은 1명 이상이어야 합니다.";
+    errors.capacity = "총 인원을 입력해주세요.";
+  } else if (input.capacity < 2) {
+    errors.capacity = "총 인원은 본인 포함 2명 이상이어야 합니다.";
   }
 
   if (!input.difficulty || !DIFFICULTY_VALUES.has(input.difficulty)) {
